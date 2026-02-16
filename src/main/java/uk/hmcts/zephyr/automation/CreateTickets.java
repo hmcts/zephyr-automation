@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import uk.hmcts.zephyr.automation.cucumber.report.Element;
 import uk.hmcts.zephyr.automation.cucumber.report.Feature;
+import uk.hmcts.zephyr.util.TagUtil;
 
 import java.util.List;
 import java.util.Optional;

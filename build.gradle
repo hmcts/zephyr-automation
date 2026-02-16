@@ -128,7 +128,6 @@ ext {
     log4JVersion = "2.25.3"
     logbackVersion = "1.5.22"
     lombokVersion = "1.18.42"
-    springVersion = "3.5.8"
 }
 
 ext['snakeyaml.version'] = '2.0'
@@ -140,19 +139,12 @@ dependencyManagement {
 }
 
 dependencies {
-    implementation group: 'uk.gov.hmcts', name: 'spring-exception-handler', version: '0.0.3'
-    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: springVersion
-    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: springVersion
-    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-aop', version: springVersion
-    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-json', version: springVersion
-    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-oauth2-resource-server', version: springVersion
-    implementation('org.springframework.cloud:spring-cloud-starter-openfeign') {
-        exclude group: 'commons-fileupload', module: 'commons-fileupload'
-    }
-    implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '3.0.0'
+//    implementation group: 'uk.gov.hmcts', name: 'spring-exception-handler', version: '0.0.3'
 
     implementation group: 'com.github.hmcts.java-logging', name: 'logging', version: '7.0.0'
 
+    implementation 'tools.jackson.core:jackson-databind:3.0.4'
+    implementation 'tools.jackson.core:jackson-core:3.0.4'
     implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: log4JVersion
     implementation group: 'org.apache.logging.log4j', name: 'log4j-to-slf4j', version: log4JVersion
     implementation group: 'ch.qos.logback', name: 'logback-classic', version: logbackVersion
@@ -160,22 +152,6 @@ dependencies {
 
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
     annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
-
-    testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
-    testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
-
-    integrationTestCompileOnly "org.projectlombok:lombok:${lombokVersion}"
-    integrationTestAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
-
-    functionalTestCompileOnly "org.projectlombok:lombok:${lombokVersion}"
-    functionalTestAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
-
-    smokeTestCompileOnly "org.projectlombok:lombok:${lombokVersion}"
-    smokeTestAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
-
-    testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springVersion
-    testImplementation group: 'io.rest-assured', name: 'rest-assured', version: '5.5.6'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 jar {

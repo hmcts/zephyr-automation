@@ -1,23 +1,18 @@
 package uk.hmcts;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import lombok.extern.slf4j.Slf4j;
+import tools.jackson.core.type.TypeReference;
 import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.CreateTickets;
 import uk.hmcts.zephyr.automation.cucumber.report.Feature;
+import uk.hmcts.zephyr.util.FileUtil;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 @Slf4j
 public class Main {
-    public static List<Feature> readFromFile(String filePath) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(new File(filePath), new TypeReference<>() {
-        });
-    }
+
 
     private static void parseArgs(String[] args) {
         for (String arg : args) {
@@ -38,16 +33,16 @@ public class Main {
     public static void main(String[] args) {
         parseArgs(args);
 
-        try {
-            List<Feature> features = readFromFile(Config.cucumberPath);
-            log.info("Features read: {}", features.size());
+        List<Feature> features = FileUtil.readFromFile(Config.cucumberPath, new TypeReference<>() {
+        });
+        log.info("Features read: {}", features.size());
 
-            if (Config.createTickets) {
-                new CreateTickets(features).create();
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (Config.createTickets) {
+            new CreateTickets(features).create();
         }
+
+
+        // Write the updated features back to the file
+        FileUtil.writeToFile(Config.cucumberPath, features);
     }
 }

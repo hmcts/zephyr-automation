@@ -26,17 +26,18 @@ public class Element {
     private List<Step> steps;
     private List<Tag> tags;
 
-    public void addTag(Tag jiraTag) {
+    public List<Tag> getTags() {
         if (tags == null) {
             tags = new ArrayList<>();
         }
-        tags.add(jiraTag);
+        return tags;
+    }
+
+    public void addTag(Tag jiraTag) {
+        getTags().add(jiraTag);
     }
 
     public boolean hasTag(String tagName) {
-        if (tags == null) {
-            return false;
-        }
-        return tags.stream().anyMatch(tag -> tag.getName().equals(tagName));
+        return getTags().stream().anyMatch(tag -> tag.getName().equals(tagName));
     }
 }

@@ -1,6 +1,7 @@
-package uk.hmcts.zephyr.automation;
+package uk.hmcts.zephyr.util;
 
 import lombok.extern.slf4j.Slf4j;
+import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.cucumber.report.Element;
 import uk.hmcts.zephyr.automation.cucumber.report.Feature;
 import uk.hmcts.zephyr.automation.cucumber.report.Location;
