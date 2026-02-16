@@ -67,8 +67,9 @@ public class TagUtil {
                 String indentation =
                     scenarioLineContent.substring(0, scenarioLineContent.indexOf(scenarioLineContent.trim()));
                 //Insert the tag line on the scenario line (Forcing the scenario line to go down by one line)
+
                 lines.add(scenarioLine, indentation + tagName);
-                //Because I have added a line above the scenario, I need to update the line numbers of the scenario and all tags in the scenario
+                //Update line numbers on the feature to account for the new line
                 updateLineNumbersOnFeature(feature, tagLine);
                 tagColumn = tagColumn + indentation.length();
             }

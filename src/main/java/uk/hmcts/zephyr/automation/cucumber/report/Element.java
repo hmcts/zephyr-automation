@@ -1,5 +1,6 @@
 package uk.hmcts.zephyr.automation.cucumber.report;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,7 +15,8 @@ import java.util.List;
 @NoArgsConstructor
 public class Element {
 
-    private String start_timestamp;
+    @JsonProperty("start_timestamp")
+    private String startTimestamp;
     private List<Hook> before;
     private int line;
     private String name;
