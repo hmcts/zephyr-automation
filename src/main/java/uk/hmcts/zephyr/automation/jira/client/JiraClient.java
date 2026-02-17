@@ -6,6 +6,8 @@ import uk.hmcts.zephyr.automation.jira.models.JiraComponent;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssue;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueFieldsWrapper;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueLink;
+import uk.hmcts.zephyr.automation.jira.models.JiraSearchRequest;
+import uk.hmcts.zephyr.automation.jira.models.JiraSearchResponse;
 
 import java.util.List;
 
@@ -19,5 +21,8 @@ public interface JiraClient {
 
     @RequestLine("POST /issueLink")
     void linkIssue(JiraIssueLink jiraIssueLink);
+
+    @RequestLine("POST /search")
+    JiraSearchResponse searchIssues(JiraSearchRequest searchRequest);
 
 }

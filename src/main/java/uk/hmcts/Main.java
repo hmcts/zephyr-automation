@@ -2,47 +2,32 @@ package uk.hmcts;
 
 
 import lombok.extern.slf4j.Slf4j;
-import tools.jackson.core.type.TypeReference;
 import uk.hmcts.zephyr.automation.Config;
-import uk.hmcts.zephyr.automation.CreateTickets;
-import uk.hmcts.zephyr.automation.cucumber.report.Feature;
-import uk.hmcts.zephyr.util.FileUtil;
-
-import java.util.List;
 
 @Slf4j
 public class Main {
 
 
     private static void parseArgs(String[] args) {
+        //Capture the action type and process type from the command line arguments
         for (String arg : args) {
-            if (arg.equalsIgnoreCase("createTickets")) {
-                Config.createTickets = true;
-            } else if (arg.equalsIgnoreCase("updateTickets")) {
-                Config.updateTickets = true;
-            } else if (arg.startsWith("cucumberPath:")) {
-                Config.cucumberPath = arg.substring("cucumberPath:".length());
+            if (arg.startsWith("action-type=")) {
+                Config.actionType = Config.ActionType.valueOf(arg.substring("action-type=".length()));
+            } else if (arg.startsWith("process-type=")) {
+                Config.processType = Config.ProcessType.valueOf(arg.substring("process-type:".length()));
+            } else if (arg.startsWith("base-path=")) {
+                Config.basePath = arg.substring("base-path=".length());
             }
         }
-        log.info("Options: createTickets={}, updateTickets={}, cucumberPath={}",
-            Config.createTickets,
-            Config.updateTickets,
-            Config.cucumberPath);
+
+        if (Config.actionType == null || Config.processType == null) {
+            throw new IllegalArgumentException(
+                "Both action-type and process-type must be specified as command line arguments");
+        }
     }
 
     public static void main(String[] args) {
         parseArgs(args);
-
-        List<Feature> features = FileUtil.readFromFile(Config.cucumberPath, new TypeReference<>() {
-        });
-        log.info("Features read: {}", features.size());
-
-        if (Config.createTickets) {
-            new CreateTickets(features).create();
-        }
-
-
-        // Write the updated features back to the file
-//TODO        FileUtil.writeToFile(Config.cucumberPath, features);
+        Config.processType.processAction(Config.actionType, args);
     }
 }

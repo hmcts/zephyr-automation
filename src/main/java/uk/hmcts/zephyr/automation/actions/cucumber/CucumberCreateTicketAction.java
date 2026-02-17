@@ -1,7 +1,8 @@
-package uk.hmcts.zephyr.automation;
+package uk.hmcts.zephyr.automation.actions.cucumber;
 
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import uk.hmcts.zephyr.automation.Config;
+import uk.hmcts.zephyr.automation.actions.CreateTicketAction;
 import uk.hmcts.zephyr.automation.cucumber.report.Element;
 import uk.hmcts.zephyr.automation.cucumber.report.Feature;
 import uk.hmcts.zephyr.automation.jira.JiraConstants;
@@ -9,6 +10,7 @@ import uk.hmcts.zephyr.automation.jira.models.JiraIssue;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueFieldsWrapper;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueLink;
 import uk.hmcts.zephyr.automation.zephyr.ZephyrConstants;
+import uk.hmcts.zephyr.util.FileUtil;
 import uk.hmcts.zephyr.util.TagUtil;
 
 import java.util.List;
@@ -16,17 +18,36 @@ import java.util.Optional;
 
 import static uk.hmcts.zephyr.automation.Config.JIRA;
 
-@AllArgsConstructor
 @Slf4j
-public class CreateTickets {
+public class CucumberCreateTicketAction extends AbstractCucumberAction implements CreateTicketAction {
 
+    public CucumberCreateTicketAction(String[] args) {
+        super(args);
+        for (String arg : args) {
+            if (arg.startsWith("github-repo-base-src-dir=")) {
+                Config.githubRepoBaseSrcDir = arg.substring("github-repo-base-src-dir=".length());
+            }
+        }
+        if (Config.githubRepoBaseSrcDir == null) {
+            throw new IllegalArgumentException(
+                "For CREATE_TICKETS action type, github-repo-base-src-dir must be specified as a command line "
+                    + "argument");
+        }
+        if (Config.basePath == null) {
+            throw new IllegalArgumentException(
+                "For CREATE_TICKETS action type, base-path must be specified as a command line "
+                    + "argument");
+        }
+    }
 
-    private final List<Feature> features;
-
-    public void create() {
+    @Override
+    public void process() {
+        List<Feature> features = getFeatures();
         for (Feature feature : features) {
             processFeature(feature);
         }
+        // Write the updated features back to the file
+        FileUtil.writeToFile(Config.cucumberPath, features);
     }
 
     private void processFeature(Feature feature) {
@@ -64,7 +85,7 @@ public class CreateTickets {
                 .summary(scenario.getName())
                 .description(getJiraDescription(feature, scenario))
                 .issuetype(JiraIssueFieldsWrapper.IssueType.builder().id(ZephyrConstants.ZEPHYR_ISSUE_TYPE_ID).build())
-                .reporter(JiraIssueFieldsWrapper.Reporter.builder().name(JiraConstants.DEFAULT_REPORTER).build())
+                .reporter(JiraIssueFieldsWrapper.Reporter.builder().name(JiraConstants.DEFAULT_USER).build())
                 .build())
             .build();
 
