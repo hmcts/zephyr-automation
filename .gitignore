@@ -1,4 +1,5 @@
 .gradle
+src/main/java/uk/hmcts/zephyr/automation/jira/JiraConstants.java
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
