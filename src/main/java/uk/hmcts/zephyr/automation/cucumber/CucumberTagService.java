@@ -8,6 +8,7 @@ import uk.hmcts.zephyr.automation.cucumber.models.Location;
 import uk.hmcts.zephyr.automation.cucumber.models.Step;
 import uk.hmcts.zephyr.automation.cucumber.models.Tag;
 import uk.hmcts.zephyr.automation.TagService;
+import uk.hmcts.zephyr.util.FileUtil;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -65,8 +66,8 @@ public class CucumberTagService implements TagService<Element> {
         String featureFilePath = resolveFeatureFilePath(feature.getUri());
 
         try {
-            List<String> lines = Files.readAllLines(Paths.get(featureFilePath));
             //Cucumber line numbers are 1-based, but List is 0-based
+            List<String> lines = FileUtil.readFileAsLines(featureFilePath);
             int scenarioLine = scenario.getLine() - 1;
 
             int tagLine = scenarioLine;

@@ -9,7 +9,7 @@ import java.util.Optional;
 import static uk.hmcts.zephyr.automation.jira.JiraConstants.JIRA_KEY_TAG_PREFIX;
 
 @Slf4j
-public class CypressTagUtil {
+public class CypressTagService {
 
     public static Optional<String> extractJiraKeyFromTag(CypressReport.CypressTest test) {
         return extractTagWithPrefix(test, JIRA_KEY_TAG_PREFIX)
@@ -26,5 +26,6 @@ public class CypressTagUtil {
             .map(tag -> tag.substring(prefix.length()))
             .toList();
     }
+
 
 }

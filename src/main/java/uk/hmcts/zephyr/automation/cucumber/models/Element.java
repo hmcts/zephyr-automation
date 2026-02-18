@@ -42,8 +42,8 @@ public class Element implements ZephyrTest {
         return tags;
     }
 
-    public void addTag(Tag jiraTag) {
-        getTags().add(jiraTag);
+    public void addTag(Tag tag) {
+        getTags().add(tag);
     }
 
     public boolean hasTag(String tagName) {

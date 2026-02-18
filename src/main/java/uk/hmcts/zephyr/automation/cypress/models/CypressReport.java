@@ -5,8 +5,8 @@ import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.actions.ZephyrTest;
 import uk.hmcts.zephyr.automation.zephyr.ZephyrConstants;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Data
 public class CypressReport {
@@ -42,6 +42,22 @@ public class CypressReport {
         private String status;
         private List<String> tags;
         private ConfigOverrides configOverrides;
+
+        public List<String> getTags() {
+            if (tags == null) {
+                tags = new ArrayList<>();
+            }
+            return tags;
+        }
+
+        public void addTag(String tag) {
+            getTags().add(tag);
+        }
+
+        public boolean hasTag(String tagName) {
+            return getTags().stream().anyMatch(tag -> tag.equals(tagName));
+        }
+
 
         @Override
         public String getName() {
