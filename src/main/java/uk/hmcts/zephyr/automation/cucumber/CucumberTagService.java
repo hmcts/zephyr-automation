@@ -1,49 +1,52 @@
-package uk.hmcts.zephyr.util;
+package uk.hmcts.zephyr.automation.cucumber;
 
 import lombok.extern.slf4j.Slf4j;
 import uk.hmcts.zephyr.automation.Config;
-import uk.hmcts.zephyr.automation.cucumber.report.Element;
-import uk.hmcts.zephyr.automation.cucumber.report.Feature;
-import uk.hmcts.zephyr.automation.cucumber.report.Location;
-import uk.hmcts.zephyr.automation.cucumber.report.Step;
-import uk.hmcts.zephyr.automation.cucumber.report.Tag;
+import uk.hmcts.zephyr.automation.cucumber.models.Element;
+import uk.hmcts.zephyr.automation.cucumber.models.Feature;
+import uk.hmcts.zephyr.automation.cucumber.models.Location;
+import uk.hmcts.zephyr.automation.cucumber.models.Step;
+import uk.hmcts.zephyr.automation.cucumber.models.Tag;
+import uk.hmcts.zephyr.automation.TagService;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
+import static uk.hmcts.zephyr.automation.jira.JiraConstants.JIRA_KEY_TAG_PREFIX;
+
 @Slf4j
-public class TagUtil {
-
-    public static final String JIRA_KEY_TAG_PREFIX = "@JIRA-KEY:";
-    public static final String JIRA_COMPONENT_TAG_PREFIX = "@JIRA-Component:";
-    public static final String JIRA_LABEL_TAG_PREFIX = "@JIRA-Label:";
-
-    public static final String JIRA_EPIC_TAG_PREFIX = "@JIRA-EPIC:";
-    public static final String JIRA_NFR_TAG_PREFIX = "@JIRA-NFR:";
-    public static final String JIRA_LINK_TAG_PREFIX = "@JIRA-Link:";
-    public static final String JIRA_STORY_TAG_PREFIX = "@JIRA-Story:";
-    public static final String JIRA_DEFECT_TAG_PREFIX = "@JIRA-Defect:";
+public class CucumberTagService implements TagService<Element> {
 
 
-    public static Optional<String> extractJiraKeyFromTag(Element scenario) {
-        return extractTagWithPrefix(scenario, JIRA_KEY_TAG_PREFIX)
-            .map(key -> key.replace(JIRA_KEY_TAG_PREFIX, ""));
+    private String addTagPrefix(String tagName) {
+        return "@" + tagName;
     }
 
-    public static Optional<String> extractTagWithPrefix(Element scenario, String prefix) {
+    @Override
+    public Optional<String> extractJiraKeyFromTag(Element scenario) {
+        return extractTagWithPrefix(scenario, addTagPrefix(JIRA_KEY_TAG_PREFIX))
+            .map(key -> key.replace(addTagPrefix(JIRA_KEY_TAG_PREFIX), ""));
+    }
+
+    @Override
+    public Optional<String> extractTagWithPrefix(Element scenario, String prefix) {
         return extractTagListWithPrefix(scenario, prefix).stream().findFirst();
     }
 
-    public static List<String> extractTagListWithPrefix(Element scenario, String prefix) {
+    @Override
+    public List<String> extractTagListWithPrefix(Element scenario, String prefix) {
         return scenario.getTags().stream()
-            .filter(tag -> tag.getName().startsWith(prefix))
-            .map(tag -> tag.getName().substring(prefix.length()))
+            .filter(tag -> tag.getName().startsWith(addTagPrefix(prefix)))
+            .map(tag -> tag.getName().substring(addTagPrefix(prefix).length()))
             .toList();
     }
 
-    public static void addTag(Feature feature, Element scenario, String tagName) {
+    @Override
+    public void addTag(Element scenario, String tagNameBase) {
+        String tagName = addTagPrefix(tagNameBase);
+        Feature feature = scenario.getFeature();
         log.info("Adding tag '{}' to scenario '{}' in feature '{}'", tagName, scenario.getName(), feature.getUri());
         boolean alreadyHasTag = scenario.hasTag(tagName);
         if (alreadyHasTag) {
@@ -58,7 +61,7 @@ public class TagUtil {
             tagName, scenario.getName(), tagLocation.getLine(), feature.getUri());
     }
 
-    private static Location addTagToScenario(Feature feature, Element scenario, String tagName) {
+    private Location addTagToScenario(Feature feature, Element scenario, String tagName) {
         String featureFilePath = resolveFeatureFilePath(feature.getUri());
 
         try {
@@ -96,7 +99,7 @@ public class TagUtil {
         }
     }
 
-    private static void updateLineNumbersOnFeature(Feature feature, int tagLine) {
+    private void updateLineNumbersOnFeature(Feature feature, int tagLine) {
         if (feature.getElements() != null) {
             for (Element scenario : feature.getElements()) {
                 updateLineNumbersOnScenario(scenario, tagLine);
@@ -107,7 +110,7 @@ public class TagUtil {
         }
     }
 
-    private static void updateLineNumbersOnScenario(Element scenario, int tagLine) {
+    private void updateLineNumbersOnScenario(Element scenario, int tagLine) {
         if (scenario.getLine() >= tagLine) {
             scenario.setLine(scenario.getLine() + 1);
 
@@ -124,7 +127,7 @@ public class TagUtil {
         }
     }
 
-    private static void updateLineNumbersOnScenarioTag(Tag tag, int tagLine) {
+    private void updateLineNumbersOnScenarioTag(Tag tag, int tagLine) {
         if (tag.getLocation() == null) {
             return;
         }
@@ -134,7 +137,7 @@ public class TagUtil {
     }
 
 
-    private static String resolveFeatureFilePath(String uri) {
+    private String resolveFeatureFilePath(String uri) {
         if (uri == null) {
             throw new RuntimeException("Feature file path is null");
         }

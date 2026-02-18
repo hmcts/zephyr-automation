@@ -1,4 +1,4 @@
-package uk.hmcts.zephyr.automation.cucumber.report;
+package uk.hmcts.zephyr.automation.cucumber.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;

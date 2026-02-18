@@ -1,4 +1,4 @@
-package uk.hmcts.zephyr.automation.cucumber.report;
+package uk.hmcts.zephyr.automation.cucumber.models;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,8 +9,8 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class MatchArgument {
+public class Location {
 
-    private String val;
-    private int offset;
+    private int line;
+    private int column;
 }

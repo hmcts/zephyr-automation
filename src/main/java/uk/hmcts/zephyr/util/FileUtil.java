@@ -2,24 +2,21 @@ package uk.hmcts.zephyr.util;
 
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
-import uk.hmcts.zephyr.automation.cucumber.report.Feature;
+import uk.hmcts.zephyr.automation.Config;
+import uk.hmcts.zephyr.automation.cucumber.models.Feature;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
 
 public class FileUtil {
-    private static final ObjectMapper objectMapper;
-
-    static {
-        objectMapper = new ObjectMapper();
-    }
 
     public static <T> T readFromFile(String filePath, TypeReference<T> typeReference) {
-        return objectMapper.readValue(new File(filePath), typeReference);
+        return Config.OBJECT_MAPPER.readValue(new File(filePath), typeReference);
     }
 
 
     public static void writeToFile(String filePath, List<Feature> features) {
-        objectMapper.writerWithDefaultPrettyPrinter().writeValue(new File(filePath), features);
+        Config.OBJECT_MAPPER.writerWithDefaultPrettyPrinter().writeValue(new File(filePath), features);
     }
 }

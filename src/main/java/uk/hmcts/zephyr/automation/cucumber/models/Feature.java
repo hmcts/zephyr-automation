@@ -1,4 +1,4 @@
-package uk.hmcts.zephyr.automation.cucumber.report;
+package uk.hmcts.zephyr.automation.cucumber.models;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

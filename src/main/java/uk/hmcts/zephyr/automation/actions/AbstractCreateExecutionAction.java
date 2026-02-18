@@ -1,22 +1,20 @@
-package uk.hmcts.zephyr.automation.actions.cucumber;
+package uk.hmcts.zephyr.automation.actions;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import uk.hmcts.zephyr.automation.actions.CreateExecutionAction;
-import uk.hmcts.zephyr.automation.cucumber.report.Element;
-import uk.hmcts.zephyr.automation.cucumber.report.Feature;
+import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.jira.JiraConstants;
 import uk.hmcts.zephyr.automation.jira.models.JiraSearchRequest;
 import uk.hmcts.zephyr.automation.jira.models.JiraSearchResponse;
+import uk.hmcts.zephyr.automation.TagService;
 import uk.hmcts.zephyr.automation.zephyr.ZephyrConstants;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrCycle;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrCycleResponse;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionDetail;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionRequest;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionStatusUpdateRequest;
-import uk.hmcts.zephyr.util.TagUtil;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -29,25 +27,35 @@ import java.util.stream.Collectors;
 import static uk.hmcts.zephyr.automation.Config.JIRA;
 import static uk.hmcts.zephyr.automation.Config.ZEPHYR;
 
+@Getter
 @Slf4j
-public class CucumberCreateExecutionAction extends AbstractCucumberAction implements CreateExecutionAction {
+public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
+    extends AbstractAction<T>
+    implements CreateExecutionAction {
 
-    public CucumberCreateExecutionAction(String[] args) {
-        super(args);
-
+    protected AbstractCreateExecutionAction(String[] args, TagService<T> tagService) {
+        super(tagService);
+        validateArgs(args);
     }
 
-    @Override
-    public void process() {
-        log.info("Starting Cucumber Create Execution Action");
-        List<Feature> features = getFeatures();
-        if (features == null || features.isEmpty()) {
-            log.warn("No features found to process for execution creation");
-            return;
+    private void validateArgs(String[] args) {
+        for (String arg : args) {
+            if (arg.startsWith("report-path=")) {
+                Config.reportPath = arg.substring("report-path=".length());
+            }
         }
+        if (Config.reportPath == null) {
+            throw new IllegalArgumentException(
+                "For CREATE_EXECUTION action type, report-path must be specified as a command line "
+                    + "argument");
+        }
+    }
+
+    protected void processTests(List<T> tests) {
+
         List<ScenarioResult> scenarioResults = new ArrayList<>();
-        for (Feature feature : features) {
-            scenarioResults.addAll(getScenarioResultFromFeature(feature));
+        for (T test : tests) {
+            getScenarioResultFromTest(test).ifPresent(scenarioResults::add);
         }
         assignJiraIds(scenarioResults);
         ZephyrCycleResponse cycle = ZEPHYR.createCycle(
@@ -61,6 +69,7 @@ public class CucumberCreateExecutionAction extends AbstractCucumberAction implem
         assignExecutionDetails(scenarioResults, cycle.getId());
         updateExecutionStatus(scenarioResults);
     }
+
 
     private void updateExecutionStatus(List<ScenarioResult> scenarioResults) {
         Map<ZephyrConstants.ExecutionStatus, List<ScenarioResult>> executionsByStatus = scenarioResults.stream()
@@ -141,42 +150,14 @@ public class CucumberCreateExecutionAction extends AbstractCucumberAction implem
 
     }
 
-    private List<ScenarioResult> getScenarioResultFromFeature(Feature feature) {
-        List<ScenarioResult> scenarioResults = new ArrayList<>();
-        for (Element element : feature.getElements()) {
-            getScenarioResultFromScenario(feature, element)
-                .ifPresent(scenarioResults::add);
-        }
-        return scenarioResults;
-    }
-
-    private Optional<ScenarioResult> getScenarioResultFromScenario(Feature feature, Element element) {
-        Optional<String> issueKeyOpt = TagUtil.extractJiraKeyFromTag(element);
+    private Optional<ScenarioResult> getScenarioResultFromTest(T test) {
+        Optional<String> issueKeyOpt = getTagService().extractJiraKeyFromTag(test);
         if (issueKeyOpt.isEmpty()) {
-            log.warn("No Jira issue key found for scenario: {} in feature: {}", element.getName(), feature.getName());
+            log.warn("No Jira issue key found for test: {}", test.getNameAndLocation());
             return Optional.empty();
         }
         String issueKey = issueKeyOpt.get();
-        ZephyrConstants.ExecutionStatus status = determineExecutionStatus(element);
+        ZephyrConstants.ExecutionStatus status = test.getZephyrExecutionStatus();
         return Optional.of(new ScenarioResult(issueKey, status));
-
-
-    }
-
-    private ZephyrConstants.ExecutionStatus determineExecutionStatus(Element element) {
-        //If all steps passed, mark as pass.
-        if (element.getSteps().stream()
-            .map(step -> step.getResult().getStatus())
-            .allMatch(s -> s.equalsIgnoreCase("passed"))) {
-            return ZephyrConstants.ExecutionStatus.PASS;
-        }
-        //If any step failed, mark as fail.
-        if (element.getSteps().stream()
-            .map(step -> step.getResult().getStatus())
-            .anyMatch(s -> s.equalsIgnoreCase("failed"))) {
-            return ZephyrConstants.ExecutionStatus.FAIL;
-        }
-        //Default to unexecuted if there are no steps or all steps are skipped or undefined
-        return ZephyrConstants.ExecutionStatus.UNEXECUTED;
     }
 }

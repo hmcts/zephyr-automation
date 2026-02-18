@@ -6,6 +6,7 @@ import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
 import lombok.extern.slf4j.Slf4j;
+import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.jira.JiraConstants;
 import uk.hmcts.zephyr.automation.zephyr.client.Zephyr;
 import uk.hmcts.zephyr.automation.zephyr.client.ZephyrClient;
@@ -14,6 +15,7 @@ import uk.hmcts.zephyr.automation.zephyr.models.ZephyrCycleResponse;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionDetail;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionRequest;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionStatusUpdateRequest;
+import uk.hmcts.zephyr.util.FileUtil;
 
 import java.util.Map;
 
@@ -36,6 +38,7 @@ public class ZephyrImpl implements Zephyr {
 
     @Override
     public ZephyrCycleResponse createCycle(ZephyrCycle cycle) {
+        log.info("Executing Zephyr create cycle: {}", Config.OBJECT_MAPPER.writeValueAsString(cycle));
         ZephyrCycleResponse response = zephyrClient.createCycle(cycle);
         log.info("Created Zephyr Cycle with ID: {}", response.getId());
         return response;
@@ -43,11 +46,16 @@ public class ZephyrImpl implements Zephyr {
 
     @Override
     public Map<String, ZephyrExecutionDetail> createExecution(ZephyrExecutionRequest execution) {
-        return zephyrClient.createExecution(execution);
+        log.info("Executing Zephyr Execution Request: {}", Config.OBJECT_MAPPER.writeValueAsString(execution));
+        Map<String, ZephyrExecutionDetail> response = zephyrClient.createExecution(execution);
+        log.info("Created Zephyr Execution with details: {}", response);
+        return response;
     }
 
     @Override
     public void updateExecutionStatus(ZephyrExecutionStatusUpdateRequest statusUpdateRequest) {
+        log.info("Executing Zephyr Update Executions status Request: {}",
+            Config.OBJECT_MAPPER.writeValueAsString(statusUpdateRequest));
         zephyrClient.updateExecutionStatus(statusUpdateRequest);
     }
 
