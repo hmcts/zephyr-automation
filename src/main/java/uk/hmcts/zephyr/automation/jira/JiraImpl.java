@@ -1,11 +1,13 @@
 package uk.hmcts.zephyr.automation.jira;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Feign;
 import feign.Logger;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
 import lombok.extern.slf4j.Slf4j;
+import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.jira.client.Jira;
 import uk.hmcts.zephyr.automation.jira.client.JiraClient;
 import uk.hmcts.zephyr.automation.jira.models.JiraComponent;
@@ -14,6 +16,7 @@ import uk.hmcts.zephyr.automation.jira.models.JiraIssueFieldsWrapper;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueLink;
 import uk.hmcts.zephyr.automation.jira.models.JiraSearchRequest;
 import uk.hmcts.zephyr.automation.jira.models.JiraSearchResponse;
+import uk.hmcts.zephyr.util.Util;
 
 import java.util.HashMap;
 import java.util.List;
@@ -26,17 +29,17 @@ public class JiraImpl implements Jira {
 
     private final Map<String, List<JiraComponent>> componentsCacheMap;
 
-    public JiraImpl() {
+    public JiraImpl(ObjectMapper objectMapper, String baseUrl, String authToken) {
         jiraClient = Feign.builder()
             .requestInterceptor(template -> {
-                template.header("Authorization", "Bearer " + JiraConstants.AUTH_TOKEN);
+                template.header("Authorization", authToken);
                 template.header("Content-Type", "application/json");
             })
-            .encoder(new JacksonEncoder())
-            .decoder(new JacksonDecoder())
+            .encoder(new JacksonEncoder(objectMapper))
+            .decoder(new JacksonDecoder(objectMapper))
             .logLevel(Logger.Level.FULL)
             .logger(new Slf4jLogger())
-            .target(JiraClient.class, JiraConstants.BASE_URL);
+            .target(JiraClient.class, baseUrl);
 
         componentsCacheMap = new HashMap<>();
     }
@@ -58,7 +61,10 @@ public class JiraImpl implements Jira {
     //Passthrough methods
     @Override
     public JiraIssue createIssue(JiraIssueFieldsWrapper issue) {
-        return jiraClient.createIssue(issue);
+        log.info("Creating Jira Issue: {}", Util.writeObjectToString(issue));
+        JiraIssue jiraIssue = jiraClient.createIssue(issue);
+        log.info("Created Jira Issue with ID: {}", Util.writeObjectToString(jiraIssue));
+        return jiraIssue;
     }
 
     @Override

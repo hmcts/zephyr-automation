@@ -6,7 +6,7 @@ import uk.hmcts.zephyr.automation.cypress.models.CypressReport;
 import java.util.List;
 import java.util.Optional;
 
-import static uk.hmcts.zephyr.automation.jira.JiraConstants.JIRA_KEY_TAG_PREFIX;
+import static uk.hmcts.zephyr.automation.jira.JiraConfig.JIRA_KEY_TAG_PREFIX;
 
 @Slf4j
 public class CypressTagService {

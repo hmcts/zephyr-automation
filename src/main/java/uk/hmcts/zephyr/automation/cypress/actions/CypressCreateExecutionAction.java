@@ -10,8 +10,8 @@ public class CypressCreateExecutionAction
     extends AbstractCreateExecutionAction<CypressReport.CypressTest>
     implements CypressAction {
 
-    public CypressCreateExecutionAction(String[] args) {
-        super(args, new CypressTagService());
+    public CypressCreateExecutionAction() {
+        super(new CypressTagService());
     }
 
     @Override

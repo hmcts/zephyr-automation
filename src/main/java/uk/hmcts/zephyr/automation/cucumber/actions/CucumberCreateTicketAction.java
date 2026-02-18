@@ -15,8 +15,8 @@ public class CucumberCreateTicketAction
     extends AbstractCreateTicketAction<Element>
     implements CucumberAction {
 
-    public CucumberCreateTicketAction(String[] args) {
-        super(args, new CucumberTagService());
+    public CucumberCreateTicketAction() {
+        super(new CucumberTagService());
     }
 
     @Override
@@ -26,7 +26,7 @@ public class CucumberCreateTicketAction
             processFeature(feature);
         }
         // Write the updated features back to the file
-        FileUtil.writeToFile(Config.reportPath, features);
+        FileUtil.writeToFile(Config.getReportPath(), features);
     }
 
     private void processFeature(Feature feature) {

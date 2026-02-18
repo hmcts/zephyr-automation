@@ -5,10 +5,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import uk.hmcts.zephyr.automation.Config;
-import uk.hmcts.zephyr.automation.jira.JiraConstants;
+import uk.hmcts.zephyr.automation.TagService;
+import uk.hmcts.zephyr.automation.jira.JiraConfig;
 import uk.hmcts.zephyr.automation.jira.models.JiraSearchRequest;
 import uk.hmcts.zephyr.automation.jira.models.JiraSearchResponse;
-import uk.hmcts.zephyr.automation.TagService;
 import uk.hmcts.zephyr.automation.zephyr.ZephyrConstants;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrCycle;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrCycleResponse;
@@ -24,8 +24,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static uk.hmcts.zephyr.automation.Config.JIRA;
-import static uk.hmcts.zephyr.automation.Config.ZEPHYR;
 
 @Getter
 @Slf4j
@@ -33,18 +31,13 @@ public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
     extends AbstractAction<T>
     implements CreateExecutionAction {
 
-    protected AbstractCreateExecutionAction(String[] args, TagService<T> tagService) {
+    protected AbstractCreateExecutionAction(TagService<T> tagService) {
         super(tagService);
-        validateArgs(args);
+        validateConfig();
     }
 
-    private void validateArgs(String[] args) {
-        for (String arg : args) {
-            if (arg.startsWith("report-path=")) {
-                Config.reportPath = arg.substring("report-path=".length());
-            }
-        }
-        if (Config.reportPath == null) {
+    private void validateConfig() {
+        if (Config.getReportPath() == null) {
             throw new IllegalArgumentException(
                 "For CREATE_EXECUTION action type, report-path must be specified as a command line "
                     + "argument");
@@ -58,11 +51,11 @@ public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
             getScenarioResultFromTest(test).ifPresent(scenarioResults::add);
         }
         assignJiraIds(scenarioResults);
-        ZephyrCycleResponse cycle = ZEPHYR.createCycle(
+        ZephyrCycleResponse cycle = Config.getZephyr().createCycle(
             ZephyrCycle.builder()
                 .name("Automated Cycle - " + DateTimeFormatter.ISO_DATE_TIME.format(OffsetDateTime.now()))
                 .description("Cycle created automatically from Cucumber JSON report")
-                .projectId(JiraConstants.PROJECT_ID)
+                .projectId(JiraConfig.getProjectId())
                 .versionId("-1") //Default to -1 for no version
                 .build()
         );
@@ -86,7 +79,7 @@ public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
                     .toList())
                 .status(String.valueOf(key.getStatusId()))
                 .build();
-            ZEPHYR.updateExecutionStatus(request);
+            Config.getZephyr().updateExecutionStatus(request);
         });
     }
 
@@ -100,12 +93,13 @@ public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
             ZephyrExecutionRequest executionRequest = ZephyrExecutionRequest.builder()
                 .cycleId(cycleId)
                 .issueId(scenarioResult.getIssueId())
-                .projectId(JiraConstants.PROJECT_ID)
+                .projectId(JiraConfig.getProjectId())
                 .versionId("-1") //Default to -1 for no version
                 .assigneeType("assignee")
-                .assignee(JiraConstants.DEFAULT_USER)
+                .assignee(JiraConfig.getDefaultUser())
                 .build();
-            Map<String, ZephyrExecutionDetail> executionDetailMap = ZEPHYR.createExecution(executionRequest);
+            Map<String, ZephyrExecutionDetail> executionDetailMap =
+                Config.getZephyr().createExecution(executionRequest);
             ZephyrExecutionDetail executionDetail = executionDetailMap.entrySet().stream().findFirst().get().getValue();
             scenarioResult.setExecutionDetail(executionDetail);
         }
@@ -117,7 +111,7 @@ public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
             .map(ScenarioResult::getIssueKey)
             .toList();
 
-        JiraSearchResponse searchResponse = JIRA.searchIssues(
+        JiraSearchResponse searchResponse = Config.getJira().searchIssues(
             JiraSearchRequest.builder()
                 .jql("key in (" + String.join(",", issueKeys) + ")")
                 .fields(List.of("id"))

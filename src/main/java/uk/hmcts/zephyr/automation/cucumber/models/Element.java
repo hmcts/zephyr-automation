@@ -1,6 +1,7 @@
 package uk.hmcts.zephyr.automation.cucumber.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -54,7 +55,7 @@ public class Element implements ZephyrTest {
     @Override
     public String getGitHubLink() {
         return feature.getUri().replace("classpath:",
-            Config.githubRepoBaseSrcDir + "/resources/") + "#L" + getLine();
+            Config.getGithubRepoBaseSrcDir() + "/resources/") + "#L" + getLine();
     }
 
     @Override

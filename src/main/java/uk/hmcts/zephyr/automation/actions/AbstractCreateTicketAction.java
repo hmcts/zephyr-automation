@@ -3,16 +3,15 @@ package uk.hmcts.zephyr.automation.actions;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import uk.hmcts.zephyr.automation.Config;
-import uk.hmcts.zephyr.automation.jira.JiraConstants;
+import uk.hmcts.zephyr.automation.TagService;
+import uk.hmcts.zephyr.automation.jira.JiraConfig;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssue;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueFieldsWrapper;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueLink;
-import uk.hmcts.zephyr.automation.TagService;
 import uk.hmcts.zephyr.automation.zephyr.ZephyrConstants;
 
 import java.util.Optional;
 
-import static uk.hmcts.zephyr.automation.Config.JIRA;
 
 @Getter
 @Slf4j
@@ -20,30 +19,23 @@ public abstract class AbstractCreateTicketAction<T extends ZephyrTest>
     extends AbstractAction<T>
     implements CreateTicketAction {
 
-    protected AbstractCreateTicketAction(String[] args, TagService<T> tagService) {
+    protected AbstractCreateTicketAction(TagService<T> tagService) {
         super(tagService);
-        validateArgs(args);
+        validateConfig();
     }
 
-    private void validateArgs(String[] args) {
-        for (String arg : args) {
-            if (arg.startsWith("github-repo-base-src-dir=")) {
-                Config.githubRepoBaseSrcDir = arg.substring("github-repo-base-src-dir=".length());
-            } else if (arg.startsWith("report-path=")) {
-                Config.reportPath = arg.substring("report-path=".length());
-            }
-        }
-        if (Config.githubRepoBaseSrcDir == null) {
+    private void validateConfig() {
+        if (Config.getGithubRepoBaseSrcDir() == null) {
             throw new IllegalArgumentException(
                 "For CREATE_TICKETS action type, github-repo-base-src-dir must be specified as a command line "
                     + "argument");
         }
-        if (Config.basePath == null) {
+        if (Config.getBasePath() == null) {
             throw new IllegalArgumentException(
                 "For CREATE_TICKETS action type, base-path must be specified as a command line "
                     + "argument");
         }
-        if (Config.reportPath == null) {
+        if (Config.getReportPath() == null) {
             throw new IllegalArgumentException(
                 "For CREATE_EXECUTION action type, report-path must be specified as a command line "
                     + "argument");
@@ -60,24 +52,24 @@ public abstract class AbstractCreateTicketAction<T extends ZephyrTest>
 
         JiraIssueFieldsWrapper body = JiraIssueFieldsWrapper.builder()
             .fields(JiraIssueFieldsWrapper.Fields.builder()
-                .project(JiraIssueFieldsWrapper.Project.builder().id(JiraConstants.PROJECT_ID).build())
+                .project(JiraIssueFieldsWrapper.Project.builder().id(JiraConfig.getProjectId()).build())
                 .summary(test.getName())
                 .description(getJiraDescription(test))
                 .issuetype(JiraIssueFieldsWrapper.IssueType.builder().id(ZephyrConstants.ZEPHYR_ISSUE_TYPE_ID).build())
-                .reporter(JiraIssueFieldsWrapper.Reporter.builder().name(JiraConstants.DEFAULT_USER).build())
+                .reporter(JiraIssueFieldsWrapper.Reporter.builder().name(JiraConfig.getDefaultUser()).build())
                 .build())
             .build();
 
         //Add Epic link if there is one
-        getTagService().extractTagWithPrefix(test, JiraConstants.JIRA_EPIC_TAG_PREFIX)
+        getTagService().extractTagWithPrefix(test, JiraConfig.JIRA_EPIC_TAG_PREFIX)
             .ifPresent(s -> body.getFields().setEpicLink(s));
 
         //Add components if there are any
         body.getFields().setComponents(
-            getTagService().extractTagListWithPrefix(test, JiraConstants.JIRA_COMPONENT_TAG_PREFIX)
+            getTagService().extractTagListWithPrefix(test, JiraConfig.JIRA_COMPONENT_TAG_PREFIX)
                 .stream()
                 .map(s -> {
-                    String componentId = JIRA.getComponentByName(JiraConstants.PROJECT_ID, s).getId();
+                    String componentId = Config.getJira().getComponentByName(JiraConfig.getProjectId(), s).getId();
                     return (JiraIssueFieldsWrapper.Component) JiraIssueFieldsWrapper.Component.builder()
                         .id(componentId)
                         .build();
@@ -85,25 +77,25 @@ public abstract class AbstractCreateTicketAction<T extends ZephyrTest>
                 .toList());
         //Add labels if there are any
         body.getFields()
-            .setLabels(getTagService().extractTagListWithPrefix(test, JiraConstants.JIRA_LABEL_TAG_PREFIX));
+            .setLabels(getTagService().extractTagListWithPrefix(test, JiraConfig.JIRA_LABEL_TAG_PREFIX));
 
         //Create the issue
-        JiraIssue jiraIssue = JIRA.createIssue(body);
+        JiraIssue jiraIssue = Config.getJira().createIssue(body);
         addLinksToJiraIssue(jiraIssue, test);
-        getTagService().addTag(test, JiraConstants.JIRA_KEY_TAG_PREFIX + jiraIssue.getKey());
+        getTagService().addTag(test, JiraConfig.JIRA_KEY_TAG_PREFIX + jiraIssue.getKey());
         return Optional.of(jiraIssue);
     }
 
     private void addLinksToJiraIssue(JiraIssue jiraIssue, T test) {
-        addLinksToJiraIssue(jiraIssue, test, JiraConstants.JIRA_NFR_TAG_PREFIX, "Contributes");
-        addLinksToJiraIssue(jiraIssue, test, JiraConstants.JIRA_LINK_TAG_PREFIX, "Relates");
-        addLinksToJiraIssue(jiraIssue, test, JiraConstants.JIRA_STORY_TAG_PREFIX, "Relates");
-        addLinksToJiraIssue(jiraIssue, test, JiraConstants.JIRA_DEFECT_TAG_PREFIX, "Relates");
+        addLinksToJiraIssue(jiraIssue, test, JiraConfig.JIRA_NFR_TAG_PREFIX, "Contributes");
+        addLinksToJiraIssue(jiraIssue, test, JiraConfig.JIRA_LINK_TAG_PREFIX, "Relates");
+        addLinksToJiraIssue(jiraIssue, test, JiraConfig.JIRA_STORY_TAG_PREFIX, "Relates");
+        addLinksToJiraIssue(jiraIssue, test, JiraConfig.JIRA_DEFECT_TAG_PREFIX, "Relates");
     }
 
     private void addLinksToJiraIssue(JiraIssue jiraIssue, T test, String tagPrefix, String linkType) {
         getTagService().extractTagListWithPrefix(test, tagPrefix)
-            .forEach(key -> JIRA.linkIssue(createIssueLink(jiraIssue.getKey(), key, linkType)));
+            .forEach(key -> Config.getJira().linkIssue(createIssueLink(jiraIssue.getKey(), key, linkType)));
     }
 
     public JiraIssueLink createIssueLink(String sourceIssueKey, String destinationIssueKey, String linkType) {

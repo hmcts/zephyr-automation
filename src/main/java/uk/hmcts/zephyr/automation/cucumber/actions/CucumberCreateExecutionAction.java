@@ -14,8 +14,8 @@ public class CucumberCreateExecutionAction
     extends AbstractCreateExecutionAction<Element>
     implements CucumberAction {
 
-    public CucumberCreateExecutionAction(String[] args) {
-        super(args, new CucumberTagService());
+    public CucumberCreateExecutionAction() {
+        super(new CucumberTagService());
     }
 
     @Override

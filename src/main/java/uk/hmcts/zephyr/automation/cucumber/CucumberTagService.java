@@ -15,7 +15,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
-import static uk.hmcts.zephyr.automation.jira.JiraConstants.JIRA_KEY_TAG_PREFIX;
+import static uk.hmcts.zephyr.automation.jira.JiraConfig.JIRA_KEY_TAG_PREFIX;
 
 @Slf4j
 public class CucumberTagService implements TagService<Element> {
@@ -145,7 +145,7 @@ public class CucumberTagService implements TagService<Element> {
         String prefix = "classpath:";
         if (uri.startsWith(prefix)) {
             String relativePath = uri.substring(prefix.length());
-            String base = Config.basePath + "/resources/";
+            String base = Config.getBasePath() + "/resources/";
             return base + relativePath;
         }
         throw new RuntimeException("Unsupported URI format: " + uri);

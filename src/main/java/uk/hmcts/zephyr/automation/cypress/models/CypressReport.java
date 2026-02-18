@@ -74,7 +74,7 @@ public class CypressReport {
 
         @Override
         public String getGitHubLink() {
-            return Config.githubRepoBaseSrcDir + "/" + file;
+            return Config.getGithubRepoBaseSrcDir() + "/" + file;
         }
 
         @Override

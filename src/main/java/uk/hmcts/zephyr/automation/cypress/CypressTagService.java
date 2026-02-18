@@ -4,15 +4,11 @@ import lombok.extern.slf4j.Slf4j;
 import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.TagService;
 import uk.hmcts.zephyr.automation.cypress.models.CypressReport;
-import uk.hmcts.zephyr.util.FileUtil;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import static uk.hmcts.zephyr.automation.jira.JiraConstants.JIRA_KEY_TAG_PREFIX;
+import static uk.hmcts.zephyr.automation.jira.JiraConfig.JIRA_KEY_TAG_PREFIX;
 
 @Slf4j
 public class CypressTagService implements TagService<CypressReport.CypressTest> {
@@ -42,7 +38,7 @@ public class CypressTagService implements TagService<CypressReport.CypressTest> 
             log.info("Test '{}' already has tag '{}', skipping addition.", test.getLocationDisplayName(), tagName);
             return;
         }
-        String fileLocation = Config.basePath + "/" + test.getFile();
+        String fileLocation = Config.getBasePath() + "/" + test.getFile();
         // Use hardcoded file path for now (update as needed)
         log.info("Added tag '{}' to test '{}' in file '{}'", tagName, test.getLocationDisplayName(), fileLocation);
 
