@@ -3,7 +3,7 @@ package uk.hmcts.zephyr.automation.cucumber.actions;
 import com.fasterxml.jackson.core.type.TypeReference;
 import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.cucumber.models.Feature;
-import uk.hmcts.zephyr.util.FileUtil;
+import uk.hmcts.zephyr.automation.util.FileUtil;
 
 import java.util.List;
 import java.util.Objects;

@@ -6,7 +6,7 @@ import uk.hmcts.zephyr.automation.actions.AbstractCreateTicketAction;
 import uk.hmcts.zephyr.automation.cucumber.CucumberTagService;
 import uk.hmcts.zephyr.automation.cucumber.models.Element;
 import uk.hmcts.zephyr.automation.cucumber.models.Feature;
-import uk.hmcts.zephyr.util.FileUtil;
+import uk.hmcts.zephyr.automation.util.FileUtil;
 
 import java.util.List;
 

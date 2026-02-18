@@ -1,4 +1,4 @@
-package uk.hmcts.zephyr.util;
+package uk.hmcts.zephyr.automation.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.SneakyThrows;

@@ -5,7 +5,7 @@ import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.actions.AbstractCreateTicketAction;
 import uk.hmcts.zephyr.automation.cypress.CypressTagService;
 import uk.hmcts.zephyr.automation.cypress.models.CypressReport;
-import uk.hmcts.zephyr.util.FileUtil;
+import uk.hmcts.zephyr.automation.util.FileUtil;
 
 @Slf4j
 public class CypressCreateTicketAction

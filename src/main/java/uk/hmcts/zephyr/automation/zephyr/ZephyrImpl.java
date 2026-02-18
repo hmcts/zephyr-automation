@@ -7,7 +7,6 @@ import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
 import lombok.extern.slf4j.Slf4j;
-import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.zephyr.client.Zephyr;
 import uk.hmcts.zephyr.automation.zephyr.client.ZephyrClient;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrCycle;
@@ -15,7 +14,7 @@ import uk.hmcts.zephyr.automation.zephyr.models.ZephyrCycleResponse;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionDetail;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionRequest;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionStatusUpdateRequest;
-import uk.hmcts.zephyr.util.Util;
+import uk.hmcts.zephyr.automation.util.Util;
 
 import java.util.Map;
 

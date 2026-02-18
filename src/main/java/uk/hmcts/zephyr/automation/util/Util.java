@@ -1,4 +1,4 @@
-package uk.hmcts.zephyr.util;
+package uk.hmcts.zephyr.automation.util;
 
 import lombok.SneakyThrows;
 import uk.hmcts.zephyr.automation.Config;

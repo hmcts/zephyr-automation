@@ -1,4 +1,4 @@
-package uk.hmcts.zephyr.util;
+package uk.hmcts.zephyr.automation.util;
 
 import lombok.extern.slf4j.Slf4j;
 import uk.hmcts.zephyr.automation.cypress.models.CypressReport;

@@ -7,7 +7,6 @@ import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
 import lombok.extern.slf4j.Slf4j;
-import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.jira.client.Jira;
 import uk.hmcts.zephyr.automation.jira.client.JiraClient;
 import uk.hmcts.zephyr.automation.jira.models.JiraComponent;
@@ -16,7 +15,7 @@ import uk.hmcts.zephyr.automation.jira.models.JiraIssueFieldsWrapper;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueLink;
 import uk.hmcts.zephyr.automation.jira.models.JiraSearchRequest;
 import uk.hmcts.zephyr.automation.jira.models.JiraSearchResponse;
-import uk.hmcts.zephyr.util.Util;
+import uk.hmcts.zephyr.automation.util.Util;
 
 import java.util.HashMap;
 import java.util.List;

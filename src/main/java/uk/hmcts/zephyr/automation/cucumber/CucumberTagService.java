@@ -8,7 +8,7 @@ import uk.hmcts.zephyr.automation.cucumber.models.Location;
 import uk.hmcts.zephyr.automation.cucumber.models.Step;
 import uk.hmcts.zephyr.automation.cucumber.models.Tag;
 import uk.hmcts.zephyr.automation.TagService;
-import uk.hmcts.zephyr.util.FileUtil;
+import uk.hmcts.zephyr.automation.util.FileUtil;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
