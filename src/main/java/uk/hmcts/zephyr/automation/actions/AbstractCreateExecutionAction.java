@@ -9,11 +9,14 @@ import uk.hmcts.zephyr.automation.TagService;
 import uk.hmcts.zephyr.automation.jira.JiraConfig;
 import uk.hmcts.zephyr.automation.jira.models.JiraSearchRequest;
 import uk.hmcts.zephyr.automation.jira.models.JiraSearchResponse;
+import uk.hmcts.zephyr.automation.util.Util;
 import uk.hmcts.zephyr.automation.zephyr.ZephyrConstants;
+import uk.hmcts.zephyr.automation.zephyr.models.JobProgressToken;
+import uk.hmcts.zephyr.automation.zephyr.models.ZephyrBulkExecutionRequest;
+import uk.hmcts.zephyr.automation.zephyr.models.ZephyrBulkExecutionResponse;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrCycle;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrCycleResponse;
-import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionDetail;
-import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionRequest;
+import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionSearchResponse;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionStatusUpdateRequest;
 
 import java.time.OffsetDateTime;
@@ -50,6 +53,10 @@ public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
         for (T test : tests) {
             getScenarioResultFromTest(test).ifPresent(scenarioResults::add);
         }
+        if (scenarioResults.isEmpty()) {
+            log.info("No scenario results found");
+            return;
+        }
         assignJiraIds(scenarioResults);
         ZephyrCycleResponse cycle = Config.getZephyr().createCycle(
             ZephyrCycle.builder()
@@ -84,24 +91,72 @@ public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
     }
 
     private void assignExecutionDetails(List<ScenarioResult> scenarioResults, String cycleId) {
+
+        List<String> jiraKeys = scenarioResults.stream()
+            .map(ScenarioResult::getIssueKey)
+            .toList();
+
+        //Bulk link test to the cycle to minimize API
+        ZephyrBulkExecutionRequest bulkExecutionRequest = ZephyrBulkExecutionRequest.builder()
+            .cycleId(cycleId)
+            .issues(jiraKeys)
+            .method("1")
+            .projectId(JiraConfig.getProjectId())
+            .build();
+
+        JobProgressToken jobProgressToken = Config.getZephyr().addTestsToCycle(bulkExecutionRequest);
+
+        //Poll Zephyr for job progress and wait until executions are created before proceeding to update execution
+        // details
+        ZephyrBulkExecutionResponse jobProgressResponse;
+        long startTime = System.currentTimeMillis();
+        boolean firstPoll = true;
+        log.info("Polling Zephyr for job progress of adding tests to cycle. Job progress token: {}", jobProgressToken);
+        do {
+            jobProgressResponse =
+                Config.getZephyr().getAddTestsToCycleJobProgress(jobProgressToken.getJobProgressToken());
+
+            if (firstPoll) {
+                firstPoll = false;
+            } else {
+                log.info("Waiting for Zephyr job to complete. Job progress response: {}",
+                    Util.writeObjectToString(jobProgressResponse));
+                try {
+                    //Wait before polling to avoid hitting rate limits and give Zephyr some time to process the request
+                    Thread.sleep(Config.DEFAULT_WAIT_TIME);
+                } catch (InterruptedException e) {
+                    log.error("Thread interrupted while waiting for Zephyr job to complete", e);
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
+
+        } while (!jobProgressResponse.isCompleted() && !jobProgressResponse.isFailed()
+            && (System.currentTimeMillis() - startTime) < Config.DEFAULT_TIMEOUT);
+
+        if (!jobProgressResponse.isCompleted()) {
+            log.error("Zephyr job did not complete within the expected time. Job progress response: {}",
+                jobProgressResponse);
+            throw new RuntimeException("Zephyr job did not complete within the expected time.");
+        }
+
+        log.info("Mapping Zephyr executions to scenario results. Job progress response: {}", jobProgressResponse);
+        //Fetch all executions for the cycle and map them by issue key to assign execution details to scenario results
+        ZephyrExecutionSearchResponse executionSearchResponse = Config.getZephyr().searchExecutions(cycleId);
+
+        Map<String, ZephyrExecutionSearchResponse.Execution> issueKeyToExecutionMap =
+            executionSearchResponse.getExecutions()
+                .stream()
+                .collect(Collectors.toMap(ZephyrExecutionSearchResponse.Execution::getIssueKey, e -> e));
+
         for (ScenarioResult scenarioResult : scenarioResults) {
-            if (scenarioResult.getIssueId() == null) {
-                log.warn("Skipping execution creation for scenario with issue key: {} as Jira issue ID is missing",
-                    scenarioResult.getIssueKey());
+            ZephyrExecutionSearchResponse.Execution execution =
+                issueKeyToExecutionMap.get(scenarioResult.getIssueKey());
+            if (execution == null) {
+                log.warn("Could not find execution in Zephyr for issue key: {}", scenarioResult.getIssueKey());
                 continue;
             }
-            ZephyrExecutionRequest executionRequest = ZephyrExecutionRequest.builder()
-                .cycleId(cycleId)
-                .issueId(scenarioResult.getIssueId())
-                .projectId(JiraConfig.getProjectId())
-                .versionId("-1") //Default to -1 for no version
-                .assigneeType("assignee")
-                .assignee(JiraConfig.getDefaultUser())
-                .build();
-            Map<String, ZephyrExecutionDetail> executionDetailMap =
-                Config.getZephyr().createExecution(executionRequest);
-            ZephyrExecutionDetail executionDetail = executionDetailMap.entrySet().stream().findFirst().get().getValue();
-            scenarioResult.setExecutionDetail(executionDetail);
+            scenarioResult.setExecutionDetail(execution);
         }
     }
 
@@ -110,7 +165,6 @@ public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
         List<String> issueKeys = scenarioResults.stream()
             .map(ScenarioResult::getIssueKey)
             .toList();
-
         JiraSearchResponse searchResponse = Config.getJira().searchIssues(
             JiraSearchRequest.builder()
                 .jql("key in (" + String.join(",", issueKeys) + ")")
@@ -139,8 +193,9 @@ public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
     static class ScenarioResult {
         private final String issueKey;
         private final ZephyrConstants.ExecutionStatus status;
-        private String issueId; //To be populated after fetching from Jira
-        private ZephyrExecutionDetail executionDetail;//To be populated after creating execution in Zephyr
+        //The below will be populated after creating execution in Zephyr
+        private String issueId;
+        private ZephyrExecutionSearchResponse.Execution executionDetail;
 
     }
 

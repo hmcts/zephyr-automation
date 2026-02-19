@@ -7,6 +7,7 @@ import uk.hmcts.zephyr.automation.jira.models.JiraIssueFieldsWrapper;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueLink;
 import uk.hmcts.zephyr.automation.zephyr.ZephyrConstants;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,7 +44,8 @@ public abstract class AbstractTicketAction<T extends ZephyrTest> extends Abstrac
 
     protected void addLinksToJiraIssue(String sourceIssueKey, T test, String tagPrefix, String linkType) {
         getTagService().extractTagListWithPrefix(test, tagPrefix)
-            .forEach(destinationIssueKey -> Config.getJira().linkIssue(createIssueLink(sourceIssueKey, destinationIssueKey, linkType)));
+            .forEach(destinationIssueKey -> Config.getJira()
+                .linkIssue(createIssueLink(sourceIssueKey, destinationIssueKey, linkType)));
     }
 
     protected JiraIssueLink createIssueLink(String sourceIssueKey, String destinationIssueKey, String linkType) {
@@ -69,7 +71,10 @@ public abstract class AbstractTicketAction<T extends ZephyrTest> extends Abstrac
     }
 
     protected List<JiraIssueFieldsWrapper.Component> getComponents(T test) {
-        return getTagService().extractTagListWithPrefix(test, JiraConfig.JIRA_COMPONENT_TAG_PREFIX)
+        List<String> componentsNames = new ArrayList<>(JiraConfig.getDefaultComponents());
+        componentsNames.addAll(getTagService().extractTagListWithPrefix(test, JiraConfig.JIRA_COMPONENT_TAG_PREFIX));
+
+        return componentsNames
             .stream()
             .map(s -> {
                 String componentId = Config.getJira().getComponentByName(JiraConfig.getProjectId(), s).getId();

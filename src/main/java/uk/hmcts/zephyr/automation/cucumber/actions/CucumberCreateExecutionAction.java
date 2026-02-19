@@ -30,6 +30,8 @@ public class CucumberCreateExecutionAction
         for (Feature feature : features) {
             tests.addAll(feature.getElements());
         }
-        processTests(tests);
+        processTests(tests.stream()
+            .filter(getElementFilter())
+            .toList());
     }
 }

@@ -1,7 +1,6 @@
 package uk.hmcts.zephyr.automation.cucumber.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -65,7 +64,7 @@ public class Element implements ZephyrTest {
 
     @Override
     public String getNameAndLocation() {
-        return getName() + " (line " + getLine() + " in feature " + feature.getName() + ")";
+        return getName() + " (line " + getLine() + " in feature " + feature.getUri() + ")";
     }
 
     @Override

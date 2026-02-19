@@ -6,6 +6,7 @@ import feign.Logger;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import uk.hmcts.zephyr.automation.jira.client.Jira;
 import uk.hmcts.zephyr.automation.jira.client.JiraClient;
@@ -68,11 +69,13 @@ public class JiraImpl implements Jira {
     }
 
     @Override
+    @SneakyThrows
     public JiraSearchResponse searchIssues(JiraSearchRequest searchRequest) {
         return jiraClient.searchIssues(searchRequest);
     }
 
     @Override
+    @SneakyThrows
     public JiraIssue updateIssue(JiraIssueFieldsWrapper body, String issueId) {
         return jiraClient.updateIssue(body, issueId);
     }

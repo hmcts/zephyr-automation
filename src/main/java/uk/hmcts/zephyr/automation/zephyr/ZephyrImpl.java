@@ -9,10 +9,14 @@ import feign.slf4j.Slf4jLogger;
 import lombok.extern.slf4j.Slf4j;
 import uk.hmcts.zephyr.automation.zephyr.client.Zephyr;
 import uk.hmcts.zephyr.automation.zephyr.client.ZephyrClient;
+import uk.hmcts.zephyr.automation.zephyr.models.JobProgressToken;
+import uk.hmcts.zephyr.automation.zephyr.models.ZephyrBulkExecutionRequest;
+import uk.hmcts.zephyr.automation.zephyr.models.ZephyrBulkExecutionResponse;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrCycle;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrCycleResponse;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionDetail;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionRequest;
+import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionSearchResponse;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionStatusUpdateRequest;
 import uk.hmcts.zephyr.automation.util.Util;
 
@@ -56,6 +60,22 @@ public class ZephyrImpl implements Zephyr {
         log.info("Executing Zephyr Update Executions status Request: {}",
             Util.writeObjectToString(statusUpdateRequest));
         zephyrClient.updateExecutionStatus(statusUpdateRequest);
+    }
+
+    //Passthrough
+    @Override
+    public JobProgressToken addTestsToCycle(ZephyrBulkExecutionRequest bulkExecutionRequest) {
+        return zephyrClient.addTestsToCycle(bulkExecutionRequest);
+    }
+
+    @Override
+    public ZephyrBulkExecutionResponse getAddTestsToCycleJobProgress(String jobProgressToken) {
+        return zephyrClient.getAddTestsToCycleJobProgress(jobProgressToken);
+    }
+
+    @Override
+    public ZephyrExecutionSearchResponse searchExecutions(String cycleId) {
+        return zephyrClient.searchExecutions(cycleId);
     }
 
 }

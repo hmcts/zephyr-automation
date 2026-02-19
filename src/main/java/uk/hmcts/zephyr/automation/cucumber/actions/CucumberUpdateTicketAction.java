@@ -30,8 +30,8 @@ public class CucumberUpdateTicketAction
         if (feature.getElements() == null) {
             return;
         }
-        for (Element scenario : feature.getElements()) {
-            updateJiraIssue(scenario);
-        }
+        feature.getElements().stream()
+            .filter(getElementFilter())
+            .forEach(this::updateJiraIssue);
     }
 }

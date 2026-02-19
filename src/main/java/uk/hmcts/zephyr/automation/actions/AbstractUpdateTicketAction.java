@@ -21,21 +21,25 @@ public abstract class AbstractUpdateTicketAction<T extends ZephyrTest>
 
 
     protected void updateJiraIssue(T test) {
-        Optional<String> jiraKeyOpt = getTagService().extractJiraKeyFromTag(test);
-        if (jiraKeyOpt.isEmpty()) {
-            log.warn("No Jira key found for test {}", test);
-            return;
+        try {
+            Optional<String> jiraKeyOpt = getTagService().extractJiraKeyFromTag(test);
+            if (jiraKeyOpt.isEmpty()) {
+                log.warn("No Jira key found for test {}", test);
+                return;
+            }
+            String jiraKey = jiraKeyOpt.get();
+            log.info("Updating Jira key {}", jiraKey);
+
+            JiraIssueFieldsWrapper body = buildBody(test, false);
+
+            //Update the issue
+            Config.getJira().updateIssue(body, jiraKey);
+            //Add any missing links to the issue.
+            //This does not remove any existing links, so if links are removed from the test, they will need to be
+            //removed manually from the Jira issue.
+            addLinksToJiraIssue(jiraKey, test);
+        } catch (Exception e) {
+            log.error("Error updating JIRA issue for test in {}", test.getNameAndLocation(), e);
         }
-        String jiraKey = jiraKeyOpt.get();
-        log.info("Updating Jira key {}", jiraKey);
-
-        JiraIssueFieldsWrapper body = buildBody(test, false);
-
-        //Update the issue
-        Config.getJira().updateIssue(body, jiraKey);
-        //Add any missing links to the issue.
-        //This does not remove any existing links, so if links are removed from the test, they will need to be
-        //removed manually from the Jira issue.
-        addLinksToJiraIssue(jiraKey, test);
     }
 }

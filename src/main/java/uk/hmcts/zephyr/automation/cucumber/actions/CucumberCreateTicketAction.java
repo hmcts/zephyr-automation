@@ -33,8 +33,8 @@ public class CucumberCreateTicketAction
         if (feature.getElements() == null) {
             return;
         }
-        for (Element scenario : feature.getElements()) {
-            createJiraIssue(scenario);
-        }
+        feature.getElements().stream()
+            .filter(getElementFilter())
+            .forEach(this::createJiraIssue);
     }
 }

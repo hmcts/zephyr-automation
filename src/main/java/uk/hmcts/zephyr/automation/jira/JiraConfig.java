@@ -2,12 +2,17 @@ package uk.hmcts.zephyr.automation.jira;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 @Slf4j
 public class JiraConfig {
 
     private static JiraConfig INSTANCE;
     public static final String JIRA_KEY_TAG_PREFIX = "JIRA-KEY:";
-    public static final String JIRA_COMPONENT_TAG_PREFIX = "JIRA-Component:";
+    public static final String JIRA_COMPONENT_TAG_PREFIX = "JIRA-COMPONENT:";
     public static final String JIRA_LABEL_TAG_PREFIX = "JIRA-Label:";
     public static final String JIRA_EPIC_TAG_PREFIX = "JIRA-EPIC:";
     public static final String JIRA_NFR_TAG_PREFIX = "JIRA-NFR:";
@@ -20,6 +25,7 @@ public class JiraConfig {
     private final String defaultUser;
     private final String authToken;
     private final String epicLinkCustomFieldId;
+    private final List<String> defaultComponents;
 
     public static void instantiate(String[] args) {
         if (INSTANCE != null) {
@@ -34,6 +40,7 @@ public class JiraConfig {
         String defaultUser = null;
         String authToken = null;
         String epicLinkCustomFieldId = null;
+        List<String> defaultComponents = new ArrayList<>();
 
         for (String arg : args) {
             if (arg.startsWith("jira-base-url=")) {
@@ -46,6 +53,12 @@ public class JiraConfig {
                 authToken = arg.substring("jira-auth-token=".length());
             } else if (arg.startsWith("jira-epic-link-custom-field-id=")) {
                 epicLinkCustomFieldId = arg.substring("jira-epic-link-custom-field-id=".length());
+            } else if (arg.startsWith("jira-default-components=")) {
+                String componentsStr = arg.substring("jira-default-components=".length());
+                String[] components = componentsStr.split(",");
+                Arrays.stream(components)
+                    .map(String::trim)
+                    .forEach(defaultComponents::add);
             }
         }
 
@@ -59,6 +72,7 @@ public class JiraConfig {
         this.defaultUser = defaultUser;
         this.authToken = authToken;
         this.epicLinkCustomFieldId = epicLinkCustomFieldId;
+        this.defaultComponents = Collections.unmodifiableList(defaultComponents);
     }
 
 
@@ -80,5 +94,9 @@ public class JiraConfig {
 
     public static String getEpicLinkCustomFieldId() {
         return INSTANCE.epicLinkCustomFieldId;
+    }
+
+    public static List<String> getDefaultComponents() {
+        return INSTANCE.defaultComponents;
     }
 }
