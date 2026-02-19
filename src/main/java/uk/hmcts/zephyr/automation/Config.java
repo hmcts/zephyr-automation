@@ -8,8 +8,10 @@ import lombok.extern.slf4j.Slf4j;
 import uk.hmcts.zephyr.automation.actions.Action;
 import uk.hmcts.zephyr.automation.cucumber.actions.CucumberCreateExecutionAction;
 import uk.hmcts.zephyr.automation.cucumber.actions.CucumberCreateTicketAction;
+import uk.hmcts.zephyr.automation.cucumber.actions.CucumberUpdateTicketAction;
 import uk.hmcts.zephyr.automation.cypress.actions.CypressCreateExecutionAction;
 import uk.hmcts.zephyr.automation.cypress.actions.CypressCreateTicketAction;
+import uk.hmcts.zephyr.automation.cypress.actions.CypressUpdateTicketAction;
 import uk.hmcts.zephyr.automation.jira.JiraConfig;
 import uk.hmcts.zephyr.automation.jira.JiraImpl;
 import uk.hmcts.zephyr.automation.jira.client.Jira;
@@ -77,7 +79,7 @@ public class Config {
         this.objectMapper = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        this.jira = new JiraImpl(objectMapper,JiraConfig.getBaseUrl(), JiraConfig.getAuthToken());
+        this.jira = new JiraImpl(objectMapper, JiraConfig.getBaseUrl(), JiraConfig.getAuthToken());
         this.zephyr = new ZephyrImpl(objectMapper, ZephyrConstants.BASE_URL, JiraConfig.getAuthToken());
     }
 
@@ -113,18 +115,9 @@ public class Config {
         return INSTANCE.objectMapper;
     }
 
-    public static void printConfig() {
-        log.info("Current configuration:");
-        log.info("Action Type: {}", getActionType());
-        log.info("Process Type: {}", getProcessType());
-        log.info("Base Path: {}", getBasePath());
-        log.info("Report Path: {}", getReportPath());
-        log.info("GitHub Repo Base Src Dir: {}", getGithubRepoBaseSrcDir());
-        JiraConfig.printConfig();
-    }
-
     public enum ActionType {
         CREATE_TICKETS,
+        UPDATE_TICKETS,
         CREATE_EXECUTION
     }
 
@@ -132,10 +125,12 @@ public class Config {
     public enum ProcessType {
         CUCUMBER_JSON_REPORT(Map.of(
             ActionType.CREATE_TICKETS, CucumberCreateTicketAction::new,
+            ActionType.UPDATE_TICKETS, CucumberUpdateTicketAction::new,
             ActionType.CREATE_EXECUTION, CucumberCreateExecutionAction::new
         )),
         CYPRESS_JSON_REPORT(Map.of(
             ActionType.CREATE_TICKETS, CypressCreateTicketAction::new,
+            ActionType.UPDATE_TICKETS, CypressUpdateTicketAction::new,
             ActionType.CREATE_EXECUTION, CypressCreateExecutionAction::new
         ));
 

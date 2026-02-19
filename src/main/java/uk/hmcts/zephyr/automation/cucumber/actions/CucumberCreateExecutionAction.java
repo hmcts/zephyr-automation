@@ -28,9 +28,7 @@ public class CucumberCreateExecutionAction
         }
         List<Element> tests = new ArrayList<>();
         for (Feature feature : features) {
-            for (Element element : feature.getElements()) {
-                tests.add(element);
-            }
+            tests.addAll(feature.getElements());
         }
         processTests(tests);
     }

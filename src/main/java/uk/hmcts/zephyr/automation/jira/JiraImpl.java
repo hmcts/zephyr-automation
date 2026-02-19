@@ -15,7 +15,6 @@ import uk.hmcts.zephyr.automation.jira.models.JiraIssueFieldsWrapper;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueLink;
 import uk.hmcts.zephyr.automation.jira.models.JiraSearchRequest;
 import uk.hmcts.zephyr.automation.jira.models.JiraSearchResponse;
-import uk.hmcts.zephyr.automation.util.Util;
 
 import java.util.HashMap;
 import java.util.List;
@@ -60,10 +59,7 @@ public class JiraImpl implements Jira {
     //Passthrough methods
     @Override
     public JiraIssue createIssue(JiraIssueFieldsWrapper issue) {
-        log.info("Creating Jira Issue: {}", Util.writeObjectToString(issue));
-        JiraIssue jiraIssue = jiraClient.createIssue(issue);
-        log.info("Created Jira Issue with ID: {}", Util.writeObjectToString(jiraIssue));
-        return jiraIssue;
+        return jiraClient.createIssue(issue);
     }
 
     @Override
@@ -74,5 +70,10 @@ public class JiraImpl implements Jira {
     @Override
     public JiraSearchResponse searchIssues(JiraSearchRequest searchRequest) {
         return jiraClient.searchIssues(searchRequest);
+    }
+
+    @Override
+    public JiraIssue updateIssue(JiraIssueFieldsWrapper body, String issueId) {
+        return jiraClient.updateIssue(body, issueId);
     }
 }

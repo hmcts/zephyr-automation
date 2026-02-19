@@ -2,6 +2,8 @@ package uk.hmcts.zephyr.automation.jira.models;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.experimental.SuperBuilder;
 import uk.hmcts.zephyr.automation.jira.JiraConfig;
@@ -17,6 +19,7 @@ public class JiraIssueFieldsWrapper {
 
     @Data
     @SuperBuilder
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class Fields {
         private Project project;
         private String summary;
@@ -41,24 +44,28 @@ public class JiraIssueFieldsWrapper {
 
     @Data
     @SuperBuilder
+    @AllArgsConstructor
     public static class Project {
         private String id;
     }
 
     @Data
     @SuperBuilder
+    @AllArgsConstructor
     public static class IssueType {
         private String id;
     }
 
     @Data
     @SuperBuilder
+    @AllArgsConstructor
     public static class Component {
         private String id;
     }
 
     @Data
     @SuperBuilder
+    @AllArgsConstructor
     public static class Reporter {
         private String name;
     }

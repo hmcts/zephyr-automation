@@ -25,4 +25,6 @@ public interface JiraClient {
     @RequestLine("POST /search")
     JiraSearchResponse searchIssues(JiraSearchRequest searchRequest);
 
+    @RequestLine("PUT /issue/{issueId}")
+    JiraIssue updateIssue(JiraIssueFieldsWrapper body, @Param("issueId") String issueId);
 }

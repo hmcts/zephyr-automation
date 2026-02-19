@@ -27,7 +27,7 @@ public class CucumberTagService implements TagService<Element> {
 
     @Override
     public Optional<String> extractJiraKeyFromTag(Element scenario) {
-        return extractTagWithPrefix(scenario, addTagPrefix(JIRA_KEY_TAG_PREFIX))
+        return extractTagWithPrefix(scenario,JIRA_KEY_TAG_PREFIX)
             .map(key -> key.replace(addTagPrefix(JIRA_KEY_TAG_PREFIX), ""));
     }
 

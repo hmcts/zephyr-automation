@@ -8,7 +8,6 @@ public class ZephyrAutomation {
 
     public static void main(String[] args) {
         Config.instantiate(args);
-        Config.printConfig();
         Config.getProcessType().processAction(Config.getActionType());
     }
 }

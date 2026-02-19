@@ -13,7 +13,7 @@ public class JiraConfig {
     public static final String JIRA_NFR_TAG_PREFIX = "JIRA-NFR:";
     public static final String JIRA_LINK_TAG_PREFIX = "JIRA-Link:";
     public static final String JIRA_STORY_TAG_PREFIX = "JIRA-Story:";
-    public static final String JIRA_DEFECT_TAG_PREFIX = "øJIRA-Defect:";
+    public static final String JIRA_DEFECT_TAG_PREFIX = "JIRA-Defect:";
 
     private final String baseUrl;
     private final String projectId;
@@ -80,13 +80,5 @@ public class JiraConfig {
 
     public static String getEpicLinkCustomFieldId() {
         return INSTANCE.epicLinkCustomFieldId;
-    }
-
-    public static void printConfig() {
-        log.info("Jira Base URL: " + getBaseUrl());
-        log.info("Jira Project ID: " + getProjectId());
-        log.info("Jira Default User: " + getDefaultUser());
-        log.info("Jira Epic Link Custom Field ID: " + getEpicLinkCustomFieldId());
-
     }
 }
