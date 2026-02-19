@@ -20,18 +20,10 @@ public class FileUtil {
     public static void writeToFile(String filePath, Object object) {
         Config.getObjectMapper().writerWithDefaultPrettyPrinter().writeValue(new File(filePath), object);
     }
-    @SneakyThrows
-    public static String readFileAsString(String filePath) {
-        return Config.getObjectMapper().readValue(new File(filePath), String.class);
-    }
+
 
     @SneakyThrows
     public static List<String> readFileAsLines(String filePath) {
         return Files.readAllLines(Paths.get(filePath));
-    }
-
-    @SneakyThrows
-    public static void saveLines(String filePath, List<String> lines) {
-        Files.write(Paths.get(filePath), lines);
     }
 }
