@@ -143,11 +143,8 @@ public class CucumberTagService implements TagService<Element> {
             throw new RuntimeException("Feature file path is null");
         }
         String prefix = "classpath:";
-        if (uri.startsWith(prefix)) {
-            String relativePath = uri.substring(prefix.length());
-            String base = Config.getBasePath() + "/resources/";
-            return base + relativePath;
-        }
-        throw new RuntimeException("Unsupported URI format: " + uri);
+        String relativePath = uri.startsWith(prefix) ? uri.substring(prefix.length()) : uri;
+        String base = Config.getBasePath();
+        return base + "/" + relativePath;
     }
 }

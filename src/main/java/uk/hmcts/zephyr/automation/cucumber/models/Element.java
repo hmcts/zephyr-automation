@@ -52,22 +52,26 @@ public class Element implements ZephyrTest {
 
 
     @Override
+    @JsonIgnore
     public String getGitHubLink() {
         return feature.getUri().replace("classpath:",
             Config.getGithubRepoBaseSrcDir() + "/resources/") + "#L" + getLine();
     }
 
     @Override
+    @JsonIgnore
     public String getLocationDisplayName() {
         return getFeature().getName();
     }
 
     @Override
+    @JsonIgnore
     public String getNameAndLocation() {
         return getName() + " (line " + getLine() + " in feature " + feature.getUri() + ")";
     }
 
     @Override
+    @JsonIgnore
     public ZephyrConstants.ExecutionStatus getZephyrExecutionStatus() {
         //If all steps passed, mark as pass.
         if (getSteps().stream()
