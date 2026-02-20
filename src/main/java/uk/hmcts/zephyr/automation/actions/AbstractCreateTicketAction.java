@@ -28,6 +28,10 @@ public abstract class AbstractCreateTicketAction<T extends ZephyrTest>
                 log.info("Test in {} has JIRA key: {}", test.getNameAndLocation(), name.get());
                 return Optional.empty();
             }
+            if (getTagService().hasTag(test, JiraConfig.JIRA_IGNORE)) {
+                log.info("Test in {} is marked to ignore JIRA creation", test.getNameAndLocation());
+                return Optional.empty();
+            }
             log.info("Test in {} does not have JIRA key tag", test.getNameAndLocation());
 
             JiraIssueFieldsWrapper body = buildBody(test, true);

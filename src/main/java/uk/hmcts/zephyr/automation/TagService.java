@@ -11,4 +11,8 @@ public interface TagService<T> {
     List<String> extractTagListWithPrefix(T test, String prefix);
 
     void addTag(T test, String tagName);
+
+    default boolean hasTag(T test, String tagName) {
+        return extractTagWithPrefix(test, tagName).isPresent();
+    }
 }
