@@ -12,10 +12,15 @@ import static uk.hmcts.zephyr.automation.jira.JiraConfig.JIRA_KEY_TAG_PREFIX;
 
 @Slf4j
 public class CypressTagService implements TagService<CypressReport.CypressTest> {
+
+    private String addTagPrefix(String tagName) {
+        return "@" + tagName;
+    }
+
     @Override
     public Optional<String> extractJiraKeyFromTag(CypressReport.CypressTest test) {
         return extractTagWithPrefix(test, JIRA_KEY_TAG_PREFIX)
-            .map(key -> key.replace(JIRA_KEY_TAG_PREFIX, ""));
+            .map(key -> key.replace(addTagPrefix(JIRA_KEY_TAG_PREFIX), ""));
     }
 
     @Override
@@ -26,14 +31,15 @@ public class CypressTagService implements TagService<CypressReport.CypressTest> 
     @Override
     public List<String> extractTagListWithPrefix(CypressReport.CypressTest test, String prefix) {
         return test.getTags().stream()
-            .filter(tag -> tag.startsWith(prefix))
-            .map(tag -> tag.substring(prefix.length()))
+            .filter(tag -> tag.startsWith(addTagPrefix(prefix)))
+            .map(tag -> tag.substring(addTagPrefix(prefix).length()))
             .toList();
     }
 
 
     @Override
-    public void addTag(CypressReport.CypressTest test, String tagName) {
+    public void addTag(CypressReport.CypressTest test, String tagNameBase) {
+        String tagName = addTagPrefix(tagNameBase);
         if (test.hasTag(tagName)) {
             log.info("Test '{}' already has tag '{}', skipping addition.", test.getLocationDisplayName(), tagName);
             return;
