@@ -3,5 +3,76 @@
   "extends": [
     "local>hmcts/.github:renovate-config",
     "local>hmcts/.github//renovate/automerge-minor"
+  ],
+  "separateMajorMinor": false,
+  "packageRules": [
+    {
+      "description": "Keep Gradle plugins aligned",
+      "groupName": "Gradle plugins",
+      "matchManagers": ["gradle"],
+      "matchDepTypes": ["plugins"]
+    },
+    {
+      "description": "Java logging stack (HMCTS logging, Log4j, Logback)",
+      "groupName": "Logging stack",
+      "groupSlug": "logging",
+      "matchManagers": ["gradle"],
+      "matchPackagePatterns": [
+        "^com\\.github\\.hmcts\\.java-logging",
+        "^org\\.apache\\.logging\\.log4j",
+        "^ch\\.qos\\.logback"
+      ]
+    },
+    {
+      "description": "Jackson JSON libraries",
+      "groupName": "Jackson",
+      "groupSlug": "jackson",
+      "matchManagers": ["gradle"],
+      "matchPackagePatterns": [
+        "^com\\.fasterxml\\.jackson\\."
+      ]
+    },
+    {
+      "description": "Feign HTTP clients",
+      "groupName": "Feign clients",
+      "groupSlug": "feign",
+      "matchManagers": ["gradle"],
+      "matchPackagePatterns": [
+        "^io\\.github\\.openfeign:"
+      ]
+    },
+    {
+      "description": "JUnit/Mockito testing stack across all custom test source sets",
+      "groupName": "Testing stack",
+      "groupSlug": "testing",
+      "matchManagers": ["gradle"],
+      "matchPackagePatterns": [
+        "^org\\.junit",
+        "^org\\.mockito"
+      ],
+      "matchDepTypes": [
+        "testImplementation",
+        "testRuntimeOnly",
+        "integrationTestImplementation",
+        "integrationTestRuntimeOnly",
+        "functionalTestImplementation",
+        "functionalTestRuntimeOnly",
+        "smokeTestImplementation",
+        "smokeTestRuntimeOnly"
+      ]
+    },
+    {
+      "description": "Lombok compile-time tooling",
+      "groupName": "Lombok",
+      "groupSlug": "lombok",
+      "matchManagers": ["gradle"],
+      "matchPackageNames": [
+        "org.projectlombok:lombok"
+      ],
+      "matchDepTypes": [
+        "compileOnly",
+        "annotationProcessor"
+      ]
+    }
   ]
 }
