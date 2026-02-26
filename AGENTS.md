@@ -20,6 +20,7 @@ JUnit 5 backs unit, integration, and db tests, so mirror source packages and nam
 - You should not test lombok generated code such as getters/setters, builders, or constructors, unless they contain custom logic. Focus on testing your own code rather than third-party libraries.
 - When testing a class if a method has multiple tests it should be extracted to a nested class with a descriptive name. This helps to group related tests together and improve readability.
 - External dependencies should be mocked using Mockito to isolate the unit under test and ensure tests are fast and reliable. Avoid using real instances of external services, databases, or APIs in unit tests.
+- Any common test logic should be extracted into support package to avoid duplication and improve maintainability. This includes setup/teardown code, test data builders, and custom assertions.
 
 ## Code Review Guidance for Agents
 - Review format: `"[Severity]: <Rule>\nProblem: ...\nWhy: ...\nFix: ..."` so comments stay actionable.

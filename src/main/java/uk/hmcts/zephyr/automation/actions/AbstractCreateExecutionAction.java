@@ -47,7 +47,7 @@ public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
         }
     }
 
-    protected void processTests(List<T> tests) {
+    public void processTests(List<T> tests) {
 
         List<ScenarioResult> scenarioResults = new ArrayList<>();
         for (T test : tests) {

@@ -7,6 +7,8 @@ import uk.hmcts.zephyr.automation.cypress.CypressTagService;
 import uk.hmcts.zephyr.automation.cypress.models.CypressReport;
 import uk.hmcts.zephyr.automation.util.FileUtil;
 
+import java.util.List;
+
 @Slf4j
 public class CypressCreateTicketAction
     extends AbstractCreateTicketAction<CypressReport.CypressTest>
@@ -20,9 +22,13 @@ public class CypressCreateTicketAction
     public void process() {
         log.info("Starting Cypress Create Ticket Action");
         CypressReport report = getCypressReport();
-        report.getTests().forEach(this::createJiraIssue);
+        List<CypressReport.CypressTest> tests = report.getTests();
+
+        tests.forEach(this::createJiraIssue);
 
         // Write the updated features back to the file
-        FileUtil.writeToFile(Config.getReportPath(), report);
+        if (!tests.isEmpty()) {
+            FileUtil.writeToFile(Config.getReportPath(), report);
+        }
     }
 }

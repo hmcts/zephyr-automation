@@ -9,8 +9,8 @@ import uk.hmcts.zephyr.automation.jira.models.JiraIssueFieldsWrapper;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueLink;
 import uk.hmcts.zephyr.automation.jira.models.JiraSearchRequest;
 import uk.hmcts.zephyr.automation.jira.models.JiraSearchResponse;
+import uk.hmcts.zephyr.automation.support.TestUtil;
 
-import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 
@@ -123,16 +123,11 @@ class JiraImplTest {
 
     private JiraImpl createSubjectWithMock(JiraClient jiraClient) throws Exception {
         JiraImpl jira = new JiraImpl(new ObjectMapper(), "http://localhost", "Bearer token");
-        setField(jira, "jiraClient", jiraClient);
-        setField(jira, "componentsCacheMap", new HashMap<>());
+        TestUtil.setField(JiraImpl.class, jira, "jiraClient", jiraClient);
+        TestUtil.setField(JiraImpl.class, jira, "componentsCacheMap", new HashMap<>());
         return jira;
     }
 
-    private static void setField(Object target, String fieldName, Object value) throws Exception {
-        Field field = JiraImpl.class.getDeclaredField(fieldName);
-        field.setAccessible(true);
-        field.set(target, value);
-    }
 
     private static JiraComponent componentNamed(String name) {
         JiraComponent component = new JiraComponent();
