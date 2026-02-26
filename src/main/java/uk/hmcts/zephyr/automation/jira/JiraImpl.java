@@ -69,13 +69,11 @@ public class JiraImpl implements Jira {
     }
 
     @Override
-    @SneakyThrows
     public JiraSearchResponse searchIssues(JiraSearchRequest searchRequest) {
         return jiraClient.searchIssues(searchRequest);
     }
 
     @Override
-    @SneakyThrows
     public JiraIssue updateIssue(JiraIssueFieldsWrapper body, String issueId) {
         return jiraClient.updateIssue(body, issueId);
     }

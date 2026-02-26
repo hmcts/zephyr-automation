@@ -18,7 +18,6 @@ import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionDetail;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionRequest;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionSearchResponse;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionStatusUpdateRequest;
-import uk.hmcts.zephyr.automation.util.Util;
 
 import java.util.Map;
 
@@ -39,28 +38,6 @@ public class ZephyrImpl implements Zephyr {
             .target(ZephyrClient.class, baseUrl);
     }
 
-    @Override
-    public ZephyrCycleResponse createCycle(ZephyrCycle cycle) {
-        log.info("Executing Zephyr create cycle: {}", Util.writeObjectToString(cycle));
-        ZephyrCycleResponse response = zephyrClient.createCycle(cycle);
-        log.info("Created Zephyr Cycle with ID: {}", response.getId());
-        return response;
-    }
-
-    @Override
-    public Map<String, ZephyrExecutionDetail> createExecution(ZephyrExecutionRequest execution) {
-        log.info("Executing Zephyr Execution Request: {}", Util.writeObjectToString(execution));
-        Map<String, ZephyrExecutionDetail> response = zephyrClient.createExecution(execution);
-        log.info("Created Zephyr Execution with details: {}", response);
-        return response;
-    }
-
-    @Override
-    public void updateExecutionStatus(ZephyrExecutionStatusUpdateRequest statusUpdateRequest) {
-        log.info("Executing Zephyr Update Executions status Request: {}",
-            Util.writeObjectToString(statusUpdateRequest));
-        zephyrClient.updateExecutionStatus(statusUpdateRequest);
-    }
 
     //Passthrough
     @Override
@@ -76,6 +53,21 @@ public class ZephyrImpl implements Zephyr {
     @Override
     public ZephyrExecutionSearchResponse searchExecutions(String cycleId) {
         return zephyrClient.searchExecutions(cycleId);
+    }
+
+    @Override
+    public ZephyrCycleResponse createCycle(ZephyrCycle cycle) {
+        return zephyrClient.createCycle(cycle);
+    }
+
+    @Override
+    public Map<String, ZephyrExecutionDetail> createExecution(ZephyrExecutionRequest execution) {
+        return zephyrClient.createExecution(execution);
+    }
+
+    @Override
+    public void updateExecutionStatus(ZephyrExecutionStatusUpdateRequest statusUpdateRequest) {
+        zephyrClient.updateExecutionStatus(statusUpdateRequest);
     }
 
 }
