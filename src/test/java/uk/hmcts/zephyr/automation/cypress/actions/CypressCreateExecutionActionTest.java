@@ -9,10 +9,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.cypress.models.CypressReport;
-import uk.hmcts.zephyr.automation.jira.JiraConfig;
 import uk.hmcts.zephyr.automation.support.TestUtil;
 
-import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
 
@@ -46,7 +44,7 @@ class CypressCreateExecutionActionTest {
 
         @Test
         void given_reportWithTests_when_process_then_delegatesToProcessTests() {
-            CypressCreateExecutionAction action = spy(new CypressCreateExecutionAction());
+            final CypressCreateExecutionAction action = spy(new CypressCreateExecutionAction());
             CypressReport report = new CypressReport();
             List<CypressReport.CypressTest> tests =
                 List.of(new CypressReport.CypressTest(), new CypressReport.CypressTest());

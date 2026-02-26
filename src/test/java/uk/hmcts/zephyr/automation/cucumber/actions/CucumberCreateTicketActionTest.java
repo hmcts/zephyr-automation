@@ -31,7 +31,8 @@ class CucumberCreateTicketActionTest {
     void setUp() throws Exception {
         fileUtilMock = mockStatic(FileUtil.class);
         TestUtil.resetSingletons();
-        Config.instantiate(TestUtil.defaultArgs(Config.ActionType.CREATE_TICKETS, Config.ProcessType.CUCUMBER_JSON_REPORT));
+        Config.instantiate(TestUtil.defaultArgs(
+            Config.ActionType.CREATE_TICKETS, Config.ProcessType.CUCUMBER_JSON_REPORT));
     }
 
     @AfterEach

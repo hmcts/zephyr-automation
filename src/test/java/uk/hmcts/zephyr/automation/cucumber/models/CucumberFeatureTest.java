@@ -6,8 +6,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Element;
-import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Element.Step;
-import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Result;
 import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Tag;
 import uk.hmcts.zephyr.automation.support.CucumberDataUtil;
 import uk.hmcts.zephyr.automation.support.TestUtil;

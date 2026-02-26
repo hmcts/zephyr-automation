@@ -27,7 +27,8 @@ class CypressTagServiceTest {
     @BeforeEach
     void setUp() throws Exception {
         TestUtil.resetSingletons();
-        Config.instantiate(TestUtil.defaultArgs(Config.ActionType.CREATE_TICKETS, Config.ProcessType.CYPRESS_JSON_REPORT));
+        Config.instantiate(TestUtil.defaultArgs(
+            Config.ActionType.CREATE_TICKETS, Config.ProcessType.CYPRESS_JSON_REPORT));
         tagService = new CypressTagService();
         cypressTest = new CypressReport.CypressTest();
         cypressTest.setTitle("User logs in");

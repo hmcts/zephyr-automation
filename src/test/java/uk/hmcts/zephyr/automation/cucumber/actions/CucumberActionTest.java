@@ -32,7 +32,8 @@ class CucumberActionTest {
     void setUp() throws Exception {
         fileUtilMock = mockStatic(FileUtil.class);
         TestUtil.resetSingletons();
-        Config.instantiate(TestUtil.defaultArgs(Config.ActionType.CREATE_TICKETS, Config.ProcessType.CUCUMBER_JSON_REPORT));
+        Config.instantiate(TestUtil.defaultArgs(
+            Config.ActionType.CREATE_TICKETS, Config.ProcessType.CUCUMBER_JSON_REPORT));
     }
 
     @AfterEach
@@ -99,7 +100,8 @@ class CucumberActionTest {
     private static TypeReference<List<CucumberFeature>> anyTypeReference() {
         //Mockito does not retain generic type info on matchers, so suppressing unchecked warning here
         @SuppressWarnings("unchecked")
-        TypeReference<List<CucumberFeature>> typeReference = (TypeReference<List<CucumberFeature>>) any(TypeReference.class);
+        TypeReference<List<CucumberFeature>> typeReference =
+            (TypeReference<List<CucumberFeature>>) any(TypeReference.class);
         return typeReference;
     }
 }

@@ -47,7 +47,8 @@ public class CucumberTagService implements TagService<Element> {
     public void addTag(Element scenario, String tagNameBase) {
         String tagName = addTagPrefix(tagNameBase);
         CucumberFeature cucumberFeature = scenario.getCucumberFeature();
-        log.info("Adding tag '{}' to scenario '{}' in feature '{}'", tagName, scenario.getName(), cucumberFeature.getUri());
+        log.info("Adding tag '{}' to scenario '{}' in feature '{}'",
+            tagName, scenario.getName(), cucumberFeature.getUri());
         boolean alreadyHasTag = scenario.hasTag(tagName);
         if (alreadyHasTag) {
             log.info("Scenario '{}' already has tag '{}', skipping addition.", scenario.getName(), tagName);

@@ -31,7 +31,13 @@ public class CucumberDataUtil {
 
     public static CucumberFeature.Element element(String type) {
         return element(type, type + "-name");
+    }
 
+    public static CucumberFeature.Element element(String type, String name) {
+        CucumberFeature.Element element = new CucumberFeature.Element();
+        element.setType(type);
+        element.setName(name);
+        return element;
     }
 
     public static  CucumberFeature.Tag tag(String name) {
@@ -45,13 +51,6 @@ public class CucumberDataUtil {
         result.setStatus(status);
         step.setResult(result);
         return step;
-    }
-
-    public static CucumberFeature.Element element(String type, String name) {
-        CucumberFeature.Element element = new CucumberFeature.Element();
-        element.setType(type);
-        element.setName(name);
-        return element;
     }
 
     public static CucumberFeature.Element.Step step(String status) {

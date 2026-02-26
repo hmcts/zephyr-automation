@@ -8,9 +8,7 @@ import org.junit.jupiter.api.io.TempDir;
 import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature;
 import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Element;
-import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Element.Step;
 import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Location;
-import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Result;
 import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Tag;
 import uk.hmcts.zephyr.automation.support.CucumberDataUtil;
 import uk.hmcts.zephyr.automation.support.TestUtil;
@@ -126,13 +124,14 @@ class CucumberTagServiceTest {
         @Test
         void givenScenarioWithoutExistingTagLine_whenAddTag_thenInsertsNewLineAndUpdatesModel() throws IOException {
             scenario.setLine(2);
-            scenario.setSteps(new ArrayList<>(List.of(stepAtLine(3, "passed"))));
+            scenario.setSteps(new ArrayList<>(List.of(CucumberDataUtil.stepAtLine(3, "passed"))));
             copyFixture("add-tag-without-existing.before.feature");
 
             String tagSuffix = JIRA_KEY_TAG_PREFIX + "ABC-900";
             tagService.addTag(scenario, tagSuffix);
 
-            assertIterableEquals(readFixture("add-tag-without-existing.after.feature"), Files.readAllLines(featurePath));
+            assertIterableEquals(readFixture("add-tag-without-existing.after.feature"),
+                Files.readAllLines(featurePath));
             assertEquals(3, scenario.getLine());
             assertEquals(4, scenario.getSteps().get(0).getLine());
 
@@ -147,7 +146,7 @@ class CucumberTagServiceTest {
         @Test
         void givenScenarioWithExistingTagLine_whenAddTag_thenAppendsToTagLine() throws IOException {
             scenario.setLine(3);
-            scenario.setSteps(new ArrayList<>(List.of(stepAtLine(4, "passed"))));
+            scenario.setSteps(new ArrayList<>(List.of(CucumberDataUtil.stepAtLine(4, "passed"))));
             copyFixture("add-tag-existing-line.before.feature");
             scenario.addTag(new Tag("@existing", "Tag", new Location(2, 3)));
 
@@ -169,7 +168,7 @@ class CucumberTagServiceTest {
         @Test
         void givenScenarioWithOtherTags_whenAddTag_thenExistingTagLineNumbersShiftDown() throws IOException {
             scenario.setLine(2);
-            scenario.setSteps(new ArrayList<>(List.of(stepAtLine(3, "passed"))));
+            scenario.setSteps(new ArrayList<>(List.of(CucumberDataUtil.stepAtLine(3, "passed"))));
             copyFixture("add-tag-shift-existing.before.feature");
             Tag existingTag = new Tag("@existing", "Tag", new Location(2, 3));
             scenario.getTags().add(existingTag);
@@ -220,15 +219,6 @@ class CucumberTagServiceTest {
             }
             return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8).lines().toList();
         }
-    }
-
-    private Step stepAtLine(int line, String status) {
-        Step step = new Step();
-        step.setLine(line);
-        Result result = new Result();
-        result.setStatus(status);
-        step.setResult(result);
-        return step;
     }
 
     private String[] argsWithBasePath(Path basePath) {

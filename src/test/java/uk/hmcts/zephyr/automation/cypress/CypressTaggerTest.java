@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("LineLength")
 class CypressTaggerTest {
 
     private static final String SAMPLE_RESOURCE = "cypress/sample-test.ts";

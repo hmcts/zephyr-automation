@@ -61,7 +61,7 @@ class CypressActionTest {
         }
 
         private CypressReport sampleReport() {
-            CypressReport report = new CypressReport();
+            final CypressReport report = new CypressReport();
             CypressReport.CypressTest test = new CypressReport.CypressTest();
             test.setTitle("should upload report");
             test.setFullTitle("suite should upload report");
@@ -73,7 +73,8 @@ class CypressActionTest {
         }
 
         private String[] argsWithReportPath(String reportPath) {
-            String[] args = TestUtil.defaultArgs(Config.ActionType.CREATE_TICKETS, Config.ProcessType.CYPRESS_JSON_REPORT);
+            String[] args = TestUtil.defaultArgs(
+                Config.ActionType.CREATE_TICKETS, Config.ProcessType.CYPRESS_JSON_REPORT);
             for (int i = 0; i < args.length; i++) {
                 if (args[i].startsWith("report-path=")) {
                     args[i] = "report-path=" + reportPath;

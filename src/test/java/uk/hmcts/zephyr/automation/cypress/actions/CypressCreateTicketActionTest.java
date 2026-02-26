@@ -15,8 +15,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -33,7 +31,8 @@ class CypressCreateTicketActionTest {
     void setUp() throws Exception {
         fileUtilMock = mockStatic(FileUtil.class);
         TestUtil.resetSingletons();
-        Config.instantiate(TestUtil.defaultArgs(Config.ActionType.CREATE_TICKETS, Config.ProcessType.CYPRESS_JSON_REPORT));
+        Config.instantiate(TestUtil.defaultArgs(
+            Config.ActionType.CREATE_TICKETS, Config.ProcessType.CYPRESS_JSON_REPORT));
     }
 
     @AfterEach
@@ -50,9 +49,10 @@ class CypressCreateTicketActionTest {
 
         @Test
         void given_reportWithTests_when_process_then_createsTicketsAndWritesReport() {
-            CypressCreateTicketAction action = spy(new CypressCreateTicketAction());
+            final CypressCreateTicketAction action = spy(new CypressCreateTicketAction());
             CypressReport report = new CypressReport();
-            List<CypressReport.CypressTest> tests = List.of(new CypressReport.CypressTest(), new CypressReport.CypressTest());
+            List<CypressReport.CypressTest> tests =
+                List.of(new CypressReport.CypressTest(), new CypressReport.CypressTest());
             tests.get(0).setTitle("first-test");
             tests.get(1).setTitle("second-test");
             report.setTests(tests);

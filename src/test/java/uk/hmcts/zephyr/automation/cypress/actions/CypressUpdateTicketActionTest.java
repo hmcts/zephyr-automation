@@ -8,10 +8,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.cypress.models.CypressReport;
-import uk.hmcts.zephyr.automation.jira.JiraConfig;
 import uk.hmcts.zephyr.automation.support.TestUtil;
 
-import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
 
@@ -41,15 +39,15 @@ class CypressUpdateTicketActionTest {
     }
 
 
-
     @Nested
     class ProcessTest {
 
         @Test
         void given_reportWithTests_when_process_then_updatesEachIssue() {
-            CypressUpdateTicketAction action = spy(new CypressUpdateTicketAction());
+            final CypressUpdateTicketAction action = spy(new CypressUpdateTicketAction());
             CypressReport report = new CypressReport();
-            List<CypressReport.CypressTest> tests = List.of(new CypressReport.CypressTest(), new CypressReport.CypressTest());
+            List<CypressReport.CypressTest> tests =
+                List.of(new CypressReport.CypressTest(), new CypressReport.CypressTest());
             tests.get(0).setTitle("first-test");
             tests.get(1).setTitle("second-test");
             report.setTests(tests);

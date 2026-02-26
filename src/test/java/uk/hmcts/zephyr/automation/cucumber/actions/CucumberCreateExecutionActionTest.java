@@ -69,8 +69,10 @@ class CucumberCreateExecutionActionTest {
         void given_featuresWithScenarios_when_process_then_filtersAndDelegates() {
             CucumberCreateExecutionAction action = spy(new CucumberCreateExecutionAction());
             List<CucumberFeature> features = new ArrayList<>();
-            features.add(CucumberDataUtil.featureWithElements("Feature A", CucumberDataUtil.scenario("Scenario 1"), CucumberDataUtil.background()));
-            features.add(CucumberDataUtil.featureWithElements("Feature B", CucumberDataUtil.scenario("Scenario 2")));
+            features.add(CucumberDataUtil.featureWithElements("Feature A",
+                CucumberDataUtil.scenario("Scenario 1"), CucumberDataUtil.background()));
+            features.add(CucumberDataUtil.featureWithElements("Feature B",
+                CucumberDataUtil.scenario("Scenario 2")));
 
             doReturn(features).when(action).getFeatures();
             doNothing().when(action).processTests(anyList());
