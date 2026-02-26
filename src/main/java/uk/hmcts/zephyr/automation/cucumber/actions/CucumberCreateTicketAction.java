@@ -4,8 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.actions.AbstractCreateTicketAction;
 import uk.hmcts.zephyr.automation.cucumber.CucumberTagService;
-import uk.hmcts.zephyr.automation.cucumber.models.Element;
-import uk.hmcts.zephyr.automation.cucumber.models.Feature;
+import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature;
+import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Element;
 import uk.hmcts.zephyr.automation.util.FileUtil;
 
 import java.util.List;
@@ -21,19 +21,19 @@ public class CucumberCreateTicketAction
 
     @Override
     public void process() {
-        List<Feature> features = getFeatures();
-        for (Feature feature : features) {
-            processFeature(feature);
+        List<CucumberFeature> cucumberFeatures = getFeatures();
+        for (CucumberFeature cucumberFeature : cucumberFeatures) {
+            processFeature(cucumberFeature);
         }
         // Write the updated features back to the file
-        FileUtil.writeToFile(Config.getReportPath(), features);
+        FileUtil.writeToFile(Config.getReportPath(), cucumberFeatures);
     }
 
-    private void processFeature(Feature feature) {
-        if (feature.getElements() == null) {
+    private void processFeature(CucumberFeature cucumberFeature) {
+        if (cucumberFeature.getElements() == null) {
             return;
         }
-        feature.getElements().stream()
+        cucumberFeature.getElements().stream()
             .filter(getElementFilter())
             .forEach(this::createJiraIssue);
     }

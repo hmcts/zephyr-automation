@@ -3,8 +3,8 @@ package uk.hmcts.zephyr.automation.cucumber.actions;
 import lombok.extern.slf4j.Slf4j;
 import uk.hmcts.zephyr.automation.actions.AbstractUpdateTicketAction;
 import uk.hmcts.zephyr.automation.cucumber.CucumberTagService;
-import uk.hmcts.zephyr.automation.cucumber.models.Element;
-import uk.hmcts.zephyr.automation.cucumber.models.Feature;
+import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature;
+import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Element;
 
 import java.util.List;
 
@@ -20,17 +20,17 @@ public class CucumberUpdateTicketAction
     @Override
     public void process() {
         log.info("Starting Cucumber Update Ticket Action");
-        List<Feature> features = getFeatures();
-        for (Feature feature : features) {
-            processFeature(feature);
+        List<CucumberFeature> cucumberFeatures = getFeatures();
+        for (CucumberFeature cucumberFeature : cucumberFeatures) {
+            processFeature(cucumberFeature);
         }
     }
 
-    private void processFeature(Feature feature) {
-        if (feature.getElements() == null) {
+    private void processFeature(CucumberFeature cucumberFeature) {
+        if (cucumberFeature.getElements() == null) {
             return;
         }
-        feature.getElements().stream()
+        cucumberFeature.getElements().stream()
             .filter(getElementFilter())
             .forEach(this::updateJiraIssue);
     }

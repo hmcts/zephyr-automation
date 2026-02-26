@@ -3,8 +3,8 @@ package uk.hmcts.zephyr.automation.cucumber.actions;
 import lombok.extern.slf4j.Slf4j;
 import uk.hmcts.zephyr.automation.actions.AbstractCreateExecutionAction;
 import uk.hmcts.zephyr.automation.cucumber.CucumberTagService;
-import uk.hmcts.zephyr.automation.cucumber.models.Element;
-import uk.hmcts.zephyr.automation.cucumber.models.Feature;
+import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature;
+import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Element;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,14 +21,14 @@ public class CucumberCreateExecutionAction
     @Override
     public void process() {
         log.info("Starting Cucumber Create Execution Action");
-        List<Feature> features = getFeatures();
-        if (features == null || features.isEmpty()) {
+        List<CucumberFeature> cucumberFeatures = getFeatures();
+        if (cucumberFeatures == null || cucumberFeatures.isEmpty()) {
             log.warn("No features found to process for execution creation");
             return;
         }
         List<Element> tests = new ArrayList<>();
-        for (Feature feature : features) {
-            tests.addAll(feature.getElements());
+        for (CucumberFeature cucumberFeature : cucumberFeatures) {
+            tests.addAll(cucumberFeature.getElements());
         }
         processTests(tests.stream()
             .filter(getElementFilter())
