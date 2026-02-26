@@ -1,5 +1,6 @@
 package uk.hmcts.zephyr.automation.cypress.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.actions.ZephyrTest;
@@ -60,11 +61,13 @@ public class CypressReport {
 
 
         @Override
+        @JsonIgnore
         public String getName() {
             return this.title;
         }
 
         @Override
+        @JsonIgnore
         public String getLocationDisplayName() {
             if (parents == null || parents.isEmpty()) {
                 throw new RuntimeException("No parents");
@@ -73,16 +76,19 @@ public class CypressReport {
         }
 
         @Override
+        @JsonIgnore
         public String getGitHubLink() {
             return Config.getGithubRepoBaseSrcDir() + "/" + file;
         }
 
         @Override
+        @JsonIgnore
         public String getNameAndLocation() {
             return getName() + " (" + getLocationDisplayName() + ")";
         }
 
         @Override
+        @JsonIgnore
         public ZephyrConstants.ExecutionStatus getZephyrExecutionStatus() {
             //If all steps passed, mark as pass.
             return switch (status) {

@@ -49,12 +49,12 @@ class CypressTagServiceTest {
 
         @Test
         void givenTagContainingJiraKey_whenExtract_thenReturnsKey() {
-            cypressTest.addTag("@" + JIRA_KEY_TAG_PREFIX + "ZE-123");
+            cypressTest.addTag("@" + JIRA_KEY_TAG_PREFIX + "ABC-123");
 
             Optional<String> jiraKey = tagService.extractJiraKeyFromTag(cypressTest);
 
             assertTrue(jiraKey.isPresent());
-            assertEquals("ZE-123", jiraKey.get());
+            assertEquals("ABC-123", jiraKey.get());
         }
 
         @Test
@@ -104,9 +104,9 @@ class CypressTagServiceTest {
         void givenMissingTag_whenAddTag_thenDelegatesToTaggerAndAddsTag() {
             cypressTaggerMock = mockStatic(CypressTagger.class);
 
-            tagService.addTag(cypressTest, JIRA_KEY_TAG_PREFIX + "ZE-456");
+            tagService.addTag(cypressTest, JIRA_KEY_TAG_PREFIX + "ABC-456");
 
-            String expectedTag = "@" + JIRA_KEY_TAG_PREFIX + "ZE-456";
+            String expectedTag = "@" + JIRA_KEY_TAG_PREFIX + "ABC-456";
             cypressTaggerMock.verify(() -> CypressTagger.addTagToCypressTest(
                 "/tmp/base/" + cypressTest.getFile(),
                 cypressTest.getTitle(),
@@ -117,11 +117,11 @@ class CypressTagServiceTest {
 
         @Test
         void givenExistingTag_whenAddTag_thenSkipsTagger() {
-            String expectedTag = "@" + JIRA_KEY_TAG_PREFIX + "ZE-456";
+            String expectedTag = "@" + JIRA_KEY_TAG_PREFIX + "ABC-456";
             cypressTest.addTag(expectedTag);
             cypressTaggerMock = mockStatic(CypressTagger.class);
 
-            tagService.addTag(cypressTest, JIRA_KEY_TAG_PREFIX + "ZE-456");
+            tagService.addTag(cypressTest, JIRA_KEY_TAG_PREFIX + "ABC-456");
 
             cypressTaggerMock.verifyNoInteractions();
             assertEquals(1, cypressTest.getTags().size());
