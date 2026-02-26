@@ -2,12 +2,11 @@ package uk.hmcts.zephyr.automation.cucumber;
 
 import lombok.extern.slf4j.Slf4j;
 import uk.hmcts.zephyr.automation.Config;
-import uk.hmcts.zephyr.automation.cucumber.models.Element;
-import uk.hmcts.zephyr.automation.cucumber.models.Feature;
-import uk.hmcts.zephyr.automation.cucumber.models.Location;
-import uk.hmcts.zephyr.automation.cucumber.models.Step;
-import uk.hmcts.zephyr.automation.cucumber.models.Tag;
 import uk.hmcts.zephyr.automation.TagService;
+import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature;
+import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Element;
+import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Location;
+import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Tag;
 import uk.hmcts.zephyr.automation.util.FileUtil;
 
 import java.nio.file.Files;
@@ -47,23 +46,24 @@ public class CucumberTagService implements TagService<Element> {
     @Override
     public void addTag(Element scenario, String tagNameBase) {
         String tagName = addTagPrefix(tagNameBase);
-        Feature feature = scenario.getFeature();
-        log.info("Adding tag '{}' to scenario '{}' in feature '{}'", tagName, scenario.getName(), feature.getUri());
+        CucumberFeature cucumberFeature = scenario.getCucumberFeature();
+        log.info("Adding tag '{}' to scenario '{}' in feature '{}'",
+            tagName, scenario.getName(), cucumberFeature.getUri());
         boolean alreadyHasTag = scenario.hasTag(tagName);
         if (alreadyHasTag) {
             log.info("Scenario '{}' already has tag '{}', skipping addition.", scenario.getName(), tagName);
             return;
         }
         //Update the feature file with the tag
-        Location tagLocation = addTagToScenario(feature, scenario, tagName);
+        Location tagLocation = addTagToScenario(cucumberFeature, scenario, tagName);
         // Add the tag to the scenario in memory
         scenario.addTag(new Tag(tagName, "Tag", tagLocation));
         log.info("Tag '{}' added to scenario '{}' at line {} in feature '{}'",
-            tagName, scenario.getName(), tagLocation.getLine(), feature.getUri());
+            tagName, scenario.getName(), tagLocation.getLine(), cucumberFeature.getUri());
     }
 
-    private Location addTagToScenario(Feature feature, Element scenario, String tagName) {
-        String featureFilePath = resolveFeatureFilePath(feature.getUri());
+    private Location addTagToScenario(CucumberFeature cucumberFeature, Element scenario, String tagName) {
+        String featureFilePath = resolveFeatureFilePath(cucumberFeature.getUri());
 
         try {
             //Cucumber line numbers are 1-based, but List is 0-based
@@ -87,7 +87,7 @@ public class CucumberTagService implements TagService<Element> {
 
                 lines.add(scenarioLine, indentation + tagName);
                 //Update line numbers on the feature to account for the new line
-                updateLineNumbersOnFeature(feature, tagLine);
+                updateLineNumbersOnFeature(cucumberFeature, tagLine);
                 tagColumn = tagColumn + indentation.length();
             }
             //Write the updated lines back to the feature file
@@ -100,14 +100,14 @@ public class CucumberTagService implements TagService<Element> {
         }
     }
 
-    private void updateLineNumbersOnFeature(Feature feature, int tagLine) {
-        if (feature.getElements() != null) {
-            for (Element scenario : feature.getElements()) {
+    private void updateLineNumbersOnFeature(CucumberFeature cucumberFeature, int tagLine) {
+        if (cucumberFeature.getElements() != null) {
+            for (Element scenario : cucumberFeature.getElements()) {
                 updateLineNumbersOnScenario(scenario, tagLine);
             }
         }
-        if (feature.getTags() != null) {
-            feature.getTags().forEach(tag -> updateLineNumbersOnScenarioTag(tag, tagLine));
+        if (cucumberFeature.getTags() != null) {
+            cucumberFeature.getTags().forEach(tag -> updateLineNumbersOnScenarioTag(tag, tagLine));
         }
     }
 
@@ -119,7 +119,7 @@ public class CucumberTagService implements TagService<Element> {
                 scenario.getTags().forEach(tag -> updateLineNumbersOnScenarioTag(tag, tagLine));
             }
             if (scenario.getSteps() != null) {
-                for (Step step : scenario.getSteps()) {
+                for (CucumberFeature.Element.Step step : scenario.getSteps()) {
                     if (step.getLine() >= tagLine) {
                         step.setLine(step.getLine() + 1);
                     }

@@ -156,6 +156,13 @@ dependencies {
     implementation 'io.github.openfeign:feign-slf4j:13.8'
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
     annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+
+    testImplementation 'org.junit.platform:junit-platform-suite:6.0.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.3'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.3'
+    testImplementation 'org.mockito:mockito-core:5.15.2'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.15.2'
+    testImplementation 'org.mockito:mockito-inline:5.2.0'
 }
 
 jar {

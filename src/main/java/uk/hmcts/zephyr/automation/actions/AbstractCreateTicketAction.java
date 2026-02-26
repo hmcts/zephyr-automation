@@ -21,7 +21,7 @@ public abstract class AbstractCreateTicketAction<T extends ZephyrTest>
         super(tagService);
     }
 
-    protected Optional<JiraIssue> createJiraIssue(T test) {
+    public Optional<JiraIssue> createJiraIssue(T test) {
         try {
             Optional<String> name = getTagService().extractJiraKeyFromTag(test);
             if (name.isPresent()) {

@@ -21,7 +21,7 @@ public abstract class AbstractUpdateTicketAction<T extends ZephyrTest>
     }
 
 
-    protected void updateJiraIssue(T test) {
+    public void updateJiraIssue(T test) {
         try {
             Optional<String> jiraKeyOpt = getTagService().extractJiraKeyFromTag(test);
             if (jiraKeyOpt.isEmpty()) {
