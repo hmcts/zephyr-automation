@@ -9,7 +9,9 @@ public interface TagService<T> {
             .map(TestTag::value);
     }
 
-    Optional<TestTag> extractTagFromTagType(T test, TestTag.Type tagType);
+    default Optional<TestTag> extractTagFromTagType(T test, TestTag.Type tagType) {
+        return extractTagListFromType(test, tagType).stream().findFirst();
+    }
 
     List<TestTag> extractTagListFromType(T test, TestTag.Type tagType);
 

@@ -12,15 +12,9 @@ import uk.hmcts.zephyr.automation.util.FileUtil;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 public class CucumberTagService implements TagService<Element>, TestTag.StandardTagPrefixProvider {
-
-    @Override
-    public Optional<TestTag> extractTagFromTagType(Element scenario, TestTag.Type tagType) {
-        return extractTagListFromType(scenario, tagType).stream().findFirst();
-    }
 
     @Override
     public List<TestTag> extractTagListFromType(Element scenario, TestTag.Type tagType) {

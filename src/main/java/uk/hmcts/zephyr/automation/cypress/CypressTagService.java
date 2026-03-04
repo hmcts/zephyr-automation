@@ -7,15 +7,9 @@ import uk.hmcts.zephyr.automation.TestTag;
 import uk.hmcts.zephyr.automation.cypress.models.CypressReport;
 
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 public class CypressTagService implements TagService<CypressReport.CypressTest>, TestTag.StandardTagPrefixProvider {
-
-    @Override
-    public Optional<TestTag> extractTagFromTagType(CypressReport.CypressTest test, TestTag.Type tagType) {
-        return extractTagListFromType(test, tagType).stream().findFirst();
-    }
 
     @Override
     public List<TestTag> extractTagListFromType(CypressReport.CypressTest test, TestTag.Type tagType) {

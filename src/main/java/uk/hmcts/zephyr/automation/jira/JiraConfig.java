@@ -12,15 +12,7 @@ public class JiraConfig {
 
     private static JiraConfig INSTANCE;
     public static final String JIRA_KEY_TAG_PREFIX = "JIRA-KEY:";
-    public static final String JIRA_COMPONENT_TAG_PREFIX = "JIRA-COMPONENT:";
     public static final String JIRA_LABEL_TAG_PREFIX = "JIRA-LABEL:";
-    public static final String JIRA_EPIC_TAG_PREFIX = "JIRA-EPIC:";
-    public static final String JIRA_NFR_TAG_PREFIX = "JIRA-NFR:";
-    public static final String JIRA_LINK_TAG_PREFIX = "JIRA-LINK:";
-    public static final String JIRA_STORY_TAG_PREFIX = "JIRA-STORY:";
-    public static final String JIRA_DEFECT_TAG_PREFIX = "JIRA-DEFECT:";
-
-    public static final String JIRA_IGNORE = "JIRA-IGNORE";
 
     private final String baseUrl;
     private final String projectId;

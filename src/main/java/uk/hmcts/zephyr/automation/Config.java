@@ -15,6 +15,9 @@ import uk.hmcts.zephyr.automation.cypress.actions.CypressUpdateTicketAction;
 import uk.hmcts.zephyr.automation.jira.JiraConfig;
 import uk.hmcts.zephyr.automation.jira.JiraImpl;
 import uk.hmcts.zephyr.automation.jira.client.Jira;
+import uk.hmcts.zephyr.automation.junit5.actions.JUnit5CreateExecutionAction;
+import uk.hmcts.zephyr.automation.junit5.actions.Junit5CreateTicketAction;
+import uk.hmcts.zephyr.automation.junit5.actions.Junit5UpdateTicketAction;
 import uk.hmcts.zephyr.automation.zephyr.ZephyrConstants;
 import uk.hmcts.zephyr.automation.zephyr.ZephyrImpl;
 import uk.hmcts.zephyr.automation.zephyr.client.Zephyr;
@@ -170,6 +173,11 @@ public class Config {
             ActionType.CREATE_TICKETS, CypressCreateTicketAction::new,
             ActionType.UPDATE_TICKETS, CypressUpdateTicketAction::new,
             ActionType.CREATE_EXECUTION, CypressCreateExecutionAction::new
+        )),
+        JUNIT5_JSON_REPORT(Map.of(
+            ActionType.CREATE_TICKETS, Junit5CreateTicketAction::new,
+            ActionType.UPDATE_TICKETS, Junit5UpdateTicketAction::new,
+            ActionType.CREATE_EXECUTION, JUnit5CreateExecutionAction::new
         ));
 
 
