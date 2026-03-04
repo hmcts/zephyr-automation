@@ -38,7 +38,11 @@ class ConfigTest {
             "jira-default-user=bot@example.com",
             "jira-auth-token=token",
             "jira-epic-link-custom-field-id=custom_1",
-            "jira-default-components=CompA,CompB"
+            "jira-default-components=CompA,CompB",
+            "execution-environment=stg",
+            "execution-build=1.0.0",
+            "execution-test-cycle-name=SomeTest cycle name",
+            "execution-attach-evidence=true",
         };
 
         Config.instantiate(args);
@@ -48,6 +52,10 @@ class ConfigTest {
         assertEquals("/tmp/base", Config.getBasePath());
         assertEquals("/tmp/report.json", Config.getReportPath());
         assertEquals("/repo", Config.getGithubRepoBaseSrcDir());
+        assertEquals("stg", Config.getExecutionEnvironment());
+        assertEquals("1.0.0", Config.getExecutionBuild());
+        assertEquals("SomeTest cycle name", Config.getTestCycleName());
+        assertTrue(Config.shouldAttachEvidence());
         assertNotNull(Config.getJira());
         assertNotNull(Config.getZephyr());
         assertNotNull(Config.getObjectMapper());

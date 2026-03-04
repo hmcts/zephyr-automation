@@ -25,13 +25,17 @@ Zephyr Automation is a tool for integrating test results and ticket management b
 - `jira-auth-token=`: Jira authentication token
 - `base-path=`: Base path for input files (e.g., test reports)
 - `report-path=`: Path to output the generated report
-- `execution-environment=`: Environment for the Zephyr execution (e.g., `Staging`, `Production`)
-- `execution-build=`:  Build version for the Zephyr execution (e.g., `1.0.0`)
 
 **Required for Action Type: CREATE_TICKETS or UPDATE_TICKETS:**
 - `github-repo-base-src-dir=`: Base source directory for the GitHub repository
 - `jira-epic-link-custom-field-id=`: Custom field ID for Jira epic links
 - `jira-default-components=`: Comma-separated list of default Jira components (e.g., `ComponentA,ComponentB`)
+
+**Optional Arguments:*
+- `execution-environment=`: Environment for the Zephyr execution (e.g., `Staging`, `Production`)
+- `execution-build=`:  Build version for the Zephyr execution (e.g., `1.0.0`)
+- `execution-test-cycle-name=`: Test cycle name for the Zephyr execution (e.g., `Regression Cycle 1`)
+- `execution-attach-evidence=`: Whether to attach evidence to the Zephyr execution (true/false, default: false) - (Only supported for cucumber reports)
 
 ### Supported Tags
 

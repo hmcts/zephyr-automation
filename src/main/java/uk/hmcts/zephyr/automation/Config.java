@@ -40,7 +40,8 @@ public class Config {
     private final ObjectMapper objectMapper;
     private final String executionEnvironment;
     private final String executionBuild;
-
+    private final String testCycleName;
+    private final boolean attachEvidence;
 
     public static void instantiate(String[] args) {
         if (INSTANCE != null) {
@@ -57,6 +58,8 @@ public class Config {
         String githubRepoBaseSrcDir = null;
         String executionEnvironment = null;
         String executionBuild = null;
+        String testCycleName = null;
+        boolean attachEvidence = false;
 
         for (String arg : args) {
             if (arg.startsWith("action-type=")) {
@@ -73,6 +76,10 @@ public class Config {
                 executionEnvironment = arg.substring("execution-environment=".length());
             } else if (arg.startsWith("execution-build=")) {
                 executionBuild = arg.substring("execution-build=".length());
+            } else if (arg.startsWith("execution-test-cycle-name=")) {
+                testCycleName = arg.substring("execution-test-cycle-name=".length());
+            } else if (arg.startsWith("execution-attach-evidence=")) {
+                attachEvidence = Boolean.parseBoolean(arg.substring("execution-attach-evidence=".length()));
             }
         }
 
@@ -87,6 +94,8 @@ public class Config {
         this.githubRepoBaseSrcDir = githubRepoBaseSrcDir;
         this.executionEnvironment = executionEnvironment;
         this.executionBuild = executionBuild;
+        this.testCycleName = testCycleName;
+        this.attachEvidence = attachEvidence;
         JiraConfig.instantiate(args);
 
         this.objectMapper = new ObjectMapper()
@@ -134,6 +143,14 @@ public class Config {
 
     public static String getExecutionBuild() {
         return INSTANCE.executionBuild;
+    }
+
+    public static String getTestCycleName() {
+        return INSTANCE.testCycleName;
+    }
+
+    public static boolean shouldAttachEvidence() {
+        return INSTANCE.attachEvidence;
     }
 
     public enum ActionType {

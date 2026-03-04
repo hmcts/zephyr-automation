@@ -2,13 +2,14 @@ package uk.hmcts.zephyr.automation.zephyr;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Feign;
-import feign.Logger;
+import feign.form.FormData;
+import feign.form.FormEncoder;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
-import feign.slf4j.Slf4jLogger;
 import lombok.extern.slf4j.Slf4j;
 import uk.hmcts.zephyr.automation.zephyr.client.Zephyr;
 import uk.hmcts.zephyr.automation.zephyr.client.ZephyrClient;
+import uk.hmcts.zephyr.automation.zephyr.client.ZephyrFormClient;
 import uk.hmcts.zephyr.automation.zephyr.models.JobProgressToken;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrBulkExecutionRequest;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrBulkExecutionResponse;
@@ -24,6 +25,7 @@ import java.util.Map;
 @Slf4j
 public class ZephyrImpl implements Zephyr {
     private final ZephyrClient zephyrClient;
+    private final ZephyrFormClient zephyrFormClient;
 
     public ZephyrImpl(ObjectMapper objectMapper, String baseUrl, String authToken) {
         zephyrClient = Feign.builder()
@@ -33,9 +35,15 @@ public class ZephyrImpl implements Zephyr {
             })
             .encoder(new JacksonEncoder(objectMapper))
             .decoder(new JacksonDecoder(objectMapper))
-            .logLevel(Logger.Level.FULL)
-            .logger(new Slf4jLogger())
             .target(ZephyrClient.class, baseUrl);
+
+        zephyrFormClient = Feign.builder()
+            .requestInterceptor(template -> {
+                template.header("Authorization", authToken);
+                template.header("X-Atlassian-Token", "no-check");
+            })
+            .encoder(new FormEncoder())
+            .target(ZephyrFormClient.class, baseUrl);
     }
 
 
@@ -70,4 +78,8 @@ public class ZephyrImpl implements Zephyr {
         zephyrClient.updateExecutionStatus(statusUpdateRequest);
     }
 
+    @Override
+    public void attachEvidence(String entityType, Long entityId, FormData formData) {
+        zephyrFormClient.attachEvidence(entityType, entityId, formData);
+    }
 }

@@ -1,5 +1,6 @@
 package uk.hmcts.zephyr.automation.actions;
 
+import feign.form.FormData;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -128,7 +129,6 @@ class AbstractCreateExecutionActionTest {
         assertEquals("Some-Build", cycle.getBuild());
 
 
-
         verify(jira).searchIssues(any());
         ArgumentCaptor<ZephyrBulkExecutionRequest> bulkExecutionCaptor =
             ArgumentCaptor.forClass(ZephyrBulkExecutionRequest.class);
@@ -143,6 +143,50 @@ class AbstractCreateExecutionActionTest {
             statusCaptor.getValue().getStatus());
     }
 
+    @Test
+    void attachFileToExecution_givenAttachment_whenCalled_thenInvokesZephyrClientWithFormData() {
+        Zephyr zephyr = mock(Zephyr.class);
+        configMock.when(Config::getZephyr).thenReturn(zephyr);
+        configMock.when(Config::getReportPath).thenReturn("/tmp/report.json");
+        configMock.when(Config::getZephyr).thenReturn(zephyr);
+        configMock.when(Config::getExecutionBuild).thenReturn("Some-Build");
+        configMock.when(Config::getExecutionEnvironment).thenReturn("Some-Env");
+        final TestCreateExecutionAction action = new TestCreateExecutionAction(tagService);
+
+        Attachment attachment = new TestAttachment("screenshot.png", "image/png", new byte[]{1, 2, 3});
+        Long executionId = 123L;
+
+        action.attachFileToExecution(executionId, attachment);
+
+        ArgumentCaptor<String> entityTypeCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Long> entityIdCaptor = ArgumentCaptor.forClass(Long.class);
+        ArgumentCaptor<FormData> formDataCaptor = ArgumentCaptor.forClass(FormData.class);
+        verify(zephyr).attachEvidence(entityTypeCaptor.capture(), entityIdCaptor.capture(), formDataCaptor.capture());
+
+        assertEquals("EXECUTION", entityTypeCaptor.getValue());
+        assertEquals(executionId, entityIdCaptor.getValue());
+        FormData formData = formDataCaptor.getValue();
+        assertEquals(attachment.getContentType(), formData.getContentType());
+        assertEquals(attachment.getFileName(), formData.getFileName());
+        assertEquals(attachment.getContent(), formData.getData());
+    }
+
+    record TestAttachment(String fileName, String contentType, byte[] content) implements Attachment {
+        @Override
+        public String getFileName() {
+            return TestAttachment.this.fileName;
+        }
+
+        @Override
+        public String getContentType() {
+            return TestAttachment.this.contentType;
+        }
+
+        @Override
+        public byte[] getContent() {
+            return TestAttachment.this.content;
+        }
+    }
     private static class TestCreateExecutionAction extends AbstractCreateExecutionAction<ZephyrTest> {
         TestCreateExecutionAction(TagService<ZephyrTest> tagService) {
             super(tagService);

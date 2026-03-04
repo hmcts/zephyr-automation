@@ -8,10 +8,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import uk.hmcts.zephyr.automation.Config;
+import uk.hmcts.zephyr.automation.actions.Attachment;
 import uk.hmcts.zephyr.automation.actions.ZephyrTest;
 import uk.hmcts.zephyr.automation.zephyr.ZephyrConstants;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 @Getter
@@ -112,6 +114,7 @@ public class CucumberFeature {
             private Match match;
             private String keyword;
             private List<Row> rows;
+            private List<Embedding> embeddings;
 
             @Getter
             @Setter
@@ -119,6 +122,33 @@ public class CucumberFeature {
             @NoArgsConstructor
             public static class Row {
                 private List<String> cells;
+            }
+
+            @Getter
+            @Setter
+            @AllArgsConstructor
+            @NoArgsConstructor
+            public static class Embedding implements Attachment {
+                @JsonProperty("mime_type")
+                private String mimeType;
+                private String data;
+
+
+                @Override
+                public byte[] getContent() {
+                    return Base64.getDecoder().decode(data);
+                }
+
+                @Override
+                public String getFileName() {
+                    String fileExtension = mimeType.split("/")[1];
+                    return "embedding." + fileExtension;
+                }
+
+                @Override
+                public String getContentType() {
+                    return mimeType;
+                }
             }
         }
     }

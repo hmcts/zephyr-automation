@@ -2,12 +2,11 @@ package uk.hmcts.zephyr.automation.zephyr;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Feign;
-import feign.Logger;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
+import feign.form.FormEncoder;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
-import feign.slf4j.Slf4jLogger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -18,6 +17,7 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.hmcts.zephyr.automation.zephyr.client.ZephyrClient;
+import uk.hmcts.zephyr.automation.zephyr.client.ZephyrFormClient;
 import uk.hmcts.zephyr.automation.zephyr.models.JobProgressToken;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrBulkExecutionRequest;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrBulkExecutionResponse;
@@ -53,20 +53,28 @@ class ZephyrImplTest {
     private Feign.Builder builder;
 
     @Mock
+    private Feign.Builder formBuilder;
+
+    @Mock
     private ZephyrClient zephyrClient;
+
+    @Mock
+    private ZephyrFormClient zephyrFormClient;
 
     private MockedStatic<Feign> feignStatic;
 
     private ZephyrImpl createSubject() {
         feignStatic = Mockito.mockStatic(Feign.class);
-        feignStatic.when(Feign::builder).thenReturn(builder);
+        feignStatic.when(Feign::builder).thenReturn(builder, formBuilder);
 
         lenient().when(builder.requestInterceptor(any())).thenReturn(builder);
         lenient().when(builder.encoder(any())).thenReturn(builder);
         lenient().when(builder.decoder(any())).thenReturn(builder);
-        lenient().when(builder.logLevel(any())).thenReturn(builder);
-        lenient().when(builder.logger(any())).thenReturn(builder);
         lenient().when(builder.target(eq(ZephyrClient.class), any())).thenReturn(zephyrClient);
+
+        lenient().when(formBuilder.requestInterceptor(any())).thenReturn(formBuilder);
+        lenient().when(formBuilder.encoder(any())).thenReturn(formBuilder);
+        lenient().when(formBuilder.target(eq(ZephyrFormClient.class), any())).thenReturn(zephyrFormClient);
 
         return new ZephyrImpl(new ObjectMapper(), BASE_URL, AUTH_TOKEN);
     }
@@ -82,32 +90,46 @@ class ZephyrImplTest {
     @Nested
     class ConstructorTest {
         @Test
-        void given_validInputs_when_constructing_then_configuresFeignClient() {
+        void given_validInputs_when_constructing_then_configuresFeignClients() {
             createSubject();
 
             verify(builder).requestInterceptor(any(RequestInterceptor.class));
             verify(builder).encoder(isA(JacksonEncoder.class));
             verify(builder).decoder(isA(JacksonDecoder.class));
-            verify(builder).logLevel(Logger.Level.FULL);
-            verify(builder).logger(isA(Slf4jLogger.class));
             verify(builder).target(ZephyrClient.class, BASE_URL);
+
+            verify(formBuilder).requestInterceptor(any(RequestInterceptor.class));
+            verify(formBuilder).encoder(isA(FormEncoder.class));
+            verify(formBuilder).target(ZephyrFormClient.class, BASE_URL);
         }
 
         @Test
         void given_authorizationToken_when_interceptorInvoked_then_requiredHeadersAreApplied() {
             createSubject();
 
-            ArgumentCaptor<RequestInterceptor> interceptorCaptor = ArgumentCaptor.forClass(RequestInterceptor.class);
-            verify(builder).requestInterceptor(interceptorCaptor.capture());
+            ArgumentCaptor<RequestInterceptor> jsonInterceptorCaptor = ArgumentCaptor.forClass(RequestInterceptor.class);
+            verify(builder).requestInterceptor(jsonInterceptorCaptor.capture());
 
-            RequestTemplate template = new RequestTemplate();
-            interceptorCaptor.getValue().apply(template);
+            RequestTemplate jsonTemplate = new RequestTemplate();
+            jsonInterceptorCaptor.getValue().apply(jsonTemplate);
 
-            Collection<String> authorizationHeader = template.headers().get("Authorization");
-            Collection<String> contentTypeHeader = template.headers().get("Content-Type");
+            Collection<String> authorizationHeader = jsonTemplate.headers().get("Authorization");
+            Collection<String> contentTypeHeader = jsonTemplate.headers().get("Content-Type");
 
             assertEquals(List.of(AUTH_TOKEN), new ArrayList<>(authorizationHeader));
             assertEquals(List.of("application/json"), new ArrayList<>(contentTypeHeader));
+
+            ArgumentCaptor<RequestInterceptor> formInterceptorCaptor = ArgumentCaptor.forClass(RequestInterceptor.class);
+            verify(formBuilder).requestInterceptor(formInterceptorCaptor.capture());
+
+            RequestTemplate formTemplate = new RequestTemplate();
+            formInterceptorCaptor.getValue().apply(formTemplate);
+
+            Collection<String> formAuthorization = formTemplate.headers().get("Authorization");
+            Collection<String> xsrfHeader = formTemplate.headers().get("X-Atlassian-Token");
+
+            assertEquals(List.of(AUTH_TOKEN), new ArrayList<>(formAuthorization));
+            assertEquals(List.of("no-check"), new ArrayList<>(xsrfHeader));
         }
     }
 
@@ -204,4 +226,3 @@ class ZephyrImplTest {
         }
     }
 }
-

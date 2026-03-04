@@ -1,5 +1,6 @@
 package uk.hmcts.zephyr.automation.actions;
 
+import feign.form.FormData;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -47,7 +48,7 @@ public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
         }
     }
 
-    public void processTests(List<T> tests) {
+    public List<ScenarioResult> processTests(List<T> tests) {
 
         List<ScenarioResult> scenarioResults = new ArrayList<>();
         for (T test : tests) {
@@ -55,12 +56,14 @@ public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
         }
         if (scenarioResults.isEmpty()) {
             log.info("No scenario results found");
-            return;
+            return List.of();
         }
         assignJiraIds(scenarioResults);
         ZephyrCycleResponse cycle = Config.getZephyr().createCycle(
             ZephyrCycle.builder()
-                .name("Automated Cycle - " + DateTimeFormatter.ISO_DATE_TIME.format(OffsetDateTime.now()))
+                .name(
+                    Optional.ofNullable(Config.getTestCycleName())
+                        .orElse("Automated Cycle - " + DateTimeFormatter.ISO_DATE_TIME.format(OffsetDateTime.now())))
                 .description("Cycle created automatically from Cucumber JSON report")
                 .projectId(JiraConfig.getProjectId())
                 .environment(Config.getExecutionEnvironment())
@@ -70,6 +73,16 @@ public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
         );
         assignExecutionDetails(scenarioResults, cycle.getId());
         updateExecutionStatus(scenarioResults);
+        return scenarioResults;
+    }
+
+    public void attachFileToExecution(Long executionId, Attachment attachment) {
+        FormData formData = new FormData(
+            attachment.getContentType(),
+            attachment.getFileName(),
+            attachment.getContent()
+        );
+        Config.getZephyr().attachEvidence("EXECUTION", executionId, formData);
     }
 
 
@@ -192,7 +205,8 @@ public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
     @Getter
     @Setter
     @RequiredArgsConstructor
-    static class ScenarioResult {
+    public class ScenarioResult {
+        private final T test;
         private final String issueKey;
         private final ZephyrConstants.ExecutionStatus status;
         //The below will be populated after creating execution in Zephyr
@@ -209,6 +223,6 @@ public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
         }
         String issueKey = issueKeyOpt.get();
         ZephyrConstants.ExecutionStatus status = test.getZephyrExecutionStatus();
-        return Optional.of(new ScenarioResult(issueKey, status));
+        return Optional.of(new ScenarioResult(test, issueKey, status));
     }
 }

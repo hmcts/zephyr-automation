@@ -2,15 +2,20 @@ package uk.hmcts.zephyr.automation.cucumber.models;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Element;
+import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Element.Step.Embedding;
 import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Tag;
 import uk.hmcts.zephyr.automation.support.CucumberDataUtil;
 import uk.hmcts.zephyr.automation.support.TestUtil;
 import uk.hmcts.zephyr.automation.zephyr.ZephyrConstants;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -155,6 +160,34 @@ class CucumberFeatureTest {
         }
     }
 
+
+    @Nested
+    @DisplayName("Embedding tests")
+    class EmbeddingTests {
+        @Test
+        void given_base64Data_when_getContent_then_decodesBytes() {
+            String original = "hello world";
+            String encoded = Base64.getEncoder().encodeToString(original.getBytes(StandardCharsets.UTF_8));
+            Embedding embedding = new Embedding("image/png", encoded);
+
+            assertEquals(original, new String(embedding.getContent(), StandardCharsets.UTF_8));
+        }
+
+        @Test
+        void given_mimeType_when_getFileName_then_usesExtension() {
+            Embedding embedding = new Embedding("image/jpeg", "ZGF0YQ==");
+
+            assertEquals("embedding.jpeg", embedding.getFileName());
+        }
+
+        @Test
+        void given_mimeType_when_getContentType_then_returnsSameValue() {
+            Embedding embedding = new Embedding("image/gif", "ZGF0YQ==");
+
+            assertEquals("image/gif", embedding.getContentType());
+        }
+    }
+
     private Element elementWithFeature(String featureName, String uri, int line) {
         CucumberFeature feature = new CucumberFeature();
         feature.setName(featureName);
@@ -166,4 +199,3 @@ class CucumberFeatureTest {
         return element;
     }
 }
-

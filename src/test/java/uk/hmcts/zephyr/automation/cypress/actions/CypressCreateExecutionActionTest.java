@@ -53,7 +53,7 @@ class CypressCreateExecutionActionTest {
             report.setTests(tests);
 
             doReturn(report).when(action).getCypressReport();
-            doNothing().when(action).processTests(anyList());
+            doReturn(List.of()).when(action).processTests(anyList());
 
             action.process();
 
@@ -68,7 +68,7 @@ class CypressCreateExecutionActionTest {
 
             doReturn(report).when(action).getCypressReport();
             when(report.getTests()).thenReturn(Collections.emptyList());
-            doNothing().when(action).processTests(anyList());
+            doReturn(List.of()).when(action).processTests(anyList());
 
             action.process();
 
