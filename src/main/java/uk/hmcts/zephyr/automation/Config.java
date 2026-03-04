@@ -68,8 +68,8 @@ public class Config {
                 githubRepoBaseSrcDir = arg.substring("github-repo-base-src-dir=".length());
             } else if (arg.startsWith("report-path=")) {
                 reportPath = arg.substring("report-path=".length());
-            } else if (arg.startsWith("execution-envrionment=")) {
-                executionEnvironment = arg.substring("execution-envrionment=".length());
+            } else if (arg.startsWith("execution-environment=")) {
+                executionEnvironment = arg.substring("execution-environment=".length());
             } else if (arg.startsWith("execution-build=")) {
                 executionBuild = arg.substring("execution-build=".length());
             }
