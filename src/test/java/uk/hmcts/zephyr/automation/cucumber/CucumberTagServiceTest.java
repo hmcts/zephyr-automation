@@ -133,7 +133,7 @@ class CucumberTagServiceTest {
             assertIterableEquals(readFixture("add-tag-without-existing.after.feature"),
                 Files.readAllLines(featurePath));
             assertEquals(3, scenario.getLine());
-            assertEquals(4, scenario.getSteps().get(0).getLine());
+            assertEquals(4, scenario.getSteps().getFirst().getLine());
 
             Tag addedTag = scenario.getTags().stream()
                 .filter(t -> t.getName().equals("@" + tagSuffix))
@@ -155,7 +155,7 @@ class CucumberTagServiceTest {
 
             assertIterableEquals(readFixture("add-tag-existing-line.after.feature"), Files.readAllLines(featurePath));
             assertEquals(3, scenario.getLine());
-            assertEquals(4, scenario.getSteps().get(0).getLine());
+            assertEquals(4, scenario.getSteps().getFirst().getLine());
 
             Tag addedTag = scenario.getTags().stream()
                 .filter(t -> t.getName().equals("@" + tagSuffix))

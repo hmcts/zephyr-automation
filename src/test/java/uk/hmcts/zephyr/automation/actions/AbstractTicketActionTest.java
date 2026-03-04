@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -95,9 +96,9 @@ class AbstractTicketActionTest {
         ArgumentCaptor<JiraIssueLink> captor = ArgumentCaptor.forClass(JiraIssueLink.class);
         verify(jira, times(4)).linkIssue(captor.capture());
         List<JiraIssueLink> links = captor.getAllValues();
-        assertEquals("CASE-1", links.get(0).getOutwardIssue().getKey());
-        assertEquals("NFR-1", links.get(0).getInwardIssue().getKey());
-        assertEquals("Contributes", links.get(0).getType().getName());
+        assertEquals("CASE-1", links.getFirst().getOutwardIssue().getKey());
+        assertEquals("NFR-1", links.getFirst().getInwardIssue().getKey());
+        assertEquals("Contributes", links.getFirst().getType().getName());
         assertEquals("LINK-1", links.get(1).getInwardIssue().getKey());
         assertEquals("Relates", links.get(1).getType().getName());
         assertEquals("STORY-1", links.get(2).getInwardIssue().getKey());
@@ -183,9 +184,9 @@ class AbstractTicketActionTest {
         JiraIssueFieldsWrapper updateBody = action.buildBody(test, false);
         assertEquals("scenario", updateBody.getFields().getSummary());
         assertEquals("Location: [feature|https://example]\r\nScenario: scenario\r\n", updateBody.getFields().getDescription());
-        assertEquals(null, updateBody.getFields().getProject());
-        assertEquals(null, updateBody.getFields().getIssuetype());
-        assertEquals(null, updateBody.getFields().getReporter());
+        assertNull(updateBody.getFields().getProject());
+        assertNull(updateBody.getFields().getIssuetype());
+        assertNull(updateBody.getFields().getReporter());
     }
 
     private JiraComponent componentWithId(String id) {

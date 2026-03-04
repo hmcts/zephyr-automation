@@ -85,7 +85,7 @@ class CucumberCreateExecutionActionTest {
             List<Element> forwarded = captor.getValue();
             assertEquals(2, forwarded.size());
             assertTrue(forwarded.stream().allMatch(element -> element.getType().equals("scenario")));
-            assertEquals("Scenario 1", forwarded.get(0).getName());
+            assertEquals("Scenario 1", forwarded.getFirst().getName());
             assertEquals("Scenario 2", forwarded.get(1).getName());
         }
     }

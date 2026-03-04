@@ -48,7 +48,7 @@ class CypressCreateExecutionActionTest {
             CypressReport report = new CypressReport();
             List<CypressReport.CypressTest> tests =
                 List.of(new CypressReport.CypressTest(), new CypressReport.CypressTest());
-            tests.get(0).setTitle("first-test");
+            tests.getFirst().setTitle("first-test");
             tests.get(1).setTitle("second-test");
             report.setTests(tests);
 

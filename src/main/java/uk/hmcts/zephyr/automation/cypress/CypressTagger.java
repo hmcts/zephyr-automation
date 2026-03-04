@@ -228,7 +228,7 @@ public class CypressTagger {
             return callText;
         }
 
-        String titleExpr = args.get(0).trim();
+        String titleExpr = args.getFirst().trim();
         String resolvedTitle = resolveSingleQuotedConcat(titleExpr);
         if (resolvedTitle == null) {
             return callText;

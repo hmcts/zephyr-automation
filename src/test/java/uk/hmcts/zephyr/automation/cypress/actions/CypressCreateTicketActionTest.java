@@ -53,7 +53,7 @@ class CypressCreateTicketActionTest {
             CypressReport report = new CypressReport();
             List<CypressReport.CypressTest> tests =
                 List.of(new CypressReport.CypressTest(), new CypressReport.CypressTest());
-            tests.get(0).setTitle("first-test");
+            tests.getFirst().setTitle("first-test");
             tests.get(1).setTitle("second-test");
             report.setTests(tests);
 
@@ -64,7 +64,7 @@ class CypressCreateTicketActionTest {
             action.process();
 
             verify(action).getCypressReport();
-            verify(action).createJiraIssue(tests.get(0));
+            verify(action).createJiraIssue(tests.getFirst());
             verify(action).createJiraIssue(tests.get(1));
             fileUtilMock.verify(() -> FileUtil.writeToFile(Config.getReportPath(), report));
         }
