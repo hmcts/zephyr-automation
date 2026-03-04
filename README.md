@@ -51,7 +51,7 @@ The following tags can be used in your test scenarios to control ticket creation
 | `JIRA-LINK:`      | `JIRA-LINK:PROJ-321`   | Creates a generic link to another Jira issue.                               |
 | `JIRA-STORY:`     | `JIRA-STORY:PROJ-654`  | Links the ticket to a Jira Story.                                           |
 | `JIRA-DEFECT:`    | `JIRA-DEFECT:PROJ-987` | Links the ticket to a Jira Defect.                                          |
-| `JIRA-IGNORE`     | `JIRA-IGNORE`          | Prevents ticket creation or update for this test.                           |
+| `JIRA-IGNORE:`    | `JIRA-IGNORE`          | Prevents ticket creation or update for this test.                           |
 
 - Tags are case-sensitive and must be used exactly as shown.
 - For Cucumber, tags should be added to scenarios or features using the `@` symbol (e.g., `@JIRA-KEY:PROJ-123`).

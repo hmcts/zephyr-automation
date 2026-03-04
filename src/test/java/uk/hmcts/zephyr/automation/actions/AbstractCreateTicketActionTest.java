@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.TagService;
+import uk.hmcts.zephyr.automation.TestTag;
 import uk.hmcts.zephyr.automation.jira.JiraConfig;
 import uk.hmcts.zephyr.automation.jira.client.Jira;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssue;
@@ -70,7 +71,7 @@ class AbstractCreateTicketActionTest {
         ZephyrTest test = new DummyZephyrTest();
 
         when(tagService.extractJiraKeyFromTag(test)).thenReturn(Optional.empty());
-        when(tagService.hasTag(test, JiraConfig.JIRA_IGNORE)).thenReturn(true);
+        when(tagService.hasTag(test, TestTag.Type.JIRA_IGNORE)).thenReturn(true);
 
         assertTrue(action.createJiraIssue(test).isEmpty());
         configMock.verify(() -> Config.getJira(), never());
@@ -83,7 +84,7 @@ class AbstractCreateTicketActionTest {
         JiraIssue createdIssue = JiraIssue.builder().key("CASE-9").build();
 
         when(tagService.extractJiraKeyFromTag(test)).thenReturn(Optional.empty());
-        when(tagService.hasTag(test, JiraConfig.JIRA_IGNORE)).thenReturn(false);
+        when(tagService.hasTag(test, TestTag.Type.JIRA_IGNORE)).thenReturn(false);
         configMock.when(Config::getJira).thenReturn(jira);
         when(jira.createIssue(action.bodyToReturn)).thenReturn(createdIssue);
 
@@ -93,7 +94,7 @@ class AbstractCreateTicketActionTest {
         assertSame(createdIssue, result.get());
         assertSame(createdIssue.getKey(), action.lastLinkedIssueKey);
         assertSame(test, action.lastLinkedTest);
-        verify(tagService).addTag(test, JiraConfig.JIRA_KEY_TAG_PREFIX + createdIssue.getKey());
+        verify(tagService).addTag(test, new TestTag(TestTag.Type.JIRA_KEY, createdIssue.getKey()));
     }
 
     @Test
@@ -102,7 +103,7 @@ class AbstractCreateTicketActionTest {
         ZephyrTest test = new DummyZephyrTest();
 
         when(tagService.extractJiraKeyFromTag(test)).thenReturn(Optional.empty());
-        when(tagService.hasTag(test, JiraConfig.JIRA_IGNORE)).thenReturn(false);
+        when(tagService.hasTag(test, TestTag.Type.JIRA_IGNORE)).thenReturn(false);
         configMock.when(Config::getJira).thenReturn(jira);
         when(jira.createIssue(any())).thenThrow(new RuntimeException("failure"));
 

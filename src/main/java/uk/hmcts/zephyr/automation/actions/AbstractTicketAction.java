@@ -2,6 +2,7 @@ package uk.hmcts.zephyr.automation.actions;
 
 import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.TagService;
+import uk.hmcts.zephyr.automation.TestTag;
 import uk.hmcts.zephyr.automation.jira.JiraConfig;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueFieldsWrapper;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueLink;
@@ -38,16 +39,16 @@ public abstract class AbstractTicketAction<T extends ZephyrTest> extends Abstrac
     }
 
     protected void addLinksToJiraIssue(String sourceIssueKey, T test) {
-        addLinksToJiraIssue(sourceIssueKey, test, JiraConfig.JIRA_NFR_TAG_PREFIX, "Contributes");
-        addLinksToJiraIssue(sourceIssueKey, test, JiraConfig.JIRA_LINK_TAG_PREFIX, "Relates");
-        addLinksToJiraIssue(sourceIssueKey, test, JiraConfig.JIRA_STORY_TAG_PREFIX, "Relates");
-        addLinksToJiraIssue(sourceIssueKey, test, JiraConfig.JIRA_DEFECT_TAG_PREFIX, "Relates");
+        addLinksToJiraIssue(sourceIssueKey, test, TestTag.Type.JIRA_NFR, "Contributes");
+        addLinksToJiraIssue(sourceIssueKey, test, TestTag.Type.JIRA_LINK, "Relates");
+        addLinksToJiraIssue(sourceIssueKey, test, TestTag.Type.JIRA_STORY, "Relates");
+        addLinksToJiraIssue(sourceIssueKey, test, TestTag.Type.JIRA_DEFECT, "Relates");
     }
 
-    protected void addLinksToJiraIssue(String sourceIssueKey, T test, String tagPrefix, String linkType) {
-        getTagService().extractTagListWithPrefix(test, tagPrefix)
+    protected void addLinksToJiraIssue(String sourceIssueKey, T test, TestTag.Type tagType, String linkType) {
+        getTagService().extractTagListFromType(test, tagType)
             .forEach(destinationIssueKey -> Config.getJira()
-                .linkIssue(createIssueLink(sourceIssueKey, destinationIssueKey, linkType)));
+                .linkIssue(createIssueLink(sourceIssueKey, destinationIssueKey.value(), linkType)));
     }
 
     protected JiraIssueLink createIssueLink(String sourceIssueKey, String destinationIssueKey, String linkType) {
@@ -77,12 +78,20 @@ public abstract class AbstractTicketAction<T extends ZephyrTest> extends Abstrac
     }
 
     protected List<String> getLabels(T test) {
-        return getTagService().extractTagListWithPrefix(test, JiraConfig.JIRA_LABEL_TAG_PREFIX);
+        return getTagService().extractTagListFromType(test, TestTag.Type.JIRA_LABEL)
+            .stream()
+            .map(TestTag::value)
+            .toList();
     }
 
     protected List<JiraIssueFieldsWrapper.Component> getComponents(T test) {
         List<String> componentsNames = new ArrayList<>(JiraConfig.getDefaultComponents());
-        componentsNames.addAll(getTagService().extractTagListWithPrefix(test, JiraConfig.JIRA_COMPONENT_TAG_PREFIX));
+        componentsNames.addAll(
+            getTagService().extractTagListFromType(test, TestTag.Type.JIRA_COMPONENT)
+                .stream()
+                .map(TestTag::value)
+                .toList()
+        );
 
         return componentsNames
             .stream()
@@ -95,8 +104,8 @@ public abstract class AbstractTicketAction<T extends ZephyrTest> extends Abstrac
             .toList();
     }
 
-    protected Optional<String> getEpicTicketKey(T test) {
-        return getTagService().extractTagWithPrefix(test, JiraConfig.JIRA_EPIC_TAG_PREFIX);
+    protected Optional<TestTag> getEpicTicketKey(T test) {
+        return getTagService().extractTagFromTagType(test, TestTag.Type.JIRA_EPIC);
     }
 
     protected JiraIssueFieldsWrapper buildBody(T test, boolean isCreate) {
@@ -115,7 +124,7 @@ public abstract class AbstractTicketAction<T extends ZephyrTest> extends Abstrac
         }
 
         //Add Epic link if there is one
-        getEpicTicketKey(test).ifPresent(s -> body.getFields().setEpicLink(s));
+        getEpicTicketKey(test).ifPresent(s -> body.getFields().setEpicLink(s.value()));
         //Add components if there are any
         body.getFields().setComponents(getComponents(test));
         //Add labels if there are any

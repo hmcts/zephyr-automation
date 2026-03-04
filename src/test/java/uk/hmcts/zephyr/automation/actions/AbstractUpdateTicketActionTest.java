@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.TagService;
+import uk.hmcts.zephyr.automation.TestTag;
 import uk.hmcts.zephyr.automation.jira.JiraConfig;
 import uk.hmcts.zephyr.automation.jira.client.Jira;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueFieldsWrapper;
@@ -70,7 +71,7 @@ class AbstractUpdateTicketActionTest {
         ZephyrTest test = new DummyZephyrTest();
 
         when(tagService.extractJiraKeyFromTag(test)).thenReturn(Optional.of("CASE-1"));
-        when(tagService.hasTag(test, JiraConfig.JIRA_IGNORE)).thenReturn(true);
+        when(tagService.hasTag(test, TestTag.Type.JIRA_IGNORE)).thenReturn(true);
 
         action.updateJiraIssue(test);
 
@@ -83,7 +84,7 @@ class AbstractUpdateTicketActionTest {
         ZephyrTest test = new DummyZephyrTest();
 
         when(tagService.extractJiraKeyFromTag(test)).thenReturn(Optional.of("CASE-2"));
-        when(tagService.hasTag(test, JiraConfig.JIRA_IGNORE)).thenReturn(false);
+        when(tagService.hasTag(test, TestTag.Type.JIRA_IGNORE)).thenReturn(false);
         configMock.when(Config::getJira).thenReturn(jira);
 
         action.updateJiraIssue(test);
@@ -99,7 +100,7 @@ class AbstractUpdateTicketActionTest {
         ZephyrTest test = new DummyZephyrTest();
 
         when(tagService.extractJiraKeyFromTag(test)).thenReturn(Optional.of("CASE-3"));
-        when(tagService.hasTag(test, JiraConfig.JIRA_IGNORE)).thenReturn(false);
+        when(tagService.hasTag(test, TestTag.Type.JIRA_IGNORE)).thenReturn(false);
         configMock.when(Config::getJira).thenReturn(jira);
         when(jira.updateIssue(any(), any())).thenThrow(new RuntimeException("boom"));
 

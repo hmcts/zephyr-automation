@@ -20,8 +20,10 @@ class CypressTaggerTest {
         "cypress/expected/sample-test-with-smoke-and-component.ts";
     private static final String EXPECTED_SAMPLE_WITH_REGRESSION = "cypress/expected/sample-test-with-regression.ts";
     private static final String EXPECTED_NESTED_WITH_NESTED_TAG = "cypress/expected/nested-suite-with-nested-tag.cy.ts";
-    private static final String EXPECTED_NESTED_WITH_CHAINED_TAG = "cypress/expected/nested-suite-with-chained-tag.cy.ts";
-    private static final String EXPECTED_NESTED_WITH_MULTILINE_TAG = "cypress/expected/nested-suite-with-multiline-tag.cy.ts";
+    private static final String EXPECTED_NESTED_WITH_CHAINED_TAG =
+        "cypress/expected/nested-suite-with-chained-tag.cy.ts";
+    private static final String EXPECTED_NESTED_WITH_MULTILINE_TAG =
+        "cypress/expected/nested-suite-with-multiline-tag.cy.ts";
     private String sampleContent;
     private String nestedContent;
 

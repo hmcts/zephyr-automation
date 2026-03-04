@@ -1,19 +1,26 @@
 package uk.hmcts.zephyr.automation.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import uk.hmcts.zephyr.automation.Config;
+import uk.hmcts.zephyr.automation.junit5.ZephyrAutomationExtension;
+import uk.hmcts.zephyr.automation.junit5.annotations.JiraKey;
 
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@ExtendWith(ZephyrAutomationExtension.class)
 class UtilTest {
 
     @Test
+    @JiraKey("TEST-123")
+    @DisplayName("writeObjectToString uses Config's ObjectMapper")
     void writeObjectToString_usesConfigObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         try (MockedStatic<Config> configMock = Mockito.mockStatic(Config.class)) {

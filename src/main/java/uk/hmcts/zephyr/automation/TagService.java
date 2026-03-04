@@ -4,15 +4,18 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TagService<T> {
-    Optional<String> extractJiraKeyFromTag(T test);
+    default Optional<String> extractJiraKeyFromTag(T test) {
+        return extractTagFromTagType(test, TestTag.Type.JIRA_KEY)
+            .map(TestTag::value);
+    }
 
-    Optional<String> extractTagWithPrefix(T test, String prefix);
+    Optional<TestTag> extractTagFromTagType(T test, TestTag.Type tagType);
 
-    List<String> extractTagListWithPrefix(T test, String prefix);
+    List<TestTag> extractTagListFromType(T test, TestTag.Type tagType);
 
-    void addTag(T test, String tagName);
+    void addTag(T test, TestTag testTag);
 
-    default boolean hasTag(T test, String tagName) {
-        return extractTagWithPrefix(test, tagName).isPresent();
+    default boolean hasTag(T test, TestTag.Type tagType) {
+        return extractTagFromTagType(test, tagType).isPresent();
     }
 }
