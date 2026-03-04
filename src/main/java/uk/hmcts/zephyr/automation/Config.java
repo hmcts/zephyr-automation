@@ -25,6 +25,7 @@ import java.util.function.Supplier;
 
 @Slf4j
 public class Config {
+    public static final String NEW_LINE_CHARACTER = "\r\n";
     public static final long DEFAULT_WAIT_TIME = Duration.ofMillis(500).toMillis();
     public static final long DEFAULT_TIMEOUT = Duration.ofMinutes(2).toMillis();
     private static Config INSTANCE;

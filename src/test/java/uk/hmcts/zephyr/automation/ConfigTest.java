@@ -94,7 +94,7 @@ class ConfigTest {
         @Test
         void processAction_usesSupplierFromMap() throws Exception {
             Config.ProcessType processType = Config.ProcessType.CUCUMBER_JSON_REPORT;
-            Field field = Config.ProcessType.class.getDeclaredField("createTicketAction");
+            Field field = Config.ProcessType.class.getDeclaredField("actionTypeSupplierMap");
             field.setAccessible(true);
             @SuppressWarnings("unchecked")
             Map<Config.ActionType, Supplier<Action>> original =
@@ -116,7 +116,7 @@ class ConfigTest {
         @Test
         void processAction_throwsForUnsupportedActionType() throws Exception {
             Config.ProcessType processType = Config.ProcessType.CUCUMBER_JSON_REPORT;
-            Field field = Config.ProcessType.class.getDeclaredField("createTicketAction");
+            Field field = Config.ProcessType.class.getDeclaredField("actionTypeSupplierMap");
             field.setAccessible(true);
             @SuppressWarnings("unchecked")
             Map<Config.ActionType, Supplier<Action>> original =

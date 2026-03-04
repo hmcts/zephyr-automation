@@ -13,7 +13,7 @@ import java.util.List;
 @Slf4j
 public class CucumberCreateTicketAction
     extends AbstractCreateTicketAction<Element>
-    implements CucumberAction {
+    implements CucumberAction, CucumberJiraDescription {
 
     public CucumberCreateTicketAction() {
         super(new CucumberTagService());
@@ -36,5 +36,10 @@ public class CucumberCreateTicketAction
         cucumberFeature.getElements().stream()
             .filter(getElementFilter())
             .forEach(this::createJiraIssue);
+    }
+
+    @Override
+    public void jiraDescriptionPostProcess(Element test, StringBuilder builder) {
+        CucumberJiraDescription.super.jiraDescriptionPostProcess(test, builder);
     }
 }

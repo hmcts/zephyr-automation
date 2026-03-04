@@ -111,7 +111,7 @@ class AbstractTicketActionTest {
 
         String description = action.getJiraDescription(test);
 
-        assertEquals("Location: [feature|https://example]\r\nScenario: scenario", description);
+        assertEquals("Location: [feature|https://example]\r\nScenario: scenario\r\n", description);
     }
 
     @Test
@@ -171,7 +171,7 @@ class AbstractTicketActionTest {
 
         JiraIssueFieldsWrapper.Fields fields = createBody.getFields();
         assertEquals("scenario", fields.getSummary());
-        assertEquals("Location: [feature|https://example]\r\nScenario: scenario", fields.getDescription());
+        assertEquals("Location: [feature|https://example]\r\nScenario: scenario\r\n", fields.getDescription());
         assertEquals(JiraConfig.getProjectId(), fields.getProject().getId());
         assertEquals(ZephyrConstants.ZEPHYR_ISSUE_TYPE_ID, fields.getIssuetype().getId());
         assertEquals(JiraConfig.getDefaultUser(), fields.getReporter().getName());
@@ -182,7 +182,7 @@ class AbstractTicketActionTest {
 
         JiraIssueFieldsWrapper updateBody = action.buildBody(test, false);
         assertEquals("scenario", updateBody.getFields().getSummary());
-        assertEquals("Location: [feature|https://example]\r\nScenario: scenario", updateBody.getFields().getDescription());
+        assertEquals("Location: [feature|https://example]\r\nScenario: scenario\r\n", updateBody.getFields().getDescription());
         assertEquals(null, updateBody.getFields().getProject());
         assertEquals(null, updateBody.getFields().getIssuetype());
         assertEquals(null, updateBody.getFields().getReporter());

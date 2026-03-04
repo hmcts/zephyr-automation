@@ -11,7 +11,7 @@ import java.util.List;
 @Slf4j
 public class CucumberUpdateTicketAction
     extends AbstractUpdateTicketAction<Element>
-    implements CucumberAction {
+    implements CucumberAction, CucumberJiraDescription {
 
     public CucumberUpdateTicketAction() {
         super(new CucumberTagService());
@@ -33,5 +33,10 @@ public class CucumberUpdateTicketAction
         cucumberFeature.getElements().stream()
             .filter(getElementFilter())
             .forEach(this::updateJiraIssue);
+    }
+
+    @Override
+    public void jiraDescriptionPostProcess(Element test, StringBuilder builder) {
+        CucumberJiraDescription.super.jiraDescriptionPostProcess(test, builder);
     }
 }

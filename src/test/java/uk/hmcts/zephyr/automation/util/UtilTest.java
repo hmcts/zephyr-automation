@@ -8,6 +8,7 @@ import uk.hmcts.zephyr.automation.Config;
 
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UtilTest {
@@ -23,6 +24,21 @@ class UtilTest {
             assertTrue(json.contains("\"a\""));
             assertTrue(json.contains("1"));
         }
+    }
+
+    @Test
+    void hasItems_returnsFalseForNull() {
+        assertFalse(Util.hasItems(null));
+    }
+
+    @Test
+    void hasItems_returnsFalseForEmptyCollection() {
+        assertFalse(Util.hasItems(java.util.Collections.emptyList()));
+    }
+
+    @Test
+    void hasItems_returnsTrueForNonEmptyCollection() {
+        assertTrue(Util.hasItems(java.util.List.of(1, 2, 3)));
     }
 }
 

@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static uk.hmcts.zephyr.automation.Config.NEW_LINE_CHARACTER;
+
 public abstract class AbstractTicketAction<T extends ZephyrTest> extends AbstractAction<T> {
     protected AbstractTicketAction(TagService<T> tagService) {
         super(tagService);
@@ -57,13 +59,21 @@ public abstract class AbstractTicketAction<T extends ZephyrTest> extends Abstrac
     }
 
     protected String getJiraDescription(T test) {
-        return new StringBuilder("Location: [")
+        StringBuilder builder = new StringBuilder("Location: [")
             .append(test.getLocationDisplayName())
             .append("|")
             .append(test.getGitHubLink())
-            .append("]\r\nScenario: ")
+            .append("]")
+            .append(NEW_LINE_CHARACTER)
+            .append("Scenario: ")
             .append(test.getName())
-            .toString();
+            .append(Config.NEW_LINE_CHARACTER);
+        jiraDescriptionPostProcess(test, builder);
+        return builder.toString();
+    }
+
+    protected void jiraDescriptionPostProcess(T test, StringBuilder builder) {
+        //Can be overridden by child classes to add more info to the description
     }
 
     protected List<String> getLabels(T test) {
