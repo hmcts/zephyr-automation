@@ -187,6 +187,7 @@ class AbstractCreateExecutionActionTest {
             return TestAttachment.this.content;
         }
     }
+
     private static class TestCreateExecutionAction extends AbstractCreateExecutionAction<ZephyrTest> {
         TestCreateExecutionAction(TagService<ZephyrTest> tagService) {
             super(tagService);

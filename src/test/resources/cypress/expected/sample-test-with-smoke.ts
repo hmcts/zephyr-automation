@@ -11,5 +11,9 @@ describe('Login feature', () => {
   }, () => {
     // implementation
   });
-});
 
+  it('should render component', () => {
+    setupComponent(SOME_DASHBOARD);
+    cy.get(L.app).should('exist');
+  });
+});

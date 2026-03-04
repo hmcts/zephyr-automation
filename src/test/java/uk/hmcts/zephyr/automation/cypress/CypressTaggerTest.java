@@ -16,6 +16,8 @@ class CypressTaggerTest {
     private static final String SAMPLE_RESOURCE = "cypress/sample-test.ts";
     private static final String NESTED_RESOURCE = "cypress/nested-suite.cy.ts";
     private static final String EXPECTED_SAMPLE_WITH_SMOKE = "cypress/expected/sample-test-with-smoke.ts";
+    private static final String EXPECTED_SAMPLE_WITH_SETUP_WITH_SMOKE =
+        "cypress/expected/sample-test-with-smoke-and-component.ts";
     private static final String EXPECTED_SAMPLE_WITH_REGRESSION = "cypress/expected/sample-test-with-regression.ts";
     private static final String EXPECTED_NESTED_WITH_NESTED_TAG = "cypress/expected/nested-suite-with-nested-tag.cy.ts";
     private static final String EXPECTED_NESTED_WITH_CHAINED_TAG = "cypress/expected/nested-suite-with-chained-tag.cy.ts";
@@ -35,6 +37,11 @@ class CypressTaggerTest {
         @Test
         void givenMatchingTitleWithExistingTags_whenAddTag_thenAppendsTagOnce() throws IOException {
             assertFixture(sampleContent, EXPECTED_SAMPLE_WITH_SMOKE, "user logs in", "@SMOKE");
+        }
+
+        @Test
+        void givenMatchingTitleWithExistingTags_And_setupScript_whenAddTag_thenAppendsTagOnce() throws IOException {
+            assertFixture(sampleContent, EXPECTED_SAMPLE_WITH_SETUP_WITH_SMOKE, "should render component", "@SMOKE");
         }
 
         @Test

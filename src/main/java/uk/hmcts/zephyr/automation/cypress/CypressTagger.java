@@ -238,19 +238,69 @@ public class CypressTagger {
             return callText;
         }
 
-        // Ensure we have an options object in arg1. If missing, we could insert one, but your example has it.
         if (args.size() < 2) {
             return callText;
         }
 
-        String options = args.get(1);
-        String updatedOptions = updateTagsInOptionsObject(options, newTag);
+        int optionsIndex = findOptionsArgumentIndex(args);
+        if (optionsIndex < 0) {
+            insertTagsOptionsArg(args, newTag);
+        } else {
+            String options = args.get(optionsIndex);
+            String updatedOptions = updateTagsInOptionsObject(options, newTag);
+            args.set(optionsIndex, updatedOptions);
+        }
 
-        args.set(1, updatedOptions);
-
-        // Rebuild inside (preserve original spacing around commas loosely)
         String rebuiltInside = String.join(", ", args);
         return callText.substring(0, openParen + 1) + rebuiltInside + callText.substring(closeParen);
+    }
+
+    static int findOptionsArgumentIndex(List<String> args) {
+        for (int idx = 1; idx < args.size(); idx++) {
+            String trimmed = args.get(idx).trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+            if (looksLikeObjectLiteral(trimmed)) {
+                return idx;
+            }
+            if (looksLikeFunctionArgument(trimmed)) {
+                break;
+            }
+        }
+        return -1;
+    }
+
+    static boolean looksLikeObjectLiteral(String arg) {
+        String trimmed = arg.trim();
+        if (trimmed.isEmpty()) {
+            return false;
+        }
+        if (trimmed.charAt(0) == '{') {
+            return true;
+        }
+        if (trimmed.charAt(0) == '(') {
+            int next = skipWs(trimmed, 1);
+            return next < trimmed.length() && trimmed.charAt(next) == '{';
+        }
+        return false;
+    }
+
+    static boolean looksLikeFunctionArgument(String arg) {
+        String trimmed = arg.trim();
+        return trimmed.startsWith("(")
+            || trimmed.startsWith("async")
+            || trimmed.startsWith("function");
+    }
+
+    static void insertTagsOptionsArg(List<String> args, String newTag) {
+        String tagsOnlyOptions = buildTagsOnlyOptions(newTag);
+        int insertIndex = Math.min(1, args.size());
+        args.add(insertIndex, tagsOnlyOptions);
+    }
+
+    static String buildTagsOnlyOptions(String newTag) {
+        return "{tags: ['" + escapeSingleQuotes(newTag) + "']}";
     }
 
     // Splits arguments by commas at top level, respecting nested braces/parens/brackets and strings/comments.
@@ -485,8 +535,7 @@ public class CypressTagger {
 
             String arrayInner = body.substring(arrayStart + 1, arrayEnd).trim();
 
-            // Check if already present as a single-quoted tag.
-            String needle = "'" + newTag.replace("'", "\\'") + "'";
+            String needle = "'" + escapeSingleQuotes(newTag) + "'";
             if (containsTag(arrayInner, newTag)) {
                 return options; // no dupes
             }
@@ -505,7 +554,7 @@ public class CypressTagger {
             return before + newBody + after;
         } else {
             // No tags property: insert one near the start of object body
-            String insert = " tags: ['" + newTag.replace("'", "\\'") + "']";
+            String insert = " tags: ['" + escapeSingleQuotes(newTag) + "']";
             String trimmed = body.trim();
             if (trimmed.isEmpty()) {
                 return before + insert + " " + after;
@@ -616,7 +665,7 @@ public class CypressTagger {
             }
 
             if (brace == 0 && bracket == 0 && paren == 0) {
-                // crude but effective: look for "tags" as an identifier boundary
+                // crude but effective: look for "tags" as an identifier
                 if (matchesKeyAt(body, i, key)) {
                     return i;
                 }
@@ -710,10 +759,12 @@ public class CypressTagger {
     }
 
     static boolean containsTag(String arrayInner, String tag) {
-        // Very simple membership check: look for 'TAG' with optional whitespace around commas.
-        // If you want to support double quotes too, expand this.
-        String needle = "'" + tag + "'";
+        String needle = "'" + escapeSingleQuotes(tag) + "'";
         return arrayInner.contains(needle);
+    }
+
+    static String escapeSingleQuotes(String value) {
+        return value.replace("'", "\\'");
     }
 }
 

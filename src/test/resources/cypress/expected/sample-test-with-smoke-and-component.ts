@@ -6,11 +6,13 @@ describe('Login feature', () => {
     // implementation
   });
 
-  it('user logs out', { tags: ['@REGRESSION'], retries: 0}, () => {
+  it('user logs out', {
+    retries: 0
+  }, () => {
     // implementation
   });
 
-  it('should render component', () => {
+  it('should render component', {tags: ['@SMOKE']}, () => {
     setupComponent(SOME_DASHBOARD);
     cy.get(L.app).should('exist');
   });

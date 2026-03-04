@@ -107,7 +107,8 @@ class ZephyrImplTest {
         void given_authorizationToken_when_interceptorInvoked_then_requiredHeadersAreApplied() {
             createSubject();
 
-            ArgumentCaptor<RequestInterceptor> jsonInterceptorCaptor = ArgumentCaptor.forClass(RequestInterceptor.class);
+            ArgumentCaptor<RequestInterceptor> jsonInterceptorCaptor =
+                ArgumentCaptor.forClass(RequestInterceptor.class);
             verify(builder).requestInterceptor(jsonInterceptorCaptor.capture());
 
             RequestTemplate jsonTemplate = new RequestTemplate();
@@ -119,7 +120,8 @@ class ZephyrImplTest {
             assertEquals(List.of(AUTH_TOKEN), new ArrayList<>(authorizationHeader));
             assertEquals(List.of("application/json"), new ArrayList<>(contentTypeHeader));
 
-            ArgumentCaptor<RequestInterceptor> formInterceptorCaptor = ArgumentCaptor.forClass(RequestInterceptor.class);
+            ArgumentCaptor<RequestInterceptor> formInterceptorCaptor =
+                ArgumentCaptor.forClass(RequestInterceptor.class);
             verify(formBuilder).requestInterceptor(formInterceptorCaptor.capture());
 
             RequestTemplate formTemplate = new RequestTemplate();

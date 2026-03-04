@@ -129,7 +129,7 @@ class CucumberCreateExecutionActionTest {
 
         @Test
         void given_elementWithEmbeddings_when_processEmbeddings_then_processesEachEmbedding() {
-            CucumberCreateExecutionAction action = spy(new CucumberCreateExecutionAction());
+            final CucumberCreateExecutionAction action = spy(new CucumberCreateExecutionAction());
             Element element = new Element();
             Element.Step step1 = new Element.Step();
             Element.Step.Embedding step1Embedding = mock(Element.Step.Embedding.class);
@@ -159,7 +159,7 @@ class CucumberCreateExecutionActionTest {
         @Test
         void given_embedding_when_processEmbedding_then_attachesToExecution() {
             CucumberCreateExecutionAction action = spy(new CucumberCreateExecutionAction());
-            Element.Step.Embedding embedding = new Element.Step.Embedding();
+            final Element.Step.Embedding embedding = new Element.Step.Embedding();
             ZephyrExecutionSearchResponse.Execution execution = new ZephyrExecutionSearchResponse.Execution();
             execution.setId(123L);
             execution.setIssueKey("TEST-123");
@@ -211,7 +211,7 @@ class CucumberCreateExecutionActionTest {
 
         @Test
         void given_elementWithAtLeastOneEmbedding_when_hasEmbeddings_then_returnsTrue() {
-            CucumberCreateExecutionAction action = new CucumberCreateExecutionAction();
+            final CucumberCreateExecutionAction action = new CucumberCreateExecutionAction();
             Element element = new Element();
             Element.Step step1 = new Element.Step();
             step1.setEmbeddings(null);
@@ -276,7 +276,7 @@ class CucumberCreateExecutionActionTest {
 
         @Test
         void given_elementWithStepsAndEmbeddings_when_getEmbeddings_then_returnsAllEmbeddings() {
-            CucumberCreateExecutionAction action = new CucumberCreateExecutionAction();
+            final CucumberCreateExecutionAction action = new CucumberCreateExecutionAction();
             Element element = new Element();
             Element.Step step1 = new Element.Step();
             Element.Step.Embedding embedding1 = new Element.Step.Embedding();
