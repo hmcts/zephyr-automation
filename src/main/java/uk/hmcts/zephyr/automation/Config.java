@@ -37,6 +37,8 @@ public class Config {
     private final Jira jira;
     private final Zephyr zephyr;
     private final ObjectMapper objectMapper;
+    private final String executionEnvironment;
+    private final String executionBuild;
 
 
     public static void instantiate(String[] args) {
@@ -52,6 +54,8 @@ public class Config {
         String basePath = null;
         String reportPath = null;
         String githubRepoBaseSrcDir = null;
+        String executionEnvironment = null;
+        String executionBuild = null;
 
         for (String arg : args) {
             if (arg.startsWith("action-type=")) {
@@ -64,6 +68,10 @@ public class Config {
                 githubRepoBaseSrcDir = arg.substring("github-repo-base-src-dir=".length());
             } else if (arg.startsWith("report-path=")) {
                 reportPath = arg.substring("report-path=".length());
+            } else if (arg.startsWith("execution-envrionment=")) {
+                executionEnvironment = arg.substring("execution-envrionment=".length());
+            } else if (arg.startsWith("execution-build=")) {
+                executionBuild = arg.substring("execution-build=".length());
             }
         }
 
@@ -76,7 +84,8 @@ public class Config {
         this.basePath = basePath;
         this.reportPath = reportPath;
         this.githubRepoBaseSrcDir = githubRepoBaseSrcDir;
-
+        this.executionEnvironment = executionEnvironment;
+        this.executionBuild = executionBuild;
         JiraConfig.instantiate(args);
 
         this.objectMapper = new ObjectMapper()
@@ -118,6 +127,14 @@ public class Config {
         return INSTANCE.objectMapper;
     }
 
+    public static String getExecutionEnvironment() {
+        return INSTANCE.executionEnvironment;
+    }
+
+    public static String getExecutionBuild() {
+        return INSTANCE.executionBuild;
+    }
+
     public enum ActionType {
         CREATE_TICKETS,
         UPDATE_TICKETS,
@@ -138,10 +155,10 @@ public class Config {
         ));
 
 
-        private final Map<ActionType, Supplier<Action>> createTicketAction;
+        private final Map<ActionType, Supplier<Action>> actionTypeSupplierMap;
 
         public void processAction(ActionType actionType) {
-            Supplier<Action> actionSupplier = createTicketAction.get(actionType);
+            Supplier<Action> actionSupplier = actionTypeSupplierMap.get(actionType);
             if (actionSupplier == null) {
                 throw new UnsupportedOperationException(
                     "Unsupported action type: " + actionType + " for process type: " + this);

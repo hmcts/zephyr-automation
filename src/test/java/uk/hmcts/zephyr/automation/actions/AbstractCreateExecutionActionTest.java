@@ -16,6 +16,7 @@ import uk.hmcts.zephyr.automation.zephyr.client.Zephyr;
 import uk.hmcts.zephyr.automation.zephyr.models.JobProgressToken;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrBulkExecutionRequest;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrBulkExecutionResponse;
+import uk.hmcts.zephyr.automation.zephyr.models.ZephyrCycle;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrCycleResponse;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionSearchResponse;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionStatusUpdateRequest;
@@ -84,6 +85,8 @@ class AbstractCreateExecutionActionTest {
         configMock.when(Config::getReportPath).thenReturn("/tmp/report.json");
         configMock.when(Config::getZephyr).thenReturn(zephyr);
         configMock.when(Config::getJira).thenReturn(jira);
+        configMock.when(Config::getExecutionBuild).thenReturn("Some-Build");
+        configMock.when(Config::getExecutionEnvironment).thenReturn("Some-Env");
         final TestCreateExecutionAction action = new TestCreateExecutionAction(tagService);
 
         ZephyrTest test = new DummyZephyrTest("Scenario with key", ZephyrConstants.ExecutionStatus.PASS);
@@ -113,6 +116,18 @@ class AbstractCreateExecutionActionTest {
         when(zephyr.searchExecutions("cycle-1")).thenReturn(executionSearchResponse);
 
         action.processTests(List.of(test));
+
+        ArgumentCaptor<ZephyrCycle> zephyrCycleCaptor = ArgumentCaptor.forClass(ZephyrCycle.class);
+        verify(zephyr).createCycle(zephyrCycleCaptor.capture());
+
+        ZephyrCycle cycle = zephyrCycleCaptor.getValue();
+        assertEquals("Automated Cycle -", cycle.getName().substring(0, 17));
+        assertEquals("Cycle created automatically from Cucumber JSON report", cycle.getDescription());
+        assertEquals(JiraConfig.getProjectId(), cycle.getProjectId());
+        assertEquals("Some-Env", cycle.getEnvironment());
+        assertEquals("Some-Build", cycle.getBuild());
+
+
 
         verify(jira).searchIssues(any());
         ArgumentCaptor<ZephyrBulkExecutionRequest> bulkExecutionCaptor =
