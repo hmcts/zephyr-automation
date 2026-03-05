@@ -45,6 +45,8 @@ public class Config {
     private final String executionBuild;
     private final String testCycleName;
     private final boolean attachEvidence;
+    private final String testCycleDescription;
+    private final String testCycleVersion;
 
     public static void instantiate(String[] args) {
         if (INSTANCE != null) {
@@ -62,6 +64,8 @@ public class Config {
         String executionEnvironment = null;
         String executionBuild = null;
         String testCycleName = null;
+        String testCycleDescription = null;
+        String testCycleVersion = null;
         boolean attachEvidence = false;
 
         for (String arg : args) {
@@ -81,6 +85,10 @@ public class Config {
                 executionBuild = arg.substring("execution-build=".length());
             } else if (arg.startsWith("execution-test-cycle-name=")) {
                 testCycleName = arg.substring("execution-test-cycle-name=".length());
+            } else if (arg.startsWith("execution-test-cycle-description=")) {
+                testCycleDescription = arg.substring("execution-test-cycle-description=".length());
+            } else if (arg.startsWith("execution-test-cycle-version=")) {
+                testCycleVersion = arg.substring("execution-test-cycle-version=".length());
             } else if (arg.startsWith("execution-attach-evidence=")) {
                 attachEvidence = Boolean.parseBoolean(arg.substring("execution-attach-evidence=".length()));
             }
@@ -98,6 +106,8 @@ public class Config {
         this.executionEnvironment = executionEnvironment;
         this.executionBuild = executionBuild;
         this.testCycleName = testCycleName;
+        this.testCycleDescription = testCycleDescription;
+        this.testCycleVersion = testCycleVersion;
         this.attachEvidence = attachEvidence;
         JiraConfig.instantiate(args);
 
@@ -155,6 +165,14 @@ public class Config {
 
     public static boolean shouldAttachEvidence() {
         return INSTANCE.attachEvidence;
+    }
+
+    public static String getTestCycleVersion() {
+        return INSTANCE.testCycleVersion;
+    }
+
+    public static String getTestCycleDescription() {
+        return INSTANCE.testCycleDescription;
     }
 
     public enum ActionType {

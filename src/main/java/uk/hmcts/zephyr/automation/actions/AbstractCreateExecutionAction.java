@@ -64,11 +64,15 @@ public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
                 .name(
                     Optional.ofNullable(Config.getTestCycleName())
                         .orElse("Automated Cycle - " + DateTimeFormatter.ISO_DATE_TIME.format(OffsetDateTime.now())))
-                .description("Cycle created automatically from Cucumber JSON report")
+                .description(
+                    Optional.ofNullable(Config.getTestCycleDescription())
+                        .orElse("Cycle created automatically from Cucumber JSON report"))
                 .projectId(JiraConfig.getProjectId())
                 .environment(Config.getExecutionEnvironment())
                 .build(Config.getExecutionBuild())
-                .versionId("-1") //Default to -1 for no version
+                .versionId(
+                    Optional.ofNullable(Config.getTestCycleVersion())
+                        .orElse("-1"))//Default to -1 for no version
                 .build()
         );
         assignExecutionDetails(scenarioResults, cycle.getId());

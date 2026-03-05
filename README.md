@@ -35,6 +35,8 @@ Zephyr Automation is a tool for integrating test results and ticket management b
 - `execution-environment=`: Environment for the Zephyr execution (e.g., `Staging`, `Production`)
 - `execution-build=`:  Build version for the Zephyr execution (e.g., `1.0.0`)
 - `execution-test-cycle-name=`: Test cycle name for the Zephyr execution (e.g., `Regression Cycle 1`)
+- `execution-test-cycle-description=`: Test cycle description for the Zephyr execution (e.g., `Automated test execution for regression cycle 1`)
+- `execution-test-cycle-version=`: Test cycle version for the Zephyr execution 
 - `execution-attach-evidence=`: Whether to attach evidence to the Zephyr execution (true/false, default: false) - (Only supported for cucumber reports)
 
 ### Supported Tags

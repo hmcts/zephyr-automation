@@ -42,6 +42,8 @@ class ConfigTest {
             "execution-environment=stg",
             "execution-build=1.0.0",
             "execution-test-cycle-name=SomeTest cycle name",
+            "execution-test-cycle-description=SomeTest cycle description",
+            "execution-test-cycle-version=123",
             "execution-attach-evidence=true",
         };
 
@@ -55,6 +57,8 @@ class ConfigTest {
         assertEquals("stg", Config.getExecutionEnvironment());
         assertEquals("1.0.0", Config.getExecutionBuild());
         assertEquals("SomeTest cycle name", Config.getTestCycleName());
+        assertEquals("SomeTest cycle description", Config.getTestCycleDescription());
+        assertEquals("123", Config.getTestCycleVersion());
         assertTrue(Config.shouldAttachEvidence());
         assertNotNull(Config.getJira());
         assertNotNull(Config.getZephyr());
