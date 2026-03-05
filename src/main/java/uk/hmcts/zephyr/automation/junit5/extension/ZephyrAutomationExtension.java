@@ -1,7 +1,6 @@
 package uk.hmcts.zephyr.automation.junit5.extension;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestWatcher;
 import uk.hmcts.zephyr.automation.junit5.JiraAnnotations;
@@ -14,25 +13,26 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class ZephyrAutomationExtension implements TestWatcher, AfterAllCallback {
+public class ZephyrAutomationExtension implements TestWatcher {
 
 
     public static final ExtensionContext.Namespace NAMESPACE =
         ExtensionContext.Namespace.create(ZephyrAutomationExtension.class);
 
-
     private static Aggregator getJunit5ZephyrReport(ExtensionContext context) {
-        // root store is shared across all tests in the same engine run
         ExtensionContext root = context.getRoot();
-        return root.getStore(NAMESPACE)
-            .getOrComputeIfAbsent(Aggregator.class, k -> new Aggregator(), Aggregator.class);
+        return root.getStore(NAMESPACE).getOrComputeIfAbsent(
+            "ZEPHYR_AGGREGATOR", // stable key so we get exactly one instance
+            key -> new Aggregator(root),
+            Aggregator.class
+        );
     }
 
     @Override
@@ -55,33 +55,28 @@ public class ZephyrAutomationExtension implements TestWatcher, AfterAllCallback 
         getJunit5ZephyrReport(extensionContext).addDisabledTest(extensionContext, reason.orElse(""));
     }
 
-    @Override
-    public void afterAll(ExtensionContext extensionContext) {
-        // In parallel runs, afterAll will be invoked for multiple containers (classes).
-        // We only want to flush once per root.
-        getJunit5ZephyrReport(extensionContext).saveReport(extensionContext);
-    }
-
-    static final class Aggregator {
+    static final class Aggregator implements ExtensionContext.Store.CloseableResource {
         private final Queue<Junit5ZephyrReport.Test> tests = new ConcurrentLinkedQueue<>();
         private final AtomicBoolean flushed = new AtomicBoolean(false);
         private final String runId = UUID.randomUUID().toString();
         private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
+        private final Path reportLocation;
 
+        Aggregator(ExtensionContext rootContext) {
+            ZephyrAutomationExtensionConfig config = ZephyrAutomationExtensionConfig.getConfig(rootContext);
+            this.reportLocation = config.reportLocation;
+        }
 
         void add(Junit5ZephyrReport.Test test) {
             this.tests.add(test);
         }
 
-        void saveReport(ExtensionContext extensionContext) {
+        void saveReport() {
             if (!flushed.compareAndSet(false, true)) {
                 return;
             }
             try {
-                ZephyrAutomationExtensionConfig config = ZephyrAutomationExtensionConfig.getConfig(extensionContext);
-                Path reportLocation = config.reportLocation;
                 Files.createDirectories(reportLocation.getParent());
-
                 Files.writeString(reportLocation, objectMapper.writeValueAsString(generateReport()),
                     StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING);
@@ -123,7 +118,7 @@ public class ZephyrAutomationExtension implements TestWatcher, AfterAllCallback 
                 status,
                 errorType,
                 errorMessage,
-                new ArrayList<>(extensionContext.getTags()),
+                new HashSet<>(extensionContext.getTags()),
                 JiraAnnotations.fromContext(extensionContext)
             );
         }
@@ -143,6 +138,11 @@ public class ZephyrAutomationExtension implements TestWatcher, AfterAllCallback 
 
         public void addDisabledTest(ExtensionContext extensionContext, String reason) {
             this.add(base(extensionContext, Junit5ZephyrReport.Test.Status.DISABLED, null, reason));
+        }
+
+        @Override
+        public void close() throws Throwable {
+            saveReport();
         }
     }
 }

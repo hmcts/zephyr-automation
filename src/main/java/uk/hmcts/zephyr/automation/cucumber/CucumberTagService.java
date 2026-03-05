@@ -14,7 +14,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 @Slf4j
-public class CucumberTagService implements TagService<Element>, TestTag.StandardTagPrefixProvider {
+public class CucumberTagService implements TagService<Element> {
 
     @Override
     public List<TestTag> extractTagListFromType(Element scenario, TestTag.Type tagType) {

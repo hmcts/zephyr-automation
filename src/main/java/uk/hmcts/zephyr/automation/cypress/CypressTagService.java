@@ -9,7 +9,10 @@ import uk.hmcts.zephyr.automation.cypress.models.CypressReport;
 import java.util.List;
 
 @Slf4j
-public class CypressTagService implements TagService<CypressReport.CypressTest>, TestTag.StandardTagPrefixProvider {
+public class CypressTagService implements TagService<CypressReport.CypressTest> {
+
+    public CypressTagService() {
+    }
 
     @Override
     public List<TestTag> extractTagListFromType(CypressReport.CypressTest test, TestTag.Type tagType) {

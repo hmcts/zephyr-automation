@@ -40,6 +40,20 @@ public class JiraIssueFieldsWrapper {
             }
             return dynamic;
         }
+
+        public void setSummary(String summary) {
+            this.summary = sanitizeSummary(summary);
+        }
+
+        private static String sanitizeSummary(String summary) {
+            if (summary == null) {
+                return null;
+            }
+            String withoutNewLines = summary.replace('\r', ' ').replace('\n', ' ');
+            return withoutNewLines.length() > 255
+                ? withoutNewLines.substring(0, 255)
+                : withoutNewLines;
+        }
     }
 
     @Data

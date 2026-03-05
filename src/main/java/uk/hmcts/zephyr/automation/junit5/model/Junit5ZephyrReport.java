@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.actions.ZephyrTest;
 import uk.hmcts.zephyr.automation.junit5.JiraAnnotationMetadata;
@@ -12,6 +13,7 @@ import uk.hmcts.zephyr.automation.zephyr.ZephyrConstants;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Data
 public class Junit5ZephyrReport {
@@ -22,6 +24,7 @@ public class Junit5ZephyrReport {
 
     @Data
     @AllArgsConstructor
+    @NoArgsConstructor
     public static class Test implements ZephyrTest {
         private String id;
         private String displayName;
@@ -30,7 +33,7 @@ public class Junit5ZephyrReport {
         private Status status;
         private String errorType;
         private String errorMessage;
-        private List<String> tags;
+        private Set<String> tags;
         private JiraAnnotationMetadata metadata;
 
         @Override
@@ -42,8 +45,10 @@ public class Junit5ZephyrReport {
         @Override
         @JsonIgnore
         public String getGitHubLink() {
-            return Config.getGithubRepoBaseSrcDir() + className.replace(".", "/")
-                .replaceAll("\\$.*", ".java");
+            return Config.getGithubRepoBaseSrcDir()
+                + "/"
+                + className.replace(".", "/").replaceAll("\\$.*", ".java")
+                + ".java";
         }
 
         @Override

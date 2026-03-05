@@ -102,6 +102,7 @@ public class Config {
         JiraConfig.instantiate(args);
 
         this.objectMapper = new ObjectMapper()
+            .findAndRegisterModules()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         this.jira = new JiraImpl(objectMapper, JiraConfig.getBaseUrl(), JiraConfig.getAuthToken());

@@ -103,7 +103,7 @@ class CucumberFeatureTest {
 
             String link = element.getGitHubLink();
 
-            assertEquals("/repo/resources/features/sample.feature#L12", link);
+            assertEquals("/repo/features/sample.feature#L12", link);
         }
     }
 

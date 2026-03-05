@@ -15,7 +15,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -41,7 +40,7 @@ public final class JiraAnnotations {
         );
     }
 
-    private static <T extends Annotation> List<String> collectValues(
+    private static <T extends Annotation> Set<String> collectValues(
         Class<?> testClass,
         Method testMethod,
         Class<T> type,
@@ -51,7 +50,7 @@ public final class JiraAnnotations {
         Set<String> values = new LinkedHashSet<>();
         addValues(values, testClass, type, extractor, skipBlank);
         addValues(values, testMethod, type, extractor, skipBlank);
-        return List.copyOf(values);
+        return values;
     }
 
     private static <T extends Annotation> void addValues(

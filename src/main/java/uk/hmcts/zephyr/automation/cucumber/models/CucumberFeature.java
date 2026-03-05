@@ -71,7 +71,7 @@ public class CucumberFeature {
         @JsonIgnore
         public String getGitHubLink() {
             return cucumberFeature.getUri().replace("classpath:",
-                Config.getGithubRepoBaseSrcDir() + "/resources/") + "#L" + getLine();
+                Config.getGithubRepoBaseSrcDir() + "/") + "#L" + getLine();
         }
 
         @Override

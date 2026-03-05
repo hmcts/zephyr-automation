@@ -52,7 +52,9 @@ public class CypressReport {
         }
 
         public void addTag(String tag) {
-            getTags().add(tag);
+            if (!hasTag(tag)) {
+                getTags().add(tag);
+            }
         }
 
         public boolean hasTag(String tagName) {

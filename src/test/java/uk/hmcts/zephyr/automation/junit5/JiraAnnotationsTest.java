@@ -9,8 +9,8 @@ import uk.hmcts.zephyr.automation.junit5.annotations.JiraKey;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraLink;
 
 import java.lang.reflect.Method;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -27,10 +27,10 @@ class JiraAnnotationsTest {
 
         JiraAnnotationMetadata metadata = JiraAnnotations.fromContext(context);
 
-        assertEquals(List.of("METHOD-KEY"), metadata.jiraKey());
-        assertEquals(List.of("CLASS-LINK", "METHOD-LINK-1", "METHOD-LINK-2"), metadata.jiraLinks());
-        assertEquals(List.of("payments", "workflow"), metadata.jiraComponents());
-        assertTrue(metadata.jiraIgnore());
+        assertEquals(Set.of("METHOD-KEY"), metadata.getJiraKey());
+        assertEquals(Set.of("CLASS-LINK", "METHOD-LINK-1", "METHOD-LINK-2"), metadata.getJiraLinks());
+        assertEquals(Set.of("payments", "workflow"), metadata.getJiraComponents());
+        assertTrue(metadata.isJiraIgnore());
     }
 
     @JiraLink("CLASS-LINK")

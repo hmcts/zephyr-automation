@@ -38,4 +38,14 @@ public class TestUtil {
             "jira-default-components=Default"
         };
     }
+
+    public static String[] defaultArgs(
+        Config.ActionType actionType,
+        Config.ProcessType processType,
+        String basePath
+    ) {
+        String[] args = defaultArgs(actionType, processType);
+        args[2] = "base-path=" + basePath;
+        return args;
+    }
 }
