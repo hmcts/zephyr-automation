@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import uk.hmcts.zephyr.automation.Config;
+import uk.hmcts.zephyr.automation.TestTag;
 import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature;
 import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Element;
 import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Location;
@@ -85,26 +86,28 @@ class CucumberTagServiceTest {
     }
 
     @Nested
-    class ExtractTagWithPrefixTest {
+    class ExtractTagFromTagTypeTest {
 
         @Test
         void givenMatchingTag_whenExtract_thenReturnsSuffix() {
             scenario.addTag(CucumberDataUtil.tag("@" + JIRA_LABEL_TAG_PREFIX + "critical"));
 
-            Optional<String> result = tagService.extractTagWithPrefix(scenario, JIRA_LABEL_TAG_PREFIX);
+            Optional<TestTag> result = tagService.extractTagFromTagType(scenario, TestTag.Type.JIRA_LABEL);
 
             assertTrue(result.isPresent());
-            assertEquals("critical", result.get());
+            TestTag extractedTag = result.get();
+            assertEquals(TestTag.Type.JIRA_LABEL, extractedTag.type());
+            assertEquals("critical", extractedTag.value());
         }
 
         @Test
         void givenNoMatchingTag_whenExtract_thenReturnsEmpty() {
-            assertTrue(tagService.extractTagWithPrefix(scenario, JIRA_LABEL_TAG_PREFIX).isEmpty());
+            assertTrue(tagService.extractTagFromTagType(scenario, TestTag.Type.JIRA_LABEL).isEmpty());
         }
     }
 
     @Nested
-    class ExtractTagListWithPrefixTest {
+    class ExtractTagListFromTypeTest {
 
         @Test
         void givenMultipleMatches_whenExtract_thenReturnsAllSuffixes() {
@@ -112,9 +115,15 @@ class CucumberTagServiceTest {
             scenario.addTag(CucumberDataUtil.tag("@" + JIRA_LABEL_TAG_PREFIX + "regression"));
             scenario.addTag(CucumberDataUtil.tag("@otherprefixvalue"));
 
-            List<String> extracted = tagService.extractTagListWithPrefix(scenario, JIRA_LABEL_TAG_PREFIX);
+            List<TestTag> extracted = tagService.extractTagListFromType(scenario, TestTag.Type.JIRA_LABEL);
+            assertEquals(2, extracted.size());
+            TestTag tag1 = extracted.get(0);
+            TestTag tag2 = extracted.get(1);
 
-            assertIterableEquals(List.of("critical", "regression"), extracted);
+            assertEquals(TestTag.Type.JIRA_LABEL, tag1.type());
+            assertEquals(TestTag.Type.JIRA_LABEL, tag2.type());
+            assertEquals("critical", tag1.value());
+            assertEquals("regression", tag2.value());
         }
     }
 
@@ -127,8 +136,7 @@ class CucumberTagServiceTest {
             scenario.setSteps(new ArrayList<>(List.of(CucumberDataUtil.stepAtLine(3, "passed"))));
             copyFixture("add-tag-without-existing.before.feature");
 
-            String tagSuffix = JIRA_KEY_TAG_PREFIX + "ABC-900";
-            tagService.addTag(scenario, tagSuffix);
+            tagService.addTag(scenario, new TestTag(TestTag.Type.JIRA_KEY, "ABC-900"));
 
             assertIterableEquals(readFixture("add-tag-without-existing.after.feature"),
                 Files.readAllLines(featurePath));
@@ -136,7 +144,7 @@ class CucumberTagServiceTest {
             assertEquals(4, scenario.getSteps().getFirst().getLine());
 
             Tag addedTag = scenario.getTags().stream()
-                .filter(t -> t.getName().equals("@" + tagSuffix))
+                .filter(t -> t.getName().equals("@JIRA-KEY:ABC-900"))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Expected tag to be added"));
             assertEquals(2, addedTag.getLocation().getLine());
@@ -150,15 +158,14 @@ class CucumberTagServiceTest {
             copyFixture("add-tag-existing-line.before.feature");
             scenario.addTag(new Tag("@existing", "Tag", new Location(2, 3)));
 
-            String tagSuffix = JIRA_KEY_TAG_PREFIX + "ABC-901";
-            tagService.addTag(scenario, tagSuffix);
+            tagService.addTag(scenario, new TestTag(TestTag.Type.JIRA_KEY, "ABC-901"));
 
             assertIterableEquals(readFixture("add-tag-existing-line.after.feature"), Files.readAllLines(featurePath));
             assertEquals(3, scenario.getLine());
             assertEquals(4, scenario.getSteps().getFirst().getLine());
 
             Tag addedTag = scenario.getTags().stream()
-                .filter(t -> t.getName().equals("@" + tagSuffix))
+                .filter(t -> t.getName().equals("@JIRA-KEY:ABC-901"))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Expected tag to be added"));
             assertEquals(2, addedTag.getLocation().getLine());
@@ -173,8 +180,7 @@ class CucumberTagServiceTest {
             Tag existingTag = new Tag("@existing", "Tag", new Location(2, 3));
             scenario.getTags().add(existingTag);
 
-            String tagSuffix = JIRA_KEY_TAG_PREFIX + "ABC-902";
-            tagService.addTag(scenario, tagSuffix);
+            tagService.addTag(scenario, new TestTag(TestTag.Type.JIRA_KEY, "ABC-902"));
 
             assertIterableEquals(readFixture("add-tag-shift-existing.after.feature"), Files.readAllLines(featurePath));
             Tag shiftedTag = scenario.getTags().stream()
@@ -189,14 +195,13 @@ class CucumberTagServiceTest {
         void givenScenarioAlreadyContainingTag_whenAddTag_thenSkipsFileUpdate() throws IOException {
             scenario.setLine(2);
             copyFixture("add-tag-skip.before.feature");
-            String tagSuffix = JIRA_KEY_TAG_PREFIX + "ABC-999";
-            scenario.addTag(new Tag("@" + tagSuffix, "Tag", new Location(2, 3)));
+            scenario.addTag(new Tag("@JIRA-KEY:ABC-999", "Tag", new Location(2, 3)));
             List<String> original = Files.readAllLines(featurePath);
 
-            tagService.addTag(scenario, tagSuffix);
+            tagService.addTag(scenario, new TestTag(TestTag.Type.JIRA_KEY, "ABC-999"));
 
             assertEquals(1, scenario.getTags().stream()
-                .filter(t -> t.getName().equals("@" + tagSuffix))
+                .filter(t -> t.getName().equals("@JIRA-KEY:ABC-999"))
                 .count());
             assertIterableEquals(original, Files.readAllLines(featurePath));
         }

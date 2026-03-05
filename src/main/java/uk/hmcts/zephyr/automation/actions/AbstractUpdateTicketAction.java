@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.TagService;
-import uk.hmcts.zephyr.automation.jira.JiraConfig;
+import uk.hmcts.zephyr.automation.TestTag;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueFieldsWrapper;
 
 import java.util.Optional;
@@ -28,7 +28,7 @@ public abstract class AbstractUpdateTicketAction<T extends ZephyrTest>
                 log.warn("No Jira key found for test {}", test);
                 return;
             }
-            if (getTagService().hasTag(test, JiraConfig.JIRA_IGNORE)) {
+            if (getTagService().hasTag(test, TestTag.Type.JIRA_IGNORE)) {
                 log.info("Test in {} is marked to ignore JIRA creation", test.getNameAndLocation());
                 return;
             }

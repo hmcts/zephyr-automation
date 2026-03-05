@@ -3,49 +3,35 @@ package uk.hmcts.zephyr.automation.cucumber;
 import lombok.extern.slf4j.Slf4j;
 import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.TagService;
+import uk.hmcts.zephyr.automation.TestTag;
 import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature;
 import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Element;
 import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Location;
-import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Tag;
 import uk.hmcts.zephyr.automation.util.FileUtil;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Optional;
-
-import static uk.hmcts.zephyr.automation.jira.JiraConfig.JIRA_KEY_TAG_PREFIX;
 
 @Slf4j
 public class CucumberTagService implements TagService<Element> {
 
-
-    private String addTagPrefix(String tagName) {
-        return "@" + tagName;
-    }
-
     @Override
-    public Optional<String> extractJiraKeyFromTag(Element scenario) {
-        return extractTagWithPrefix(scenario, JIRA_KEY_TAG_PREFIX)
-            .map(key -> key.replace(addTagPrefix(JIRA_KEY_TAG_PREFIX), ""));
-    }
-
-    @Override
-    public Optional<String> extractTagWithPrefix(Element scenario, String prefix) {
-        return extractTagListWithPrefix(scenario, prefix).stream().findFirst();
-    }
-
-    @Override
-    public List<String> extractTagListWithPrefix(Element scenario, String prefix) {
+    public List<TestTag> extractTagListFromType(Element scenario, TestTag.Type tagType) {
+        String prefix = getTagPrefix(tagType);
         return scenario.getTags().stream()
-            .filter(tag -> tag.getName().startsWith(addTagPrefix(prefix)))
-            .map(tag -> tag.getName().substring(addTagPrefix(prefix).length()))
+            .filter(tag -> tag.getName().startsWith(prefix))
+            .map(tag -> tag.getName().substring(prefix.length()))
+            .map(value -> new TestTag(tagType, value))
             .toList();
     }
 
     @Override
-    public void addTag(Element scenario, String tagNameBase) {
-        String tagName = addTagPrefix(tagNameBase);
+    public void addTag(Element scenario, TestTag testTag) {
+        String tagName = getTagPrefix(testTag.type());
+        if (testTag.value() != null) {
+            tagName = tagName + testTag.value();
+        }
         CucumberFeature cucumberFeature = scenario.getCucumberFeature();
         log.info("Adding tag '{}' to scenario '{}' in feature '{}'",
             tagName, scenario.getName(), cucumberFeature.getUri());
@@ -57,7 +43,7 @@ public class CucumberTagService implements TagService<Element> {
         //Update the feature file with the tag
         Location tagLocation = addTagToScenario(cucumberFeature, scenario, tagName);
         // Add the tag to the scenario in memory
-        scenario.addTag(new Tag(tagName, "Tag", tagLocation));
+        scenario.addTag(new CucumberFeature.Tag(tagName, "Tag", tagLocation));
         log.info("Tag '{}' added to scenario '{}' at line {} in feature '{}'",
             tagName, scenario.getName(), tagLocation.getLine(), cucumberFeature.getUri());
     }
@@ -128,7 +114,7 @@ public class CucumberTagService implements TagService<Element> {
         }
     }
 
-    private void updateLineNumbersOnScenarioTag(Tag tag, int tagLine) {
+    private void updateLineNumbersOnScenarioTag(CucumberFeature.Tag tag, int tagLine) {
         if (tag.getLocation() == null) {
             return;
         }

@@ -1,6 +1,7 @@
 package uk.hmcts.zephyr.automation.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -14,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class UtilTest {
 
     @Test
+    @DisplayName("writeObjectToString uses Config's ObjectMapper")
     void writeObjectToString_usesConfigObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         try (MockedStatic<Config> configMock = Mockito.mockStatic(Config.class)) {

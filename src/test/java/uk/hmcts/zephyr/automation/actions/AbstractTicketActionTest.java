@@ -7,6 +7,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.TagService;
+import uk.hmcts.zephyr.automation.TestTag;
 import uk.hmcts.zephyr.automation.jira.JiraConfig;
 import uk.hmcts.zephyr.automation.jira.client.Jira;
 import uk.hmcts.zephyr.automation.jira.models.JiraComponent;
@@ -82,14 +83,14 @@ class AbstractTicketActionTest {
     void givenTagsForLinking_whenAddLinksToJiraIssue_thenCreatesExpectedLinks() {
         final TestTicketAction action = new TestTicketAction(tagService);
         ZephyrTest test = new DummyZephyrTest();
-        when(tagService.extractTagListWithPrefix(test, JiraConfig.JIRA_NFR_TAG_PREFIX))
-            .thenReturn(List.of("NFR-1"));
-        when(tagService.extractTagListWithPrefix(test, JiraConfig.JIRA_LINK_TAG_PREFIX))
-            .thenReturn(List.of("LINK-1"));
-        when(tagService.extractTagListWithPrefix(test, JiraConfig.JIRA_STORY_TAG_PREFIX))
-            .thenReturn(List.of("STORY-1"));
-        when(tagService.extractTagListWithPrefix(test, JiraConfig.JIRA_DEFECT_TAG_PREFIX))
-            .thenReturn(List.of("BUG-1"));
+        when(tagService.extractTagListFromType(test, TestTag.Type.JIRA_NFR))
+            .thenReturn(List.of(new TestTag(TestTag.Type.JIRA_NFR, "NFR-1")));
+        when(tagService.extractTagListFromType(test, TestTag.Type.JIRA_LINK))
+            .thenReturn(List.of(new TestTag(TestTag.Type.JIRA_LINK, "LINK-1")));
+        when(tagService.extractTagListFromType(test, TestTag.Type.JIRA_STORY))
+            .thenReturn(List.of(new TestTag(TestTag.Type.JIRA_STORY, "STORY-1")));
+        when(tagService.extractTagListFromType(test, TestTag.Type.JIRA_DEFECT))
+            .thenReturn(List.of(new TestTag(TestTag.Type.JIRA_DEFECT, "BUG-1")));
 
         action.addLinksToJiraIssue("CASE-1", test);
 
@@ -119,8 +120,9 @@ class AbstractTicketActionTest {
     void givenLabels_whenGetLabels_thenDelegatesToTagService() {
         TestTicketAction action = new TestTicketAction(tagService);
         ZephyrTest test = new DummyZephyrTest();
-        when(tagService.extractTagListWithPrefix(test, JiraConfig.JIRA_LABEL_TAG_PREFIX))
-            .thenReturn(List.of("critical", "smoke"));
+        when(tagService.extractTagListFromType(test, TestTag.Type.JIRA_LABEL))
+            .thenReturn(List.of(new TestTag(TestTag.Type.JIRA_LABEL, "critical"),
+                new TestTag(TestTag.Type.JIRA_LABEL, "smoke")));
 
         List<String> labels = action.getLabels(test);
 
@@ -131,8 +133,8 @@ class AbstractTicketActionTest {
     void givenDefaultAndTaggedComponents_whenGetComponents_thenResolvesIds() {
         TestTicketAction action = new TestTicketAction(tagService);
         ZephyrTest test = new DummyZephyrTest();
-        when(tagService.extractTagListWithPrefix(test, JiraConfig.JIRA_COMPONENT_TAG_PREFIX))
-            .thenReturn(List.of("Extra"));
+        when(tagService.extractTagListFromType(test, TestTag.Type.JIRA_COMPONENT))
+            .thenReturn(List.of(new TestTag(TestTag.Type.JIRA_COMPONENT, "Extra")));
         when(jira.getComponentByName(JiraConfig.getProjectId(), "Default"))
             .thenReturn(componentWithId("id-default"));
         when(jira.getComponentByName(JiraConfig.getProjectId(), "Extra"))
@@ -148,21 +150,22 @@ class AbstractTicketActionTest {
     void givenEpicTag_whenGetEpicTicketKey_thenReturnsOptional() {
         TestTicketAction action = new TestTicketAction(tagService);
         ZephyrTest test = new DummyZephyrTest();
-        when(tagService.extractTagWithPrefix(test, JiraConfig.JIRA_EPIC_TAG_PREFIX)).thenReturn(Optional.of("EPIC-1"));
+        when(tagService.extractTagFromTagType(test, TestTag.Type.JIRA_EPIC)).thenReturn(
+            Optional.of(new TestTag(TestTag.Type.JIRA_EPIC, "epic-1")));
 
-        assertEquals(Optional.of("EPIC-1"), action.getEpicTicketKey(test));
+        assertEquals(Optional.of(new TestTag(TestTag.Type.JIRA_EPIC,"epic-1")), action.getEpicTicketKey(test));
     }
 
     @Test
     void givenTest_whenBuildBodyForCreate_thenPopulatesAllFields() {
         TestTicketAction action = new TestTicketAction(tagService);
         ZephyrTest test = new DummyZephyrTest();
-        when(tagService.extractTagListWithPrefix(test, JiraConfig.JIRA_LABEL_TAG_PREFIX))
-            .thenReturn(List.of("critical"));
-        when(tagService.extractTagListWithPrefix(test, JiraConfig.JIRA_COMPONENT_TAG_PREFIX))
-            .thenReturn(List.of("Extra"));
-        when(tagService.extractTagWithPrefix(test, JiraConfig.JIRA_EPIC_TAG_PREFIX))
-            .thenReturn(Optional.of("EPIC-9"));
+        when(tagService.extractTagListFromType(test, TestTag.Type.JIRA_LABEL))
+            .thenReturn(List.of(new TestTag(TestTag.Type.JIRA_LABEL, "critical")));
+        when(tagService.extractTagListFromType(test, TestTag.Type.JIRA_COMPONENT))
+            .thenReturn(List.of(new TestTag(TestTag.Type.JIRA_COMPONENT, "Extra")));
+        when(tagService.extractTagFromTagType(test, TestTag.Type.JIRA_EPIC))
+            .thenReturn(Optional.of(new TestTag(TestTag.Type.JIRA_EPIC, "EPIC-9")));
         when(jira.getComponentByName(JiraConfig.getProjectId(), "Default"))
             .thenReturn(componentWithId("id-default"));
         when(jira.getComponentByName(JiraConfig.getProjectId(), "Extra"))
@@ -183,7 +186,8 @@ class AbstractTicketActionTest {
 
         JiraIssueFieldsWrapper updateBody = action.buildBody(test, false);
         assertEquals("scenario", updateBody.getFields().getSummary());
-        assertEquals("Location: [feature|https://example]\r\nScenario: scenario\r\n", updateBody.getFields().getDescription());
+        assertEquals("Location: [feature|https://example]\r\nScenario: scenario\r\n",
+            updateBody.getFields().getDescription());
         assertNull(updateBody.getFields().getProject());
         assertNull(updateBody.getFields().getIssuetype());
         assertNull(updateBody.getFields().getReporter());
