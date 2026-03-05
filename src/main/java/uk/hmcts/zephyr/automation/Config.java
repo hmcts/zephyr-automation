@@ -3,6 +3,7 @@ package uk.hmcts.zephyr.automation;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import uk.hmcts.zephyr.automation.actions.Action;
@@ -23,6 +24,8 @@ import uk.hmcts.zephyr.automation.zephyr.ZephyrImpl;
 import uk.hmcts.zephyr.automation.zephyr.client.Zephyr;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -33,20 +36,10 @@ public class Config {
     public static final long DEFAULT_TIMEOUT = Duration.ofMinutes(2).toMillis();
     private static Config INSTANCE;
 
-    private final ProcessType processType;
-    private final ActionType actionType;
-    private final String basePath;
-    private final String reportPath;
-    private final String githubRepoBaseSrcDir;
+    private final Map<Argument, String> arguments;
     private final Jira jira;
     private final Zephyr zephyr;
     private final ObjectMapper objectMapper;
-    private final String executionEnvironment;
-    private final String executionBuild;
-    private final String testCycleName;
-    private final boolean attachEvidence;
-    private final String testCycleDescription;
-    private final String testCycleVersion;
 
     public static void instantiate(String[] args) {
         if (INSTANCE != null) {
@@ -55,60 +48,46 @@ public class Config {
         INSTANCE = new Config(args);
     }
 
-    private Config(String[] args) {
-        Config.ActionType actionType = null;
-        Config.ProcessType processType = null;
-        String basePath = null;
-        String reportPath = null;
-        String githubRepoBaseSrcDir = null;
-        String executionEnvironment = null;
-        String executionBuild = null;
-        String testCycleName = null;
-        String testCycleDescription = null;
-        String testCycleVersion = null;
-        boolean attachEvidence = false;
+    @Getter
+    public enum Argument {
+        ACTION_TYPE("action-type="),
+        PROCESS_TYPE("process-type="),
+        BASE_PATH("base-path="),
+        REPORT_PATH("report-path="),
+        GITHUB_REPO_BASE_SRC_DIR("github-repo-base-src-dir="),
+        EXECUTION_ENVIRONMENT("execution-environment="),
+        EXECUTION_BUILD("execution-build="),
+        EXECUTION_TEST_CYCLE_NAME("execution-test-cycle-name="),
+        EXECUTION_TEST_CYCLE_DESCRIPTION("execution-test-cycle-description="),
+        EXECUTION_TEST_CYCLE_VERSION("execution-test-cycle-version="),
+        EXECUTION_ATTACH_EVIDENCE("execution-attach-evidence=");
 
+        private final String prefix;
+
+        Argument(String prefix) {
+            this.prefix = prefix;
+        }
+    }
+
+
+    private Config(String[] args) {
+        Map<Argument, String> argumentMap = new EnumMap<>(Argument.class);
         for (String arg : args) {
-            if (arg.startsWith("action-type=")) {
-                actionType = Config.ActionType.valueOf(arg.substring("action-type=".length()));
-            } else if (arg.startsWith("process-type=")) {
-                processType = Config.ProcessType.valueOf(arg.substring("process-type:".length()));
-            } else if (arg.startsWith("base-path=")) {
-                basePath = arg.substring("base-path=".length());
-            } else if (arg.startsWith("github-repo-base-src-dir=")) {
-                githubRepoBaseSrcDir = arg.substring("github-repo-base-src-dir=".length());
-            } else if (arg.startsWith("report-path=")) {
-                reportPath = arg.substring("report-path=".length());
-            } else if (arg.startsWith("execution-environment=")) {
-                executionEnvironment = arg.substring("execution-environment=".length());
-            } else if (arg.startsWith("execution-build=")) {
-                executionBuild = arg.substring("execution-build=".length());
-            } else if (arg.startsWith("execution-test-cycle-name=")) {
-                testCycleName = arg.substring("execution-test-cycle-name=".length());
-            } else if (arg.startsWith("execution-test-cycle-description=")) {
-                testCycleDescription = arg.substring("execution-test-cycle-description=".length());
-            } else if (arg.startsWith("execution-test-cycle-version=")) {
-                testCycleVersion = arg.substring("execution-test-cycle-version=".length());
-            } else if (arg.startsWith("execution-attach-evidence=")) {
-                attachEvidence = Boolean.parseBoolean(arg.substring("execution-attach-evidence=".length()));
+            for (Argument argument : Argument.values()) {
+                if (arg.startsWith(argument.getPrefix())) {
+                    String value = arg.substring(argument.getPrefix().length()).trim();
+                    if (!value.isEmpty()) {
+                        argumentMap.put(argument, value);
+                    }
+                }
             }
         }
-
-        if (actionType == null || processType == null) {
+        this.arguments = Collections.unmodifiableMap(argumentMap);
+        if (this.arguments.getOrDefault(Argument.ACTION_TYPE, null) == null
+            || this.arguments.getOrDefault(Argument.PROCESS_TYPE, null) == null) {
             throw new IllegalArgumentException(
                 "Both action-type and process-type must be specified as command line arguments");
         }
-        this.actionType = actionType;
-        this.processType = processType;
-        this.basePath = basePath;
-        this.reportPath = reportPath;
-        this.githubRepoBaseSrcDir = githubRepoBaseSrcDir;
-        this.executionEnvironment = executionEnvironment;
-        this.executionBuild = executionBuild;
-        this.testCycleName = testCycleName;
-        this.testCycleDescription = testCycleDescription;
-        this.testCycleVersion = testCycleVersion;
-        this.attachEvidence = attachEvidence;
         JiraConfig.instantiate(args);
 
         this.objectMapper = new ObjectMapper()
@@ -120,23 +99,47 @@ public class Config {
     }
 
     public static ProcessType getProcessType() {
-        return INSTANCE.processType;
+        return ProcessType.valueOf(INSTANCE.arguments.getOrDefault(Argument.PROCESS_TYPE, null));
     }
 
     public static ActionType getActionType() {
-        return INSTANCE.actionType;
+        return ActionType.valueOf(INSTANCE.arguments.getOrDefault(Argument.ACTION_TYPE, null));
     }
 
     public static String getBasePath() {
-        return INSTANCE.basePath;
+        return INSTANCE.arguments.getOrDefault(Argument.BASE_PATH, null);
     }
 
     public static String getReportPath() {
-        return INSTANCE.reportPath;
+        return INSTANCE.arguments.getOrDefault(Argument.REPORT_PATH, null);
     }
 
     public static String getGithubRepoBaseSrcDir() {
-        return INSTANCE.githubRepoBaseSrcDir;
+        return INSTANCE.arguments.getOrDefault(Argument.GITHUB_REPO_BASE_SRC_DIR, null);
+    }
+
+    public static String getExecutionEnvironment() {
+        return INSTANCE.arguments.getOrDefault(Argument.EXECUTION_ENVIRONMENT, null);
+    }
+
+    public static String getExecutionBuild() {
+        return INSTANCE.arguments.getOrDefault(Argument.EXECUTION_BUILD, null);
+    }
+
+    public static String getTestCycleName() {
+        return INSTANCE.arguments.getOrDefault(Argument.EXECUTION_TEST_CYCLE_NAME, null);
+    }
+
+    public static boolean shouldAttachEvidence() {
+        return Boolean.parseBoolean(INSTANCE.arguments.getOrDefault(Argument.EXECUTION_ATTACH_EVIDENCE, "false"));
+    }
+
+    public static String getTestCycleVersion() {
+        return INSTANCE.arguments.getOrDefault(Argument.EXECUTION_TEST_CYCLE_VERSION, null);
+    }
+
+    public static String getTestCycleDescription() {
+        return INSTANCE.arguments.getOrDefault(Argument.EXECUTION_TEST_CYCLE_DESCRIPTION, null);
     }
 
     public static Jira getJira() {
@@ -151,29 +154,6 @@ public class Config {
         return INSTANCE.objectMapper;
     }
 
-    public static String getExecutionEnvironment() {
-        return INSTANCE.executionEnvironment;
-    }
-
-    public static String getExecutionBuild() {
-        return INSTANCE.executionBuild;
-    }
-
-    public static String getTestCycleName() {
-        return INSTANCE.testCycleName;
-    }
-
-    public static boolean shouldAttachEvidence() {
-        return INSTANCE.attachEvidence;
-    }
-
-    public static String getTestCycleVersion() {
-        return INSTANCE.testCycleVersion;
-    }
-
-    public static String getTestCycleDescription() {
-        return INSTANCE.testCycleDescription;
-    }
 
     public enum ActionType {
         CREATE_TICKETS,
