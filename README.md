@@ -71,6 +71,46 @@ java -jar zephyr-automation.jar \
   report-path=./output/report.json
 ```
 
+## JUnit 5 Support
+
+Zephyr Automation ships with a dedicated JUnit 5 integration so that pure Java tests can emit the same metadata as the JSON-based reporters.
+
+### Available Annotations
+
+Add these annotations to your JUnit 5 test methods (or declaring classes) to mirror the tag behaviour documented above. They live under `uk.hmcts.zephyr.automation.junit5.annotations`.
+
+| Annotation                | Equivalent Tag Prefix | Description |
+|---------------------------|------------------------|-------------|
+| `@JiraKey("PROJ-123")`     | `JIRA-KEY:`            | Links the test to an existing Jira issue key; prevents ticket creation when present. |
+| `@JiraComponent("API")`   | `JIRA-COMPONENT:`      | Adds the specified component to created/updated tickets. |
+| `@JiraLabel("smoke")`     | `JIRA-LABEL:`          | Adds labels to the ticket. |
+| `@JiraEpic("PROJ-456")`   | `JIRA-EPIC:`           | Associates the ticket with the given Epic. |
+| `@JiraNfr("PROJ-789")`    | `JIRA-NFR:`            | Links the ticket to a Non-Functional Requirement. |
+| `@JiraLink("PROJ-321")`   | `JIRA-LINK:`           | Creates a generic Jira issue link. |
+| `@JiraStory("PROJ-654")`  | `JIRA-STORY:`          | Links the ticket to a Story. |
+| `@JiraDefect("PROJ-987")` | `JIRA-DEFECT:`         | Links the ticket to a Defect. |
+| `@JiraIgnore`              | `JIRA-IGNORE`          | Skips ticket creation or updates for the annotated test. |
+
+### ZephyrAutomationExtension
+
+Include the extension to aggregate JUnit 5 execution results into a Zephyr-compatible JSON file:
+
+```java
+@ExtendWith(ZephyrAutomationExtension.class)
+class MyZephyrEnabledTests {
+    // ... your tests ...
+}
+```
+
+Configuration:
+
+1. Set the report destination via `src/test/resources/junit-platform.properties`:
+   ```properties
+   zephyr.report.location = target/zephyr-reports/Junit5Report.json
+   ```
+2. Provide the usual CLI arguments (e.g., `action-type`, `process-type=JUNIT5_JSON_REPORT`, Jira credentials, etc.) when invoking the automation CLI so the generated report is consumed just like Cucumber or Cypress outputs.
+3. (Optional) The extension honours the existing annotations and will enrich each captured test with tag-derived metadata before writing the JSON file.
+
 ## Building
 
 Build the project using Gradle:
