@@ -140,9 +140,9 @@ dependencies {
     implementation group: 'org.apache.logging.log4j', name: 'log4j-to-slf4j', version: log4JVersion
     implementation group: 'ch.qos.logback', name: 'logback-classic', version: logbackVersion
     implementation group: 'ch.qos.logback', name: 'logback-core', version: logbackVersion
-    implementation 'io.github.openfeign:feign-core:13.8'
-    implementation 'io.github.openfeign:feign-jackson:13.8'
-    implementation 'io.github.openfeign:feign-slf4j:13.8'
+    implementation 'io.github.openfeign:feign-core:13.9.3'
+    implementation 'io.github.openfeign:feign-jackson:13.9.3'
+    implementation 'io.github.openfeign:feign-slf4j:13.9.3'
     implementation "io.github.openfeign.form:feign-form:3.8.0"
     implementation 'com.github.javaparser:javaparser-core:3.26.1'
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
