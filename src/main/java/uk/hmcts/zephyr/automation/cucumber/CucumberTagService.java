@@ -52,39 +52,168 @@ public class CucumberTagService implements TagService<Element> {
         String featureFilePath = resolveFeatureFilePath(cucumberFeature.getUri());
 
         try {
-            //Cucumber line numbers are 1-based, but List is 0-based
             List<String> lines = FileUtil.readFileAsLines(featureFilePath);
-            int scenarioLine = scenario.getLine() - 1;
+            int scenarioLineIndex = scenario.getLine() - 1;
 
-            int tagLine = scenarioLine;
-            int tagColumn = 1;
-
-            if (lines.get(tagLine - 1).trim().startsWith("@")) {
-                tagLine = scenarioLine - 1;
-                String prefix = lines.get(tagLine) + " ";
-                tagColumn = tagColumn + prefix.length();
-                lines.set(tagLine, prefix + tagName);
+            Location location;
+            if (isExampleRowLine(lines, scenarioLineIndex)) {
+                location = handleScenarioOutlineTagInsertion(lines, cucumberFeature, scenarioLineIndex, tagName);
             } else {
-                //Get number of spaces at the start of the scenario line to maintain indentation
-                String scenarioLineContent = lines.get(scenarioLine);
-                String indentation =
-                    scenarioLineContent.substring(0, scenarioLineContent.indexOf(scenarioLineContent.trim()));
-                //Insert the tag line on the scenario line (Forcing the scenario line to go down by one line)
-
-                lines.add(scenarioLine, indentation + tagName);
-                //Update line numbers on the feature to account for the new line
-                updateLineNumbersOnFeature(cucumberFeature, tagLine);
-                tagColumn = tagColumn + indentation.length();
+                location = handleStandardScenarioTagInsertion(lines, cucumberFeature, scenarioLineIndex, tagName);
             }
-            //Write the updated lines back to the feature file
-            Files.write(Paths.get(featureFilePath), lines);
 
-            //Return the line number of the added tag (Cucumber line numbers are 1-based)
-            return new Location(tagLine + 1, tagColumn);
+            Files.write(Paths.get(featureFilePath), lines);
+            return location;
         } catch (Exception e) {
             throw new RuntimeException("Failed to update feature file '" + featureFilePath, e);
         }
     }
+
+    private Location handleScenarioOutlineTagInsertion(List<String> lines, CucumberFeature cucumberFeature,
+                                                       int scenarioLineIndex, String tagName) {
+        Integer examplesLineIndex = findExamplesLineIndex(lines, scenarioLineIndex);
+        if (examplesLineIndex == null) {
+            return handleStandardScenarioTagInsertion(lines, cucumberFeature, scenarioLineIndex, tagName);
+        }
+
+        splitExamplesBlockAfterSelectedRow(lines, cucumberFeature, examplesLineIndex, scenarioLineIndex);
+
+        Integer existingTagLineIndex = findExampleTagLineIndex(lines, examplesLineIndex);
+        if (existingTagLineIndex != null) {
+            return appendTagToLine(lines, existingTagLineIndex, tagName);
+        }
+
+        String indentation = extractIndentation(lines.get(examplesLineIndex));
+        lines.add(examplesLineIndex, indentation + tagName);
+        updateLineNumbersOnFeature(cucumberFeature, examplesLineIndex);
+        return new Location(examplesLineIndex + 1, indentation.length() + 1);
+    }
+
+    private void splitExamplesBlockAfterSelectedRow(List<String> lines, CucumberFeature cucumberFeature,
+                                                    int examplesLineIndex, int scenarioLineIndex) {
+        int headerLineIndex = findExampleTableHeaderLineIndex(lines, examplesLineIndex);
+        if (headerLineIndex == -1 || scenarioLineIndex <= headerLineIndex) {
+            return;
+        }
+
+        int blockEndExclusive = findExampleTableBlockEnd(lines, headerLineIndex + 1);
+        if (scenarioLineIndex + 1 >= blockEndExclusive) {
+            return;
+        }
+
+        final List<String> rowsAfterSelected =
+            lines.subList(scenarioLineIndex + 1, blockEndExclusive).stream().toList();
+        lines.subList(scenarioLineIndex + 1, blockEndExclusive).clear();
+
+        int insertionIndex = scenarioLineIndex + 1;
+        String examplesIndentation = extractIndentation(lines.get(examplesLineIndex));
+        String headerLine = lines.get(headerLineIndex);
+        lines.add(insertionIndex++, examplesIndentation + "Examples:");
+        lines.add(insertionIndex++, headerLine);
+        for (String row : rowsAfterSelected) {
+            lines.add(insertionIndex++, row);
+        }
+
+        // Net line increase is +2 (rows are moved, not duplicated), so update model line numbers accordingly.
+        updateLineNumbersOnFeature(cucumberFeature, scenarioLineIndex + 1);
+        updateLineNumbersOnFeature(cucumberFeature, scenarioLineIndex + 1);
+    }
+
+    private int findExampleTableHeaderLineIndex(List<String> lines, int examplesLineIndex) {
+        for (int i = examplesLineIndex + 1; i < lines.size(); i++) {
+            String trimmed = lines.get(i).trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+            if (trimmed.startsWith("|")) {
+                return i;
+            }
+            return -1;
+        }
+        return -1;
+    }
+
+    private int findExampleTableBlockEnd(List<String> lines, int startIndex) {
+        for (int i = startIndex; i < lines.size(); i++) {
+            String trimmed = lines.get(i).trim();
+            if (trimmed.startsWith("|")) {
+                continue;
+            }
+            return i;
+        }
+        return lines.size();
+    }
+
+    private Location handleStandardScenarioTagInsertion(List<String> lines, CucumberFeature cucumberFeature,
+                                                        int scenarioLineIndex, String tagName) {
+        int tagLineIndex = scenarioLineIndex;
+        int tagColumn = 1;
+
+        if (scenarioLineIndex > 0 && lines.get(tagLineIndex - 1).trim().startsWith("@")) {
+            tagLineIndex = scenarioLineIndex - 1;
+            String prefix = lines.get(tagLineIndex) + " ";
+            tagColumn = tagColumn + prefix.length();
+            lines.set(tagLineIndex, prefix + tagName);
+        } else {
+            String scenarioLineContent = lines.get(scenarioLineIndex);
+            String indentation = extractIndentation(scenarioLineContent);
+            lines.add(scenarioLineIndex, indentation + tagName);
+            updateLineNumbersOnFeature(cucumberFeature, tagLineIndex);
+            tagColumn = tagColumn + indentation.length();
+        }
+
+        return new Location(tagLineIndex + 1, tagColumn);
+    }
+
+    private Location appendTagToLine(List<String> lines, int tagLineIndex, String tagName) {
+        String prefix = lines.get(tagLineIndex) + " ";
+        lines.set(tagLineIndex, prefix + tagName);
+        return new Location(tagLineIndex + 1, prefix.length() + 1);
+    }
+
+    private boolean isExampleRowLine(List<String> lines, int lineIndex) {
+        if (lineIndex < 0 || lineIndex >= lines.size()) {
+            return false;
+        }
+        return lines.get(lineIndex).trim().startsWith("|");
+    }
+
+    private Integer findExamplesLineIndex(List<String> lines, int fromLineIndex) {
+        for (int i = fromLineIndex; i >= 0; i--) {
+            String trimmed = lines.get(i).trim();
+            if (trimmed.startsWith("Examples")) {
+                return i;
+            }
+            if (trimmed.isEmpty() || trimmed.startsWith("|") || trimmed.startsWith("@")) {
+                continue;
+            }
+            break;
+        }
+        return null;
+    }
+
+    private Integer findExampleTagLineIndex(List<String> lines, int examplesLineIndex) {
+        for (int i = examplesLineIndex - 1; i >= 0; i--) {
+            String trimmed = lines.get(i).trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+            if (trimmed.startsWith("@")) {
+                return i;
+            }
+            break;
+        }
+        return null;
+    }
+
+    private String extractIndentation(String lineContent) {
+        int index = 0;
+        while (index < lineContent.length() && Character.isWhitespace(lineContent.charAt(index))) {
+            index++;
+        }
+        return lineContent.substring(0, index);
+    }
+
 
     private void updateLineNumbersOnFeature(CucumberFeature cucumberFeature, int tagLine) {
         if (cucumberFeature.getElements() != null) {
