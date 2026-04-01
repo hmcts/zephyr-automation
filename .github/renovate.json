@@ -16,10 +16,10 @@
       "groupName": "Logging stack",
       "groupSlug": "logging",
       "matchManagers": ["gradle"],
-      "matchPackagePatterns": [
-        "^com\\.github\\.hmcts\\.java-logging",
-        "^org\\.apache\\.logging\\.log4j",
-        "^ch\\.qos\\.logback"
+      "matchPackageNames": [
+        "/^com\.github\.hmcts\.java-logging/",
+        "/^org\.apache\.logging\.log4j/",
+        "/^ch\.qos\.logback/"
       ]
     },
     {
@@ -27,8 +27,8 @@
       "groupName": "Jackson",
       "groupSlug": "jackson",
       "matchManagers": ["gradle"],
-      "matchPackagePatterns": [
-        "^com\\.fasterxml\\.jackson\\."
+      "matchPackageNames": [
+        "/^com\.fasterxml\.jackson\./"
       ]
     },
     {
@@ -36,8 +36,8 @@
       "groupName": "Feign clients",
       "groupSlug": "feign",
       "matchManagers": ["gradle"],
-      "matchPackagePatterns": [
-        "^io\\.github\\.openfeign:"
+      "matchPackageNames": [
+        "/^io\.github\.openfeign:/"
       ]
     },
     {
@@ -45,10 +45,6 @@
       "groupName": "Testing stack",
       "groupSlug": "testing",
       "matchManagers": ["gradle"],
-      "matchPackagePatterns": [
-        "^org\\.junit",
-        "^org\\.mockito"
-      ],
       "matchDepTypes": [
         "testImplementation",
         "testRuntimeOnly",
@@ -58,6 +54,10 @@
         "functionalTestRuntimeOnly",
         "smokeTestImplementation",
         "smokeTestRuntimeOnly"
+      ],
+      "matchPackageNames": [
+        "/^org\.junit/",
+        "/^org\.mockito/"
       ]
     },
     {
