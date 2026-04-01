@@ -205,6 +205,86 @@ class CucumberTagServiceTest {
                 .count());
             assertIterableEquals(original, Files.readAllLines(featurePath));
         }
+
+        @Nested
+        class ScenarioOutlineExamplesTest {
+
+            @Test
+            void givenScenarioOutlineExampleWithoutExistingTags_whenAddTag_thenInsertsAboveExamples()
+                throws IOException {
+                scenario.setLine(9);
+                copyFixture("add-tag-outline.before.feature");
+
+                tagService.addTag(scenario, new TestTag(TestTag.Type.JIRA_KEY, "TEST-0001"));
+
+                assertIterableEquals(readFixture("add-tag-outline.after.feature"), Files.readAllLines(featurePath));
+                assertEquals(12, scenario.getLine());
+
+                Tag addedTag = scenario.getTags().stream()
+                    .filter(t -> t.getName().equals("@JIRA-KEY:TEST-0001"))
+                    .findFirst()
+                    .orElseThrow(() -> new AssertionError("Expected tag to be added"));
+                assertEquals(7, addedTag.getLocation().getLine());
+                assertEquals(5, addedTag.getLocation().getColumn());
+            }
+
+            @Test
+            void givenScenarioOutlineExampleWithExistingExampleTag_whenAddTag_thenAppendsToExampleTagLine()
+                throws IOException {
+                scenario.setLine(10);
+                copyFixture("add-tag-outline-existing.before.feature");
+                scenario.addTag(new Tag("@example-tag", "Tag", new Location(7, 5)));
+
+                tagService.addTag(scenario, new TestTag(TestTag.Type.JIRA_KEY, "TEST-0002"));
+
+                assertIterableEquals(readFixture("add-tag-outline-existing.after.feature"),
+                    Files.readAllLines(featurePath));
+                assertEquals(10, scenario.getLine());
+
+                Tag addedTag = scenario.getTags().stream()
+                    .filter(t -> t.getName().equals("@JIRA-KEY:TEST-0002"))
+                    .findFirst()
+                    .orElseThrow(() -> new AssertionError("Expected tag to be added"));
+                assertEquals(7, addedTag.getLocation().getLine());
+                assertEquals(18, addedTag.getLocation().getColumn());
+            }
+
+            @Test
+            void givenScenarioOutlineWithMultipleRows_whenTaggingEachRow_thenEachRowGetsOwnTaggedExamplesBlock()
+                throws IOException {
+                scenario.setLine(9);
+                scenario.setName("Row one scenario");
+                copyFixture("add-tag-outline-multi-row.before.feature");
+
+                Element secondScenario = new Element();
+                secondScenario.setName("Row two scenario");
+                secondScenario.setLine(10);
+                secondScenario.setCucumberFeature(feature);
+                secondScenario.setTags(new ArrayList<>());
+                secondScenario.setSteps(new ArrayList<>());
+                feature.setElements(new ArrayList<>(List.of(scenario, secondScenario)));
+
+                tagService.addTag(scenario, new TestTag(TestTag.Type.JIRA_KEY, "TEST-1001"));
+                tagService.addTag(secondScenario, new TestTag(TestTag.Type.JIRA_KEY, "TEST-1002"));
+
+                assertIterableEquals(readFixture("add-tag-outline-multi-row.after.feature"),
+                    Files.readAllLines(featurePath));
+
+                Tag firstAddedTag = scenario.getTags().stream()
+                    .filter(t -> t.getName().equals("@JIRA-KEY:TEST-1001"))
+                    .findFirst()
+                    .orElseThrow(() -> new AssertionError("Expected first row tag to be added"));
+                assertEquals(7, firstAddedTag.getLocation().getLine());
+                assertEquals(5, firstAddedTag.getLocation().getColumn());
+
+                Tag secondAddedTag = secondScenario.getTags().stream()
+                    .filter(t -> t.getName().equals("@JIRA-KEY:TEST-1002"))
+                    .findFirst()
+                    .orElseThrow(() -> new AssertionError("Expected second row tag to be added"));
+                assertEquals(11, secondAddedTag.getLocation().getLine());
+                assertEquals(5, secondAddedTag.getLocation().getColumn());
+            }
+        }
     }
 
     private void copyFixture(String resourceName) throws IOException {
