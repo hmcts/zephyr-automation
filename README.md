@@ -45,7 +45,7 @@ The following tags can be used in your test scenarios to control ticket creation
 
 | Tag Prefix         | Example Value           | Description                                                                 |
 |--------------------|-------------------------|-----------------------------------------------------------------------------|
-| `@JIRA-KEY:`       | `@JIRA-KEY:PROJ-123`    | Associates the test with an existing Jira issue key.                        |
+| `@JIRA-TEST-KEY:`       | `@JIRA-TEST-KEY:PROJ-123`    | Associates the test with an existing Jira issue key.                        |
 | `@JIRA-COMPONENT:` | `@JIRA-COMPONENT:API`   | Adds the specified Jira component to the ticket.                            |
 | `@JIRA-LABEL:`     | `@JIRA-LABEL:smoke`     | Adds the specified label to the Jira ticket.                                |
 | `@JIRA-EPIC:`      | `@JIRA-EPIC:PROJ-456`   | Links the ticket to the specified Jira Epic.                                |
@@ -80,7 +80,7 @@ Add these annotations to your JUnit 5 test methods (or declaring classes) to mir
 
 | Annotation                | Equivalent Tag Prefix | Description |
 |---------------------------|------------------------|-------------|
-| `@JiraKey("PROJ-123")`     | `JIRA-KEY:`            | Links the test to an existing Jira issue key; prevents ticket creation when present. |
+| `@JiraKey("PROJ-123")`     | `JIRA-TEST-KEY:`            | Links the test to an existing Jira issue key; prevents ticket creation when present. |
 | `@JiraComponent("API")`   | `JIRA-COMPONENT:`      | Adds the specified component to created/updated tickets. |
 | `@JiraLabel("smoke")`     | `JIRA-LABEL:`          | Adds labels to the ticket. |
 | `@JiraEpic("PROJ-456")`   | `JIRA-EPIC:`           | Associates the ticket with the given Epic. |

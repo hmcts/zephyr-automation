@@ -2,7 +2,7 @@ describe('Account flows', () => {
   describe('when user is admin', () => {
     it('admin can approve', {
       retries: 1,
-      tags: ['@JIRA-KEY:ABC-500']
+      tags: ['@JIRA-TEST-KEY:ABC-500']
     }, () => {
       // admin scenario
     });

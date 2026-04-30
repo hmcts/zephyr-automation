@@ -16,7 +16,7 @@ public class CypressTagService implements TagService<CypressReport.CypressTest> 
 
     @Override
     public List<TestTag> extractTagListFromType(CypressReport.CypressTest test, TestTag.Type tagType) {
-        String prefix = getTagPrefix(tagType);
+        String prefix = TagService.getTagPrefix(tagType);
         return test.getTags().stream()
             .filter(tag -> tag.startsWith(prefix))
             .map(tag -> tag.substring(prefix.length()))
@@ -27,7 +27,7 @@ public class CypressTagService implements TagService<CypressReport.CypressTest> 
 
     @Override
     public void addTag(CypressReport.CypressTest test, TestTag testTag) {
-        String tagName = getTagPrefix(testTag.type());
+        String tagName = TagService.getTagPrefix(testTag.type());
         if (testTag.value() != null) {
             tagName = tagName + testTag.value();
         }

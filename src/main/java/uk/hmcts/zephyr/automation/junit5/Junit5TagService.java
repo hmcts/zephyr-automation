@@ -103,10 +103,4 @@ public class Junit5TagService implements TagService<Junit5ZephyrReport.Test> {
         values.add(testTag.value());
 
     }
-
-
-    @Override
-    public String getTagPrefix(TestTag.Type tagType) {
-        return "";
-    }
 }

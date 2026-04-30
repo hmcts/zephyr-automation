@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import uk.hmcts.zephyr.automation.Config;
+import uk.hmcts.zephyr.automation.TagService;
 import uk.hmcts.zephyr.automation.TestTag;
 import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature;
 import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Element;
@@ -27,8 +28,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static uk.hmcts.zephyr.automation.jira.JiraConfig.JIRA_KEY_TAG_PREFIX;
-import static uk.hmcts.zephyr.automation.jira.JiraConfig.JIRA_LABEL_TAG_PREFIX;
 
 class CucumberTagServiceTest {
 
@@ -71,7 +70,7 @@ class CucumberTagServiceTest {
 
         @Test
         void givenTagContainingJiraKey_whenExtract_thenReturnsKey() {
-            scenario.addTag(CucumberDataUtil.tag("@" + JIRA_KEY_TAG_PREFIX + "ABC-321"));
+            scenario.addTag(CucumberDataUtil.tag(TagService.getTagPrefix(TestTag.Type.JIRA_KEY) + "ABC-321"));
 
             Optional<String> jiraKey = tagService.extractJiraKeyFromTag(scenario);
 
@@ -90,7 +89,7 @@ class CucumberTagServiceTest {
 
         @Test
         void givenMatchingTag_whenExtract_thenReturnsSuffix() {
-            scenario.addTag(CucumberDataUtil.tag("@" + JIRA_LABEL_TAG_PREFIX + "critical"));
+            scenario.addTag(CucumberDataUtil.tag(TagService.getTagPrefix(TestTag.Type.JIRA_LABEL) + "critical"));
 
             Optional<TestTag> result = tagService.extractTagFromTagType(scenario, TestTag.Type.JIRA_LABEL);
 
@@ -111,8 +110,8 @@ class CucumberTagServiceTest {
 
         @Test
         void givenMultipleMatches_whenExtract_thenReturnsAllSuffixes() {
-            scenario.addTag(CucumberDataUtil.tag("@" + JIRA_LABEL_TAG_PREFIX + "critical"));
-            scenario.addTag(CucumberDataUtil.tag("@" + JIRA_LABEL_TAG_PREFIX + "regression"));
+            scenario.addTag(CucumberDataUtil.tag(TagService.getTagPrefix(TestTag.Type.JIRA_LABEL) + "critical"));
+            scenario.addTag(CucumberDataUtil.tag(TagService.getTagPrefix(TestTag.Type.JIRA_LABEL) + "regression"));
             scenario.addTag(CucumberDataUtil.tag("@otherprefixvalue"));
 
             List<TestTag> extracted = tagService.extractTagListFromType(scenario, TestTag.Type.JIRA_LABEL);
@@ -144,7 +143,7 @@ class CucumberTagServiceTest {
             assertEquals(4, scenario.getSteps().getFirst().getLine());
 
             Tag addedTag = scenario.getTags().stream()
-                .filter(t -> t.getName().equals("@JIRA-KEY:ABC-900"))
+                .filter(t -> t.getName().equals("@JIRA-TEST-KEY:ABC-900"))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Expected tag to be added"));
             assertEquals(2, addedTag.getLocation().getLine());
@@ -165,7 +164,7 @@ class CucumberTagServiceTest {
             assertEquals(4, scenario.getSteps().getFirst().getLine());
 
             Tag addedTag = scenario.getTags().stream()
-                .filter(t -> t.getName().equals("@JIRA-KEY:ABC-901"))
+                .filter(t -> t.getName().equals("@JIRA-TEST-KEY:ABC-901"))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Expected tag to be added"));
             assertEquals(2, addedTag.getLocation().getLine());
@@ -195,13 +194,13 @@ class CucumberTagServiceTest {
         void givenScenarioAlreadyContainingTag_whenAddTag_thenSkipsFileUpdate() throws IOException {
             scenario.setLine(2);
             copyFixture("add-tag-skip.before.feature");
-            scenario.addTag(new Tag("@JIRA-KEY:ABC-999", "Tag", new Location(2, 3)));
+            scenario.addTag(new Tag("@JIRA-TEST-KEY:ABC-999", "Tag", new Location(2, 3)));
             List<String> original = Files.readAllLines(featurePath);
 
             tagService.addTag(scenario, new TestTag(TestTag.Type.JIRA_KEY, "ABC-999"));
 
             assertEquals(1, scenario.getTags().stream()
-                .filter(t -> t.getName().equals("@JIRA-KEY:ABC-999"))
+                .filter(t -> t.getName().equals("@JIRA-TEST-KEY:ABC-999"))
                 .count());
             assertIterableEquals(original, Files.readAllLines(featurePath));
         }
@@ -221,7 +220,7 @@ class CucumberTagServiceTest {
                 assertEquals(12, scenario.getLine());
 
                 Tag addedTag = scenario.getTags().stream()
-                    .filter(t -> t.getName().equals("@JIRA-KEY:TEST-0001"))
+                    .filter(t -> t.getName().equals("@JIRA-TEST-KEY:TEST-0001"))
                     .findFirst()
                     .orElseThrow(() -> new AssertionError("Expected tag to be added"));
                 assertEquals(7, addedTag.getLocation().getLine());
@@ -242,7 +241,7 @@ class CucumberTagServiceTest {
                 assertEquals(10, scenario.getLine());
 
                 Tag addedTag = scenario.getTags().stream()
-                    .filter(t -> t.getName().equals("@JIRA-KEY:TEST-0002"))
+                    .filter(t -> t.getName().equals("@JIRA-TEST-KEY:TEST-0002"))
                     .findFirst()
                     .orElseThrow(() -> new AssertionError("Expected tag to be added"));
                 assertEquals(7, addedTag.getLocation().getLine());
@@ -271,14 +270,14 @@ class CucumberTagServiceTest {
                     Files.readAllLines(featurePath));
 
                 Tag firstAddedTag = scenario.getTags().stream()
-                    .filter(t -> t.getName().equals("@JIRA-KEY:TEST-1001"))
+                    .filter(t -> t.getName().equals("@JIRA-TEST-KEY:TEST-1001"))
                     .findFirst()
                     .orElseThrow(() -> new AssertionError("Expected first row tag to be added"));
                 assertEquals(7, firstAddedTag.getLocation().getLine());
                 assertEquals(5, firstAddedTag.getLocation().getColumn());
 
                 Tag secondAddedTag = secondScenario.getTags().stream()
-                    .filter(t -> t.getName().equals("@JIRA-KEY:TEST-1002"))
+                    .filter(t -> t.getName().equals("@JIRA-TEST-KEY:TEST-1002"))
                     .findFirst()
                     .orElseThrow(() -> new AssertionError("Expected second row tag to be added"));
                 assertEquals(11, secondAddedTag.getLocation().getLine());

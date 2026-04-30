@@ -1,7 +1,7 @@
 describe('Login feature', () => {
   it('user logs in', {
     retries: 1,
-    tags: ['@JIRA-KEY:ABC-1', '@SMOKE']
+    tags: ['@JIRA-TEST-KEY:ABC-1', '@SMOKE']
   }, () => {
     // implementation
   });
