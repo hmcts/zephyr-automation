@@ -21,9 +21,9 @@ public interface TagService<T> {
         return extractTagFromTagType(test, tagType).isPresent();
     }
 
-    default String getTagPrefix(TestTag.Type tagType) {
+    static String getTagPrefix(TestTag.Type tagType) {
         return switch (tagType) {
-            case JIRA_KEY -> "@JIRA-KEY:";
+            case JIRA_KEY -> "@JIRA-TEST-KEY:";
             case JIRA_COMPONENT -> "@JIRA-COMPONENT:";
             case JIRA_LABEL -> "@JIRA-LABEL:";
             case JIRA_EPIC -> "@JIRA-EPIC:";

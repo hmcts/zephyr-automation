@@ -18,7 +18,7 @@ public class CucumberTagService implements TagService<Element> {
 
     @Override
     public List<TestTag> extractTagListFromType(Element scenario, TestTag.Type tagType) {
-        String prefix = getTagPrefix(tagType);
+        String prefix = TagService.getTagPrefix(tagType);
         return scenario.getTags().stream()
             .filter(tag -> tag.getName().startsWith(prefix))
             .map(tag -> tag.getName().substring(prefix.length()))
@@ -28,7 +28,7 @@ public class CucumberTagService implements TagService<Element> {
 
     @Override
     public void addTag(Element scenario, TestTag testTag) {
-        String tagName = getTagPrefix(testTag.type());
+        String tagName = TagService.getTagPrefix(testTag.type());
         if (testTag.value() != null) {
             tagName = tagName + testTag.value();
         }

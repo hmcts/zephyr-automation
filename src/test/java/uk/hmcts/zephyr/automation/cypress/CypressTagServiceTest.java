@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import uk.hmcts.zephyr.automation.Config;
+import uk.hmcts.zephyr.automation.TagService;
 import uk.hmcts.zephyr.automation.TestTag;
 import uk.hmcts.zephyr.automation.cypress.models.CypressReport;
 import uk.hmcts.zephyr.automation.support.TestUtil;
@@ -16,8 +17,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mockStatic;
-import static uk.hmcts.zephyr.automation.jira.JiraConfig.JIRA_KEY_TAG_PREFIX;
-import static uk.hmcts.zephyr.automation.jira.JiraConfig.JIRA_LABEL_TAG_PREFIX;
 
 class CypressTagServiceTest {
 
@@ -47,11 +46,11 @@ class CypressTagServiceTest {
     }
 
     @Nested
-    class ExtractJiraKeyFromTagTest {
+    class ExtractJiraTestKeyFromTagTest {
 
         @Test
         void givenTagContainingJiraKey_whenExtract_thenReturnsKey() {
-            cypressTest.addTag("@" + JIRA_KEY_TAG_PREFIX + "ABC-123");
+            cypressTest.addTag(TagService.getTagPrefix(TestTag.Type.JIRA_KEY) + "ABC-123");
 
             Optional<String> jiraKey = tagService.extractJiraKeyFromTag(cypressTest);
 
@@ -70,7 +69,7 @@ class CypressTagServiceTest {
 
         @Test
         void givenMatchingTag_whenExtract_thenReturnsSuffixWithoutPrefix() {
-            cypressTest.addTag("@" + JIRA_LABEL_TAG_PREFIX + "critical");
+            cypressTest.addTag(TagService.getTagPrefix(TestTag.Type.JIRA_LABEL) + "critical");
 
             Optional<TestTag> label = tagService.extractTagFromTagType(cypressTest, TestTag.Type.JIRA_LABEL);
 
@@ -91,8 +90,8 @@ class CypressTagServiceTest {
 
         @Test
         void givenMultipleMatchingTags_whenExtract_thenReturnsAllSuffixes() {
-            cypressTest.addTag("@" + JIRA_LABEL_TAG_PREFIX + "critical");
-            cypressTest.addTag("@" + JIRA_LABEL_TAG_PREFIX + "regression");
+            cypressTest.addTag(TagService.getTagPrefix(TestTag.Type.JIRA_LABEL) + "critical");
+            cypressTest.addTag(TagService.getTagPrefix(TestTag.Type.JIRA_LABEL) + "regression");
             cypressTest.addTag("@JIRA-OTHER:ignore");
 
             List<TestTag> labels = tagService.extractTagListFromType(cypressTest, TestTag.Type.JIRA_LABEL);
@@ -116,7 +115,7 @@ class CypressTagServiceTest {
             TestTag testTag = new TestTag(TestTag.Type.JIRA_KEY, "ABC-456");
             tagService.addTag(cypressTest, testTag);
 
-            String expectedTag = "@" + JIRA_KEY_TAG_PREFIX + "ABC-456";
+            String expectedTag = TagService.getTagPrefix(TestTag.Type.JIRA_KEY) + "ABC-456";
             cypressTaggerMock.verify(() -> CypressTagger.addTagToCypressTest(
                 "/tmp/base/" + cypressTest.getFile(),
                 cypressTest.getTitle(),
@@ -127,7 +126,7 @@ class CypressTagServiceTest {
 
         @Test
         void givenExistingTag_whenAddTag_thenSkipsTagger() {
-            String expectedTag = "@" + JIRA_KEY_TAG_PREFIX + "ABC-456";
+            String expectedTag = TagService.getTagPrefix(TestTag.Type.JIRA_KEY) + "ABC-456";
             cypressTest.addTag(expectedTag);
             cypressTaggerMock = mockStatic(CypressTagger.class);
             TestTag testTag = new TestTag(TestTag.Type.JIRA_KEY, "ABC-456");

@@ -4,7 +4,7 @@ Feature: Payments feature
     When they pay an invoice
     Then the payment succeeds
 
-    @JIRA-KEY:TEST-0001
+    @JIRA-TEST-KEY:TEST-0001
     Examples:
       | method | path                                   |
       | GET    | /defendant-accounts/500000009          |

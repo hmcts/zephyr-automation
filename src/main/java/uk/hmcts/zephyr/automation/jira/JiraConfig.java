@@ -11,8 +11,6 @@ import java.util.List;
 public class JiraConfig {
 
     private static JiraConfig INSTANCE;
-    public static final String JIRA_KEY_TAG_PREFIX = "JIRA-KEY:";
-    public static final String JIRA_LABEL_TAG_PREFIX = "JIRA-LABEL:";
 
     private final String baseUrl;
     private final String projectId;

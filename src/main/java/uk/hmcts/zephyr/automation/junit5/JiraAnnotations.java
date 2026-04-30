@@ -5,7 +5,7 @@ import uk.hmcts.zephyr.automation.junit5.annotations.JiraComponent;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraDefect;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraEpic;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraIgnore;
-import uk.hmcts.zephyr.automation.junit5.annotations.JiraKey;
+import uk.hmcts.zephyr.automation.junit5.annotations.JiraTestKey;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraLabel;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraLink;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraNfr;
@@ -28,7 +28,7 @@ public final class JiraAnnotations {
         Method testMethod = context.getTestMethod().orElse(null);
 
         return new JiraAnnotationMetadata(
-            collectValues(testClass, testMethod, JiraKey.class, JiraKey::value, true),
+            collectValues(testClass, testMethod, JiraTestKey.class, JiraTestKey::value, true),
             collectValues(testClass, testMethod, JiraComponent.class, JiraComponent::value, true),
             collectValues(testClass, testMethod, JiraLabel.class, JiraLabel::value, true),
             collectValues(testClass, testMethod, JiraEpic.class, JiraEpic::value, true),
