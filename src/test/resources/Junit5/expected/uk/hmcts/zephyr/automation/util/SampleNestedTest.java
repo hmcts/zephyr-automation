@@ -2,7 +2,7 @@ package uk.hmcts.zephyr.automation.util;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import uk.hmcts.zephyr.automation.junit5.annotations.JiraKey;
+import uk.hmcts.zephyr.automation.junit5.annotations.JiraTestKey;
 
 class SampleNestedTest {
 
@@ -13,7 +13,7 @@ class SampleNestedTest {
         class Nested2 {
 
             @Test
-            @JiraKey("ABC-123")
+            @JiraTestKey("ABC-123")
             void targetMethod() {
             }
         }

@@ -8,7 +8,7 @@ import uk.hmcts.zephyr.automation.junit5.annotations.JiraComponent;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraDefect;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraEpic;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraIgnore;
-import uk.hmcts.zephyr.automation.junit5.annotations.JiraKey;
+import uk.hmcts.zephyr.automation.junit5.annotations.JiraTestKey;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraLabel;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraLink;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraNfr;
@@ -25,7 +25,7 @@ import java.util.Set;
 public class Junit5TagService implements TagService<Junit5ZephyrReport.Test> {
 
     private static final Map<TestTag.Type, AnnotationDescriptor> ANNOTATIONS = Map.of(
-        TestTag.Type.JIRA_KEY, JavaTagger.descriptor(JiraKey.class, true),
+        TestTag.Type.JIRA_KEY, JavaTagger.descriptor(JiraTestKey.class, true),
         TestTag.Type.JIRA_COMPONENT, JavaTagger.descriptor(JiraComponent.class, true),
         TestTag.Type.JIRA_LABEL, JavaTagger.descriptor(JiraLabel.class, true),
         TestTag.Type.JIRA_EPIC, JavaTagger.descriptor(JiraEpic.class, true),

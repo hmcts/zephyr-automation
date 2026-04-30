@@ -66,7 +66,7 @@ class CucumberTagServiceTest {
     }
 
     @Nested
-    class ExtractJiraKeyFromTagTest {
+    class ExtractJiraTestKeyFromTagTest {
 
         @Test
         void givenTagContainingJiraKey_whenExtract_thenReturnsKey() {

@@ -5,7 +5,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.mockito.Mockito;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraComponent;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraIgnore;
-import uk.hmcts.zephyr.automation.junit5.annotations.JiraKey;
+import uk.hmcts.zephyr.automation.junit5.annotations.JiraTestKey;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraLink;
 
 import java.lang.reflect.Method;
@@ -37,7 +37,7 @@ class JiraAnnotationsTest {
     @JiraComponent("payments")
     static class AnnotatedTestCase {
 
-        @JiraKey("METHOD-KEY")
+        @JiraTestKey("METHOD-KEY")
         @JiraLink("METHOD-LINK-1")
         @JiraLink("METHOD-LINK-2")
         @JiraComponent("workflow")
