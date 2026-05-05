@@ -1,5 +1,6 @@
 package uk.hmcts.zephyr.automation.actions;
 
+import org.apache.logging.log4j.util.TriConsumer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,7 @@ import uk.hmcts.zephyr.automation.jira.client.Jira;
 import uk.hmcts.zephyr.automation.jira.models.JiraComponent;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueFieldsWrapper;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueLink;
+import uk.hmcts.zephyr.automation.jira.models.LinkType;
 import uk.hmcts.zephyr.automation.support.TestUtil;
 import uk.hmcts.zephyr.automation.zephyr.ZephyrConstants;
 
@@ -91,19 +93,25 @@ class AbstractTicketActionTest {
             .thenReturn(List.of(new TestTag(TestTag.Type.JIRA_STORY, "STORY-1")));
         when(tagService.extractTagListFromType(test, TestTag.Type.JIRA_DEFECT))
             .thenReturn(List.of(new TestTag(TestTag.Type.JIRA_DEFECT, "BUG-1")));
+        when(tagService.extractTagListFromType(test, TestTag.Type.JIRA_EPIC))
+            .thenReturn(List.of(new TestTag(TestTag.Type.JIRA_EPIC, "EPIC-1")));
 
         action.addLinksToJiraIssue("CASE-1", test);
 
         ArgumentCaptor<JiraIssueLink> captor = ArgumentCaptor.forClass(JiraIssueLink.class);
-        verify(jira, times(4)).linkIssue(captor.capture());
+        verify(jira, times(5)).linkIssue(captor.capture());
         List<JiraIssueLink> links = captor.getAllValues();
-        assertEquals("CASE-1", links.getFirst().getOutwardIssue().getKey());
-        assertEquals("NFR-1", links.getFirst().getInwardIssue().getKey());
-        assertEquals("Contributes", links.getFirst().getType().getName());
-        assertEquals("LINK-1", links.get(1).getInwardIssue().getKey());
-        assertEquals("Relates", links.get(1).getType().getName());
-        assertEquals("STORY-1", links.get(2).getInwardIssue().getKey());
-        assertEquals("BUG-1", links.get(3).getInwardIssue().getKey());
+
+        TriConsumer<Integer, LinkType, String> validateLink = (index, linkType, expectedInboundKey) -> {
+            assertEquals(expectedInboundKey, links.get(index).getInwardIssue().getKey());
+            assertEquals(linkType.getType(), links.get(index).getType().getName());
+            assertEquals("CASE-1", links.get(index).getOutwardIssue().getKey());
+        };
+        validateLink.accept(0, LinkType.CONTRIBUTES, "EPIC-1");
+        validateLink.accept(1, LinkType.CONTRIBUTES, "NFR-1");
+        validateLink.accept(2, LinkType.RELATES, "LINK-1");
+        validateLink.accept(3, LinkType.RELATES, "STORY-1");
+        validateLink.accept(4, LinkType.RELATES, "BUG-1");
     }
 
     @Test

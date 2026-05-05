@@ -6,6 +6,7 @@ import uk.hmcts.zephyr.automation.TestTag;
 import uk.hmcts.zephyr.automation.jira.JiraConfig;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueFieldsWrapper;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueLink;
+import uk.hmcts.zephyr.automation.jira.models.LinkType;
 import uk.hmcts.zephyr.automation.zephyr.ZephyrConstants;
 
 import java.util.ArrayList;
@@ -39,21 +40,23 @@ public abstract class AbstractTicketAction<T extends ZephyrTest> extends Abstrac
     }
 
     protected void addLinksToJiraIssue(String sourceIssueKey, T test) {
-        addLinksToJiraIssue(sourceIssueKey, test, TestTag.Type.JIRA_NFR, "Contributes");
-        addLinksToJiraIssue(sourceIssueKey, test, TestTag.Type.JIRA_LINK, "Relates");
-        addLinksToJiraIssue(sourceIssueKey, test, TestTag.Type.JIRA_STORY, "Relates");
-        addLinksToJiraIssue(sourceIssueKey, test, TestTag.Type.JIRA_DEFECT, "Relates");
+        //Link epic if found
+        addLinksToJiraIssue(sourceIssueKey, test, TestTag.Type.JIRA_EPIC, LinkType.CONTRIBUTES);
+        addLinksToJiraIssue(sourceIssueKey, test, TestTag.Type.JIRA_NFR, LinkType.CONTRIBUTES);
+        addLinksToJiraIssue(sourceIssueKey, test, TestTag.Type.JIRA_LINK, LinkType.RELATES);
+        addLinksToJiraIssue(sourceIssueKey, test, TestTag.Type.JIRA_STORY, LinkType.RELATES);
+        addLinksToJiraIssue(sourceIssueKey, test, TestTag.Type.JIRA_DEFECT, LinkType.RELATES);
     }
 
-    protected void addLinksToJiraIssue(String sourceIssueKey, T test, TestTag.Type tagType, String linkType) {
+    protected void addLinksToJiraIssue(String sourceIssueKey, T test, TestTag.Type tagType, LinkType linkType) {
         getTagService().extractTagListFromType(test, tagType)
             .forEach(destinationIssueKey -> Config.getJira()
                 .linkIssue(createIssueLink(sourceIssueKey, destinationIssueKey.value(), linkType)));
     }
 
-    protected JiraIssueLink createIssueLink(String sourceIssueKey, String destinationIssueKey, String linkType) {
+    protected JiraIssueLink createIssueLink(String sourceIssueKey, String destinationIssueKey, LinkType linkType) {
         return JiraIssueLink.builder()
-            .type(JiraIssueLink.Type.builder().name(linkType).build())
+            .type(JiraIssueLink.Type.builder().name(linkType.getType()).build())
             .inwardIssue(JiraIssueLink.IssueReference.builder().key(destinationIssueKey).build())
             .outwardIssue(JiraIssueLink.IssueReference.builder().key(sourceIssueKey).build())
             .build();
