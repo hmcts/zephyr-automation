@@ -71,8 +71,8 @@ class ZephyrAutomationExtensionTest {
         Aggregator aggregator = mock(Aggregator.class);
         ExtensionContext context = contextWithMockAggregator(aggregator);
         ExtensionContext parent = mock(ExtensionContext.class);
-        InvocationInterceptor.Invocation<Void> invocation = mock(InvocationInterceptor.Invocation.class);
-        ReflectiveInvocationContext<Method> invocationContext = mock(ReflectiveInvocationContext.class);
+        final InvocationInterceptor.Invocation<Void> invocation = mock(InvocationInterceptor.Invocation.class);
+        final ReflectiveInvocationContext<Method> invocationContext = mock(ReflectiveInvocationContext.class);
 
         when(context.getUniqueId()).thenReturn("test-id");
         when(context.getParent()).thenReturn(Optional.of(parent));

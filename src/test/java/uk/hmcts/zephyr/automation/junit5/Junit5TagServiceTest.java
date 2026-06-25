@@ -104,8 +104,9 @@ class Junit5TagServiceTest {
     void givenParameterizedJiraKey_whenAddTag_thenFormatsArgumentsAndStoresOriginalKey() {
         JavaTagger javaTagger = mock(JavaTagger.class);
         when(javaTagger.addAnnotation(anyString(), anyString(), any(), any())).thenReturn(true);
-        Junit5TagService parameterizedTagService = new Junit5TagService(javaTagger);
-        Junit5ZephyrReport.Test test = junitTest("uk.hmcts.zephyr.automation.util.SampleNestedTest$Nested1$Nested2", "targetMethod");
+        final Junit5TagService parameterizedTagService = new Junit5TagService(javaTagger);
+        final Junit5ZephyrReport.Test test =
+            junitTest("uk.hmcts.zephyr.automation.util.SampleNestedTest$Nested1$Nested2", "targetMethod");
         test.setType(Junit5ZephyrReport.Test.Type.PARAMETERIZED);
         test.setArguments(List.of("alpha", "x\"y"));
         TestTag tag = new TestTag(TestTag.Type.JIRA_KEY, "ABC-123");
