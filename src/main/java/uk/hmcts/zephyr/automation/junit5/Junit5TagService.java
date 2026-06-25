@@ -113,12 +113,11 @@ public class Junit5TagService implements TagService<Junit5ZephyrReport.Test> {
 
 
         if (javaTagger.addAnnotation(className, test.getMethodName(), descriptor, testTag)) {
-            getTagValues(test, testTag.getType()).add(originalValue);
-        }
-
-
-        if (TestTag.Type.JIRA_IGNORE.equals(testTag.getType())) {
-            test.getMetadata().setJiraIgnore(true);
+            if (TestTag.Type.JIRA_IGNORE.equals(testTag.getType())) {
+                test.getMetadata().setJiraIgnore(true);
+            } else {
+                getTagValues(test, testTag.getType()).add(originalValue);
+            }
         }
     }
 
