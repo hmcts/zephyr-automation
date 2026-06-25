@@ -6,7 +6,7 @@ import java.util.Optional;
 public interface TagService<T> {
     default Optional<String> extractJiraKeyFromTag(T test) {
         return extractTagFromTagType(test, TestTag.Type.JIRA_KEY)
-            .map(TestTag::value);
+            .map(TestTag::getValue);
     }
 
     default Optional<TestTag> extractTagFromTagType(T test, TestTag.Type tagType) {

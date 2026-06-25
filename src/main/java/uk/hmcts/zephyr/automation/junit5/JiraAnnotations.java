@@ -5,16 +5,18 @@ import uk.hmcts.zephyr.automation.junit5.annotations.JiraComponent;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraDefect;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraEpic;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraIgnore;
-import uk.hmcts.zephyr.automation.junit5.annotations.JiraTestKey;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraLabel;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraLink;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraNfr;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraStory;
+import uk.hmcts.zephyr.automation.junit5.annotations.JiraTestKey;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -24,11 +26,15 @@ public final class JiraAnnotations {
     }
 
     public static JiraAnnotationMetadata fromContext(ExtensionContext context) {
+        return fromContext(context, List.of());
+    }
+
+    public static JiraAnnotationMetadata fromContext(ExtensionContext context, List<String> invocationArguments) {
         Class<?> testClass = context.getTestClass().orElse(null);
         Method testMethod = context.getTestMethod().orElse(null);
 
         return new JiraAnnotationMetadata(
-            collectValues(testClass, testMethod, JiraTestKey.class, JiraTestKey::value, true),
+            collectJiraKeys(testClass, testMethod, invocationArguments),
             collectValues(testClass, testMethod, JiraComponent.class, JiraComponent::value, true),
             collectValues(testClass, testMethod, JiraLabel.class, JiraLabel::value, true),
             collectValues(testClass, testMethod, JiraEpic.class, JiraEpic::value, true),
@@ -38,6 +44,40 @@ public final class JiraAnnotations {
             collectValues(testClass, testMethod, JiraDefect.class, JiraDefect::value, true),
             !collectValues(testClass, testMethod, JiraIgnore.class, jiraIgnore -> null, false).isEmpty()
         );
+    }
+
+    private static Set<String> collectJiraKeys(Class<?> testClass, Method testMethod,
+                                               List<String> invocationArguments) {
+        Set<String> keys = new LinkedHashSet<>();
+        addJiraKeys(keys, testClass, invocationArguments);
+        addJiraKeys(keys, testMethod, invocationArguments);
+        return keys;
+    }
+
+    private static void addJiraKeys(Set<String> keys, AnnotatedElement element, List<String> invocationArguments) {
+        if (element == null) {
+            return;
+        }
+        List<String> normalizedInvocationArguments = normalizeArguments(invocationArguments);
+        for (JiraTestKey annotation : element.getAnnotationsByType(JiraTestKey.class)) {
+            String key = normalize(annotation.value());
+            if (key.isEmpty()) {
+                continue;
+            }
+            List<String> expectedArguments = normalizeArguments(Arrays.asList(annotation.arguments()));
+            boolean matches = expectedArguments.equals(normalizedInvocationArguments);
+            if (matches) {
+                keys.add(key);
+            }
+        }
+    }
+
+    private static List<String> normalizeArguments(List<String> values) {
+        return values.stream().map(JiraAnnotations::normalize).toList();
+    }
+
+    private static String normalize(String raw) {
+        return raw == null ? "" : raw.trim();
     }
 
     private static <T extends Annotation> Set<String> collectValues(
@@ -66,7 +106,7 @@ public final class JiraAnnotations {
         T[] annotations = element.getAnnotationsByType(type);
         for (T annotation : annotations) {
             String raw = extractor.apply(annotation);
-            String normalized = raw == null ? "" : raw.trim();
+            String normalized = normalize(raw);
             if (skipBlank && normalized.isEmpty()) {
                 continue;
             }

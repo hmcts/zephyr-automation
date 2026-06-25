@@ -75,8 +75,8 @@ class CypressTagServiceTest {
 
             assertTrue(label.isPresent());
             TestTag extractedTag = label.get();
-            assertEquals(TestTag.Type.JIRA_LABEL, extractedTag.type());
-            assertEquals("critical", extractedTag.value());
+            assertEquals(TestTag.Type.JIRA_LABEL, extractedTag.getType());
+            assertEquals("critical", extractedTag.getValue());
         }
 
         @Test
@@ -99,10 +99,10 @@ class CypressTagServiceTest {
             assertEquals(2, labels.size());
             TestTag tag1 = labels.get(0);
             TestTag tag2 = labels.get(1);
-            assertEquals(TestTag.Type.JIRA_LABEL, tag1.type());
-            assertEquals(TestTag.Type.JIRA_LABEL, tag2.type());
-            assertEquals("critical", tag1.value());
-            assertEquals("regression", tag2.value());
+            assertEquals(TestTag.Type.JIRA_LABEL, tag1.getType());
+            assertEquals(TestTag.Type.JIRA_LABEL, tag2.getType());
+            assertEquals("critical", tag1.getValue());
+            assertEquals("regression", tag2.getValue());
         }
     }
 

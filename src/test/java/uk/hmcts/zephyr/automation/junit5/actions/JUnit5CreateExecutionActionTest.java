@@ -56,7 +56,10 @@ class JUnit5CreateExecutionActionTest {
             null,
             null,
             Set.of(),
-            JiraAnnotationMetadata.empty()
+            JiraAnnotationMetadata.empty(),
+            List.of(),
+            Junit5ZephyrReport.Test.Type.STANDARD,
+            "ID-1"
         );
         Junit5ZephyrReport.Test second = new Junit5ZephyrReport.Test(
             "ID-2",
@@ -67,7 +70,10 @@ class JUnit5CreateExecutionActionTest {
             null,
             null,
             Set.of(),
-            JiraAnnotationMetadata.empty()
+            JiraAnnotationMetadata.empty(),
+            List.of(),
+            Junit5ZephyrReport.Test.Type.STANDARD,
+            "ID-2"
         );
         report.getTests().add(first);
         report.getTests().add(second);

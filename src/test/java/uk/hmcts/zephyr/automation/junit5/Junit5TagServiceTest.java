@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -95,7 +96,10 @@ class Junit5TagServiceTest {
             null,
             null,
             Set.of(),
-            JiraAnnotationMetadata.empty()
+            JiraAnnotationMetadata.empty(),
+            List.of(),
+            Junit5ZephyrReport.Test.Type.STANDARD,
+            "id"
         );
     }
 }

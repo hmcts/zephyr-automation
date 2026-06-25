@@ -10,6 +10,7 @@ import uk.hmcts.zephyr.automation.junit5.model.Junit5ZephyrReport;
 import uk.hmcts.zephyr.automation.support.TestUtil;
 import uk.hmcts.zephyr.automation.util.FileUtil;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -100,7 +101,10 @@ class Junit5CreateTicketActionTest {
             null,
             null,
             Set.of(),
-            JiraAnnotationMetadata.empty()
+            JiraAnnotationMetadata.empty(),
+            List.of(),
+            Junit5ZephyrReport.Test.Type.STANDARD,
+            id
         );
     }
 }

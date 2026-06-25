@@ -32,7 +32,7 @@ public class JavaTagger {
         StaticJavaParser.getParserConfiguration().setLanguageLevel(LanguageLevel.JAVA_21);
     }
 
-    public void addAnnotation(
+    public boolean addAnnotation(
         String fullyQualifiedClassName,
         String methodName,
         AnnotationDescriptor descriptor,
@@ -52,17 +52,20 @@ public class JavaTagger {
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("Unable to find method '" + methodName
                     + "' in class '" + fullyQualifiedClassName + "'"));
-            if (method.getAnnotationByClass(descriptor.annotationClass()).isPresent()) {
+
+            AnnotationExpr proposedAnnotationExpr = descriptor.createAnnotationExpression(testTag);
+
+            if (method.getAnnotations().stream()
+                .anyMatch(annotationExpr -> annotationExpr.equals(proposedAnnotationExpr))) {
                 log.info(
                     "Method {}#{} already has {} annotation",
                     fullyQualifiedClassName,
                     methodName,
                     descriptor.simpleName()
                 );
-                return;
+                return false;
             }
-            AnnotationExpr annotationExpr = descriptor.createAnnotationExpression(testTag);
-            method.addAnnotation(annotationExpr);
+            method.addAnnotation(proposedAnnotationExpr);
             ensureImport(compilationUnit, descriptor);
             Files.writeString(javaFilePath, LexicalPreservingPrinter.print(compilationUnit));
             log.info(
@@ -74,6 +77,7 @@ public class JavaTagger {
         } catch (IOException | ParseProblemException e) {
             throw new RuntimeException("Failed to update annotations for class '" + fullyQualifiedClassName + "'", e);
         }
+        return true;
     }
 
     public static AnnotationDescriptor descriptor(Class<? extends Annotation> annotationClass, boolean hasValue) {
@@ -153,12 +157,12 @@ public class JavaTagger {
             if (!hasValue) {
                 return StaticJavaParser.parseAnnotation("@" + simpleName());
             }
-            String value = Optional.ofNullable(testTag.value())
+            String value = Optional.ofNullable(testTag.getValue())
                 .map(String::trim)
                 .filter(v -> !v.isEmpty())
                 .orElseThrow(() -> new IllegalArgumentException(
                     "Tag type '" + annotationClass().getSimpleName() + "' requires a value"));
-            return StaticJavaParser.parseAnnotation("@" + simpleName() + "(\"" + escape(value) + "\")");
+            return StaticJavaParser.parseAnnotation("@" + simpleName() + "(" + value + ")");
         }
 
         String simpleName() {
@@ -167,10 +171,6 @@ public class JavaTagger {
 
         String qualifiedName() {
             return annotationClass().getName();
-        }
-
-        private String escape(String input) {
-            return input.replace("\\", "\\\\").replace("\"", "\\\"");
         }
     }
 }

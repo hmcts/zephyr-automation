@@ -95,8 +95,8 @@ class CucumberTagServiceTest {
 
             assertTrue(result.isPresent());
             TestTag extractedTag = result.get();
-            assertEquals(TestTag.Type.JIRA_LABEL, extractedTag.type());
-            assertEquals("critical", extractedTag.value());
+            assertEquals(TestTag.Type.JIRA_LABEL, extractedTag.getType());
+            assertEquals("critical", extractedTag.getValue());
         }
 
         @Test
@@ -119,10 +119,10 @@ class CucumberTagServiceTest {
             TestTag tag1 = extracted.get(0);
             TestTag tag2 = extracted.get(1);
 
-            assertEquals(TestTag.Type.JIRA_LABEL, tag1.type());
-            assertEquals(TestTag.Type.JIRA_LABEL, tag2.type());
-            assertEquals("critical", tag1.value());
-            assertEquals("regression", tag2.value());
+            assertEquals(TestTag.Type.JIRA_LABEL, tag1.getType());
+            assertEquals(TestTag.Type.JIRA_LABEL, tag2.getType());
+            assertEquals("critical", tag1.getValue());
+            assertEquals("regression", tag2.getValue());
         }
     }
 

@@ -1,7 +1,12 @@
 package uk.hmcts.zephyr.automation.junit5.extension;
 
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.InvocationInterceptor;
+import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
 import org.junit.jupiter.api.extension.TestWatcher;
 import uk.hmcts.zephyr.automation.junit5.JiraAnnotations;
 import uk.hmcts.zephyr.automation.junit5.model.Junit5ZephyrReport;
@@ -14,17 +19,25 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class ZephyrAutomationExtension implements TestWatcher {
+public class ZephyrAutomationExtension implements TestWatcher, InvocationInterceptor {
 
 
     public static final ExtensionContext.Namespace NAMESPACE =
         ExtensionContext.Namespace.create(ZephyrAutomationExtension.class);
+    private static final ObjectMapper argumentsObjectMapper = JsonMapper.builder()
+        .findAndAddModules()
+        .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+        .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
+        .build();
 
     private static Aggregator getJunit5ZephyrReport(ExtensionContext context) {
         ExtensionContext root = context.getRoot();
@@ -33,6 +46,23 @@ public class ZephyrAutomationExtension implements TestWatcher {
             key -> new Aggregator(root),
             Aggregator.class
         );
+    }
+
+    public static String toDeterministicArgumentString(Object value) {
+        if (value == null) {
+            return "null";
+        }
+        try {
+            Method toStringMethod = value.getClass().getMethod("toString");
+            if (!Object.class.equals(toStringMethod.getDeclaringClass())) {
+                return String.valueOf(value);
+            }
+            return argumentsObjectMapper.writeValueAsString(value);
+        } catch (RuntimeException e) {
+            return "<toString-failed:" + e.getClass().getSimpleName() + ">";
+        } catch (Exception e) {
+            return "<" + value.getClass().getName() + ">";
+        }
     }
 
     @Override
@@ -55,11 +85,28 @@ public class ZephyrAutomationExtension implements TestWatcher {
         getJunit5ZephyrReport(extensionContext).addDisabledTest(extensionContext, reason.orElse(""));
     }
 
+    @Override
+    public void interceptTestTemplateMethod(Invocation<Void> invocation,
+                                            ReflectiveInvocationContext<Method> invocationContext,
+                                            ExtensionContext extensionContext) throws Throwable {
+        Aggregator aggregator = getJunit5ZephyrReport(extensionContext);
+        String testId = extensionContext.getUniqueId();
+        String groupId = extensionContext.getParent().map(ExtensionContext::getUniqueId).orElse(testId);
+        aggregator.markParameterizedTest(testId, groupId);
+        aggregator.captureParameterizedArguments(testId, invocationContext.getArguments());
+        invocation.proceed();
+    }
+
     static final class Aggregator implements ExtensionContext.Store.CloseableResource {
+        private static final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
+
+
         private final Queue<Junit5ZephyrReport.Test> tests = new ConcurrentLinkedQueue<>();
+        private final Map<String, List<String>> parameterizedArgumentsByTestId = new ConcurrentHashMap<>();
+        private final Map<String, Junit5ZephyrReport.Test.Type> typeByTestId = new ConcurrentHashMap<>();
+        private final Map<String, String> groupIdByTestId = new ConcurrentHashMap<>();
         private final AtomicBoolean flushed = new AtomicBoolean(false);
         private final String runId = UUID.randomUUID().toString();
-        private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
         private final Path reportLocation;
 
         Aggregator(ExtensionContext rootContext) {
@@ -69,6 +116,22 @@ public class ZephyrAutomationExtension implements TestWatcher {
 
         void add(Junit5ZephyrReport.Test test) {
             this.tests.add(test);
+        }
+
+        void captureParameterizedArguments(String uniqueId, List<Object> arguments) {
+            if (arguments == null || arguments.isEmpty()) {
+                return;
+            }
+            parameterizedArgumentsByTestId.put(uniqueId, arguments
+                .stream()
+                .map(ZephyrAutomationExtension::toDeterministicArgumentString)
+                .toList()
+            );
+        }
+
+        void markParameterizedTest(String uniqueId, String groupId) {
+            typeByTestId.put(uniqueId, Junit5ZephyrReport.Test.Type.PARAMETERIZED);
+            groupIdByTestId.put(uniqueId, groupId);
         }
 
         void saveReport() {
@@ -110,6 +173,8 @@ public class ZephyrAutomationExtension implements TestWatcher {
                                      Junit5ZephyrReport.Test.Status status,
                                      String errorType,
                                      String errorMessage) {
+            List<String> arguments =
+                parameterizedArgumentsByTestId.getOrDefault(extensionContext.getUniqueId(), List.of());
             return new Junit5ZephyrReport.Test(
                 extensionContext.getUniqueId(),
                 extensionContext.getDisplayName(),
@@ -119,7 +184,10 @@ public class ZephyrAutomationExtension implements TestWatcher {
                 errorType,
                 errorMessage,
                 new HashSet<>(extensionContext.getTags()),
-                JiraAnnotations.fromContext(extensionContext)
+                JiraAnnotations.fromContext(extensionContext, arguments),
+                arguments,
+                typeByTestId.getOrDefault(extensionContext.getUniqueId(), Junit5ZephyrReport.Test.Type.STANDARD),
+                groupIdByTestId.getOrDefault(extensionContext.getUniqueId(), extensionContext.getUniqueId())
             );
         }
 
@@ -145,4 +213,5 @@ public class ZephyrAutomationExtension implements TestWatcher {
             saveReport();
         }
     }
+
 }

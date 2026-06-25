@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.junit5.model.Junit5ZephyrReport;
 
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -24,7 +25,10 @@ class Junit5ActionJiraDescriptionTest {
             null,
             null,
             Set.of("smoke"),
-            null
+            null,
+            List.of(),
+            Junit5ZephyrReport.Test.Type.STANDARD,
+            "ZE-123"
         );
         StringBuilder builder = new StringBuilder("existing-content");
 
@@ -53,7 +57,10 @@ class Junit5ActionJiraDescriptionTest {
             "IllegalStateException",
             "boom",
             Set.of(),
-            null
+            null,
+            List.of(),
+            Junit5ZephyrReport.Test.Type.STANDARD,
+            "ID-456"
         );
         StringBuilder builder = new StringBuilder();
 
