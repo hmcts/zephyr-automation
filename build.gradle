@@ -148,7 +148,7 @@ dependencies {
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
     annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
-    implementation 'org.junit.platform:junit-platform-suite:6.0.2'
+    implementation 'org.junit.platform:junit-platform-suite:6.1.0'
     implementation 'org.junit.jupiter:junit-jupiter-api:6.1.0'
     implementation 'org.junit.jupiter:junit-jupiter-engine:6.1.0'
     testImplementation 'org.mockito:mockito-core:5.23.0'
