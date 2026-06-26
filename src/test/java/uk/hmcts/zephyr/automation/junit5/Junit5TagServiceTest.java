@@ -13,9 +13,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class Junit5TagServiceTest {
 
@@ -23,6 +30,8 @@ class Junit5TagServiceTest {
     private static final Path EXPECTED_ROOT = Paths.get("src/test/resources/Junit5/expected");
     private static final Path NESTED_RELATIVE_PATH = Path.of("uk/hmcts/zephyr/automation/util/SampleNestedTest.java");
     private static final Path IGNORE_RELATIVE_PATH = Path.of("uk/hmcts/zephyr/automation/util/SampleIgnoreTest.java");
+    private static final Path PARAMETERIZED_RELATIVE_PATH =
+        Path.of("uk/hmcts/zephyr/automation/util/SampleParameterizedJiraKeysTest.java");
 
     @TempDir
     Path tempDir;
@@ -73,6 +82,68 @@ class Junit5TagServiceTest {
         assertMatchesExpected(IGNORE_RELATIVE_PATH);
     }
 
+    @Test
+    void givenParameterizedTest_whenAddDifferentArgumentKeys_thenMatchesExpectedFixture() throws Exception {
+        copyTemplateToTemp(PARAMETERIZED_RELATIVE_PATH);
+        Junit5ZephyrReport.Test junitTest = junitTest(
+            "uk.hmcts.zephyr.automation.util.SampleParameterizedJiraKeysTest",
+            "parameterizedMethod"
+        );
+        junitTest.setType(Junit5ZephyrReport.Test.Type.PARAMETERIZED);
+
+        junitTest.setArguments(List.of("false"));
+        tagService.addTag(junitTest, new TestTag(TestTag.Type.JIRA_KEY, "ABC-101"));
+
+        junitTest.setArguments(List.of("true"));
+        tagService.addTag(junitTest, new TestTag(TestTag.Type.JIRA_KEY, "ABC-202"));
+
+        assertMatchesExpected(PARAMETERIZED_RELATIVE_PATH);
+    }
+
+    @Test
+    void givenParameterizedJiraKey_whenAddTag_thenFormatsArgumentsAndStoresOriginalKey() {
+        JavaTagger javaTagger = mock(JavaTagger.class);
+        when(javaTagger.addAnnotation(anyString(), anyString(), any(), any())).thenReturn(true);
+        final Junit5TagService parameterizedTagService = new Junit5TagService(javaTagger);
+        final Junit5ZephyrReport.Test test =
+            junitTest("uk.hmcts.zephyr.automation.util.SampleNestedTest$Nested1$Nested2", "targetMethod");
+        test.setType(Junit5ZephyrReport.Test.Type.PARAMETERIZED);
+        test.setArguments(List.of("alpha", "x\"y"));
+        TestTag tag = new TestTag(TestTag.Type.JIRA_KEY, "ABC-123");
+
+        parameterizedTagService.addTag(test, tag);
+
+        assertEquals("value = \"ABC-123\", arguments = { \"alpha\",\"x\\\"y\" }", tag.getValue());
+        assertEquals(Set.of("ABC-123"), test.getMetadata().getJiraKey());
+        verify(javaTagger).addAnnotation(anyString(), anyString(), any(), any());
+    }
+
+    @Test
+    void givenStandardJiraKey_whenAddTag_thenFormatsAsQuotedString() {
+        JavaTagger javaTagger = mock(JavaTagger.class);
+        when(javaTagger.addAnnotation(anyString(), anyString(), any(), any())).thenReturn(true);
+        Junit5TagService service = new Junit5TagService(javaTagger);
+        Junit5ZephyrReport.Test test = junitTest("uk.hmcts.zephyr.automation.util.SampleIgnoreTest", "shouldSkip");
+        TestTag tag = new TestTag(TestTag.Type.JIRA_KEY, "ABC-999");
+
+        service.addTag(test, tag);
+
+        assertEquals("\"ABC-999\"", tag.getValue());
+        assertEquals(Set.of("ABC-999"), test.getMetadata().getJiraKey());
+    }
+
+    @Test
+    void givenJiraIgnore_whenAddTag_thenSetsIgnoreMetadataWithoutLookupFailure() {
+        JavaTagger javaTagger = mock(JavaTagger.class);
+        when(javaTagger.addAnnotation(anyString(), anyString(), any(), any())).thenReturn(true);
+        Junit5TagService service = new Junit5TagService(javaTagger);
+        Junit5ZephyrReport.Test test = junitTest("uk.hmcts.zephyr.automation.util.SampleIgnoreTest", "shouldSkip");
+
+        service.addTag(test, new TestTag(TestTag.Type.JIRA_IGNORE, null));
+
+        assertTrue(test.getMetadata().isJiraIgnore());
+    }
+
     private void copyTemplateToTemp(Path relativePath) throws Exception {
         Path destination = tempDir.resolve(relativePath);
         Files.createDirectories(destination.getParent());
@@ -95,7 +166,10 @@ class Junit5TagServiceTest {
             null,
             null,
             Set.of(),
-            JiraAnnotationMetadata.empty()
+            JiraAnnotationMetadata.empty(),
+            List.of(),
+            Junit5ZephyrReport.Test.Type.STANDARD,
+            "id"
         );
     }
 }

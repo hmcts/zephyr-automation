@@ -28,9 +28,9 @@ public class CucumberTagService implements TagService<Element> {
 
     @Override
     public void addTag(Element scenario, TestTag testTag) {
-        String tagName = TagService.getTagPrefix(testTag.type());
-        if (testTag.value() != null) {
-            tagName = tagName + testTag.value();
+        String tagName = TagService.getTagPrefix(testTag.getType());
+        if (testTag.getValue() != null) {
+            tagName = tagName + testTag.getValue();
         }
         CucumberFeature cucumberFeature = scenario.getCucumberFeature();
         log.info("Adding tag '{}' to scenario '{}' in feature '{}'",

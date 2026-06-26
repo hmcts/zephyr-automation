@@ -8,6 +8,7 @@ import uk.hmcts.zephyr.automation.junit5.JiraAnnotationMetadata;
 import uk.hmcts.zephyr.automation.junit5.model.Junit5ZephyrReport;
 import uk.hmcts.zephyr.automation.support.TestUtil;
 
+import java.util.List;
 import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -89,7 +90,10 @@ class Junit5UpdateTicketActionTest {
             null,
             null,
             Set.of(),
-            JiraAnnotationMetadata.empty()
+            JiraAnnotationMetadata.empty(),
+            List.of(),
+            Junit5ZephyrReport.Test.Type.STANDARD,
+            id
         );
     }
 }

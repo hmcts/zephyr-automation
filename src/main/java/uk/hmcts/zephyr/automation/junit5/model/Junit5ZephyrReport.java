@@ -35,6 +35,9 @@ public class Junit5ZephyrReport {
         private String errorMessage;
         private Set<String> tags;
         private JiraAnnotationMetadata metadata;
+        private List<String> arguments;
+        private Type type;
+        private String groupId;
 
         @Override
         @JsonIgnore
@@ -78,6 +81,11 @@ public class Junit5ZephyrReport {
             FAILED,
             ABORTED,
             DISABLED
+        }
+
+        public enum Type {
+            STANDARD,
+            PARAMETERIZED
         }
     }
 }

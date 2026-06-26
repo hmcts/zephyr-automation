@@ -1,6 +1,13 @@
 package uk.hmcts.zephyr.automation;
 
-public record TestTag(TestTag.Type type, String value) {
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+@Data
+@AllArgsConstructor
+public class TestTag {
+    final TestTag.Type type;
+    String value;
 
     public enum Type {
         JIRA_KEY,

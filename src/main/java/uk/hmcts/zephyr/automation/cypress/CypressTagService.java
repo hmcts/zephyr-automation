@@ -27,9 +27,9 @@ public class CypressTagService implements TagService<CypressReport.CypressTest> 
 
     @Override
     public void addTag(CypressReport.CypressTest test, TestTag testTag) {
-        String tagName = TagService.getTagPrefix(testTag.type());
-        if (testTag.value() != null) {
-            tagName = tagName + testTag.value();
+        String tagName = TagService.getTagPrefix(testTag.getType());
+        if (testTag.getValue() != null) {
+            tagName = tagName + testTag.getValue();
         }
         if (test.hasTag(tagName)) {
             log.info("Test '{}' already has tag '{}', skipping addition.", test.getLocationDisplayName(), tagName);

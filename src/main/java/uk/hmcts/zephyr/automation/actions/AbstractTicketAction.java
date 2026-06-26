@@ -51,7 +51,7 @@ public abstract class AbstractTicketAction<T extends ZephyrTest> extends Abstrac
     protected void addLinksToJiraIssue(String sourceIssueKey, T test, TestTag.Type tagType, LinkType linkType) {
         getTagService().extractTagListFromType(test, tagType)
             .forEach(destinationIssueKey -> Config.getJira()
-                .linkIssue(createIssueLink(sourceIssueKey, destinationIssueKey.value(), linkType)));
+                .linkIssue(createIssueLink(sourceIssueKey, destinationIssueKey.getValue(), linkType)));
     }
 
     protected JiraIssueLink createIssueLink(String sourceIssueKey, String destinationIssueKey, LinkType linkType) {
@@ -83,7 +83,7 @@ public abstract class AbstractTicketAction<T extends ZephyrTest> extends Abstrac
     protected List<String> getLabels(T test) {
         return getTagService().extractTagListFromType(test, TestTag.Type.JIRA_LABEL)
             .stream()
-            .map(TestTag::value)
+            .map(TestTag::getValue)
             .toList();
     }
 
@@ -92,7 +92,7 @@ public abstract class AbstractTicketAction<T extends ZephyrTest> extends Abstrac
         componentsNames.addAll(
             getTagService().extractTagListFromType(test, TestTag.Type.JIRA_COMPONENT)
                 .stream()
-                .map(TestTag::value)
+                .map(TestTag::getValue)
                 .toList()
         );
 
@@ -127,7 +127,7 @@ public abstract class AbstractTicketAction<T extends ZephyrTest> extends Abstrac
         }
 
         //Add Epic link if there is one
-        getEpicTicketKey(test).ifPresent(s -> body.getFields().setEpicLink(s.value()));
+        getEpicTicketKey(test).ifPresent(s -> body.getFields().setEpicLink(s.getValue()));
         //Add components if there are any
         body.getFields().setComponents(getComponents(test));
         //Add labels if there are any

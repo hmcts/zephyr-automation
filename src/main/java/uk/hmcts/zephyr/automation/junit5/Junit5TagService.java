@@ -8,11 +8,11 @@ import uk.hmcts.zephyr.automation.junit5.annotations.JiraComponent;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraDefect;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraEpic;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraIgnore;
-import uk.hmcts.zephyr.automation.junit5.annotations.JiraTestKey;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraLabel;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraLink;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraNfr;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraStory;
+import uk.hmcts.zephyr.automation.junit5.annotations.JiraTestKey;
 import uk.hmcts.zephyr.automation.junit5.model.Junit5ZephyrReport;
 
 import java.util.List;
@@ -86,21 +86,42 @@ public class Junit5TagService implements TagService<Junit5ZephyrReport.Test> {
 
     @Override
     public void addTag(Junit5ZephyrReport.Test test, TestTag testTag) {
-        AnnotationDescriptor descriptor = Optional.ofNullable(ANNOTATIONS.get(testTag.type()))
-            .orElseThrow(() -> new UnsupportedOperationException("Unsupported tag type: " + testTag.type()));
+        AnnotationDescriptor descriptor = Optional.ofNullable(ANNOTATIONS.get(testTag.getType()))
+            .orElseThrow(() -> new UnsupportedOperationException("Unsupported tag type: " + testTag.getType()));
         String className = Objects.requireNonNull(test.getClassName(), "className");
         log.info("Adding {} annotation to {}#{}", descriptor.simpleName(), className, test.getMethodName());
-        javaTagger.addAnnotation(className, test.getMethodName(), descriptor, testTag);
 
-        if (TestTag.Type.JIRA_IGNORE.equals(testTag.type())) {
-            test.getMetadata().setJiraIgnore(true);
-            return;
-        }
-        Set<String> values = getTagValues(test, testTag.type());
-        if (TestTag.Type.JIRA_KEY.equals(testTag.type())) {
-            values.clear();
-        }
-        values.add(testTag.value());
+        String originalValue = testTag.getValue();
+        if (Junit5ZephyrReport.Test.Type.PARAMETERIZED.equals(test.getType())
+            && TestTag.Type.JIRA_KEY.equals(testTag.getType())
+            && test.getArguments() != null
+            && !test.getArguments().isEmpty()) {
+            String arguments = test.getArguments().stream()
+                .filter(Objects::nonNull)
+                .map(argument -> "\"" + escape(argument) + "\"")
+                .reduce((a, b) -> a + "," + b)
+                .orElse("");
 
+            if (test.getArguments().size() != 1) {
+                arguments = "{ " + arguments + " }";
+            }
+
+            testTag.setValue("value = \"" + originalValue + "\", arguments = " + arguments);
+        } else {
+            testTag.setValue("\"" + originalValue + "\"");
+        }
+
+
+        if (javaTagger.addAnnotation(className, test.getMethodName(), descriptor, testTag)) {
+            if (TestTag.Type.JIRA_IGNORE.equals(testTag.getType())) {
+                test.getMetadata().setJiraIgnore(true);
+            } else {
+                getTagValues(test, testTag.getType()).add(originalValue);
+            }
+        }
+    }
+
+    private String escape(String input) {
+        return input.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 }

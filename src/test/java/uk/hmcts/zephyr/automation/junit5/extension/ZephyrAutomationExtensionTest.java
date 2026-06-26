@@ -2,8 +2,12 @@ package uk.hmcts.zephyr.automation.junit5.extension;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.InvocationInterceptor;
+import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
 import uk.hmcts.zephyr.automation.junit5.extension.ZephyrAutomationExtension.Aggregator;
 
+import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -59,6 +63,27 @@ class ZephyrAutomationExtensionTest {
         extension.testDisabled(context, Optional.of("ignored"));
 
         verify(aggregator).addDisabledTest(context, "ignored");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void interceptTestTemplateMethod_marksGroupAndCapturesArguments() throws Throwable {
+        Aggregator aggregator = mock(Aggregator.class);
+        ExtensionContext context = contextWithMockAggregator(aggregator);
+        ExtensionContext parent = mock(ExtensionContext.class);
+        final InvocationInterceptor.Invocation<Void> invocation = mock(InvocationInterceptor.Invocation.class);
+        final ReflectiveInvocationContext<Method> invocationContext = mock(ReflectiveInvocationContext.class);
+
+        when(context.getUniqueId()).thenReturn("test-id");
+        when(context.getParent()).thenReturn(Optional.of(parent));
+        when(parent.getUniqueId()).thenReturn("group-id");
+        when(invocationContext.getArguments()).thenReturn(List.of("a", 1));
+
+        extension.interceptTestTemplateMethod(invocation, invocationContext, context);
+
+        verify(aggregator).markParameterizedTest("test-id", "group-id");
+        verify(aggregator).captureParameterizedArguments("test-id", List.of("a", 1));
+        verify(invocation).proceed();
     }
 
     private ExtensionContext contextWithMockAggregator(Aggregator aggregator) {
