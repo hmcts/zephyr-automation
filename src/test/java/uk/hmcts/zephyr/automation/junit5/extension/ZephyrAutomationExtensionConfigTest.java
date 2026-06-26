@@ -96,15 +96,33 @@ class ZephyrAutomationExtensionConfigTest {
         }
 
         @Override
-        public <K, V> V getOrComputeIfAbsent(K key, Function<K, V> defaultCreator, Class<V> requiredType) {
+        public <K, V> V computeIfAbsent(K key,
+                                        Function<? super K, ? extends V> defaultCreator,
+                                        Class<V> requiredType) {
             Object value = values.computeIfAbsent(key, ignored -> defaultCreator.apply(key));
             return requiredType.cast(value);
         }
 
         @Override
-        public <K, V> V getOrComputeIfAbsent(K key, Function<K, V> defaultCreator) {
-            throw new UnsupportedOperationException("Use typed overload");
+        @SuppressWarnings("unchecked")
+        public <K, V> V computeIfAbsent(K key, Function<? super K, ? extends V> defaultCreator) {
+            return (V) values.computeIfAbsent(key, ignored -> defaultCreator.apply(key));
         }
+
+        @Override
+        public <K, V> V getOrComputeIfAbsent(K key,
+                                             Function<? super K, ? extends V> defaultCreator,
+                                             Class<V> requiredType) {
+            Object value = values.computeIfAbsent(key, ignored -> defaultCreator.apply(key));
+            return requiredType.cast(value);
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public <K, V> V getOrComputeIfAbsent(K key, Function<? super K, ? extends V> defaultCreator) {
+            return (V) values.computeIfAbsent(key, ignored -> defaultCreator.apply(key));
+        }
+
 
         @Override
         public void put(Object key, Object value) {

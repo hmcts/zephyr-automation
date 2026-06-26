@@ -109,14 +109,31 @@ class ZephyrAutomationExtensionTest {
         }
 
         @Override
-        public <K, V> V getOrComputeIfAbsent(K key, Function<K, V> defaultCreator, Class<V> requiredType) {
+        public <K, V> V computeIfAbsent(K key,
+                                        Function<? super K, ? extends V> defaultCreator,
+                                        Class<V> requiredType) {
             Object value = data.computeIfAbsent(key, unused -> defaultCreator.apply(key));
             return requiredType.cast(value);
         }
 
         @Override
-        public <K, V> V getOrComputeIfAbsent(K key, Function<K, V> defaultCreator) {
-            throw new UnsupportedOperationException("Use typed variant");
+        @SuppressWarnings("unchecked")
+        public <K, V> V computeIfAbsent(K key, Function<? super K, ? extends V> defaultCreator) {
+            return (V) data.computeIfAbsent(key, unused -> defaultCreator.apply(key));
+        }
+
+        @Override
+        public <K, V> V getOrComputeIfAbsent(K key,
+                                             Function<? super K, ? extends V> defaultCreator,
+                                             Class<V> requiredType) {
+            Object value = data.computeIfAbsent(key, unused -> defaultCreator.apply(key));
+            return requiredType.cast(value);
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public <K, V> V getOrComputeIfAbsent(K key, Function<? super K, ? extends V> defaultCreator) {
+            return (V) data.computeIfAbsent(key, unused -> defaultCreator.apply(key));
         }
     }
 }
