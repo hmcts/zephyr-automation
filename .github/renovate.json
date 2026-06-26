@@ -17,9 +17,9 @@
       "groupSlug": "logging",
       "matchManagers": ["gradle"],
       "matchPackageNames": [
-        "/^com\.github\.hmcts\.java-logging/",
-        "/^org\.apache\.logging\.log4j/",
-        "/^ch\.qos\.logback/"
+        "/^com\\.github\\.hmcts\\.java-logging/",
+        "/^org\\.apache\\.logging\\.log4j/",
+        "/^ch\\.qos\\.logback/"
       ]
     },
     {
@@ -28,7 +28,7 @@
       "groupSlug": "jackson",
       "matchManagers": ["gradle"],
       "matchPackageNames": [
-        "/^com\.fasterxml\.jackson\./"
+        "/^com\\.fasterxml\\.jackson\\./"
       ]
     },
     {
@@ -37,7 +37,7 @@
       "groupSlug": "feign",
       "matchManagers": ["gradle"],
       "matchPackageNames": [
-        "/^io\.github\.openfeign:/"
+        "/^io\\.github\\.openfeign:/"
       ]
     },
     {
@@ -56,8 +56,8 @@
         "smokeTestRuntimeOnly"
       ],
       "matchPackageNames": [
-        "/^org\.junit/",
-        "/^org\.mockito/"
+        "/^org\\.junit/",
+        "/^org\\.mockito/"
       ]
     },
     {
