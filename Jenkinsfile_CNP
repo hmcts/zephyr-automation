@@ -3,7 +3,7 @@
 @Library("Infrastructure")
 
 def type = "java"
-def product = "hmcts"
+def product = "opal"
 def component = "zephyr-automation"
 
 withPipeline(type, product, component) {
