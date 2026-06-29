@@ -2,6 +2,7 @@ package uk.hmcts.zephyr.automation.junit5;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import uk.hmcts.zephyr.automation.Config;
@@ -15,8 +16,11 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -144,6 +148,113 @@ class Junit5TagServiceTest {
         service.addTag(test, new TestTag(TestTag.Type.JIRA_IGNORE, null));
 
         assertTrue(test.getMetadata().isJiraIgnore());
+    }
+
+    @Nested
+    class ExtractTagListFromTypeTest {
+
+        @Test
+        void givenJiraIgnoreFalse_whenExtractTagListFromType_thenReturnsFalseValueTag() {
+            Junit5ZephyrReport.Test test = junitTest("uk.hmcts.zephyr.automation.util.SampleIgnoreTest", "shouldSkip");
+
+            List<TestTag> result = tagService.extractTagListFromType(test, TestTag.Type.JIRA_IGNORE);
+
+            assertEquals(1, result.size());
+            assertEquals(TestTag.Type.JIRA_IGNORE, result.getFirst().getType());
+            assertEquals("false", result.getFirst().getValue());
+        }
+
+        @Test
+        void givenJiraComponents_whenExtractTagListFromType_thenReturnsAllComponentTags() {
+            Junit5ZephyrReport.Test test = junitTest("uk.hmcts.zephyr.automation.util.SampleIgnoreTest", "shouldSkip");
+            test.getMetadata().setJiraComponents(Set.of("api", "backend"));
+
+            Set<String> resultValues = tagService.extractTagListFromType(test, TestTag.Type.JIRA_COMPONENT)
+                .stream()
+                .map(TestTag::getValue)
+                .collect(Collectors.toSet());
+
+            assertEquals(Set.of("api", "backend"), resultValues);
+        }
+    }
+
+    @Nested
+    class HasTagTest {
+
+        @Test
+        void givenJiraIgnoreTrue_whenHasTag_thenReturnsTrue() {
+            Junit5ZephyrReport.Test test = junitTest("uk.hmcts.zephyr.automation.util.SampleIgnoreTest", "shouldSkip");
+            test.getMetadata().setJiraIgnore(true);
+
+            assertTrue(tagService.hasTag(test, TestTag.Type.JIRA_IGNORE));
+        }
+
+        @Test
+        void givenJiraIgnoreFalse_whenHasTag_thenReturnsFalse() {
+            Junit5ZephyrReport.Test test = junitTest("uk.hmcts.zephyr.automation.util.SampleIgnoreTest", "shouldSkip");
+
+            assertFalse(tagService.hasTag(test, TestTag.Type.JIRA_IGNORE));
+        }
+
+        @Test
+        void givenJiraStoryPresent_whenHasTag_thenReturnsTrueUsingDefaultPath() {
+            Junit5ZephyrReport.Test test = junitTest("uk.hmcts.zephyr.automation.util.SampleIgnoreTest", "shouldSkip");
+            test.getMetadata().setJiraStories(Set.of("story-1"));
+
+            assertTrue(tagService.hasTag(test, TestTag.Type.JIRA_STORY));
+        }
+    }
+
+    @Nested
+    class AddTagTest {
+
+        @Test
+        void givenJiraComponent_whenAddTagAndAnnotationApplied_thenStoresOriginalMetadataValue() {
+            JavaTagger javaTagger = mock(JavaTagger.class);
+            when(javaTagger.addAnnotation(anyString(), anyString(), any(), any())).thenReturn(true);
+            Junit5TagService service = new Junit5TagService(javaTagger);
+            Junit5ZephyrReport.Test test = junitTest("uk.hmcts.zephyr.automation.util.SampleIgnoreTest", "shouldSkip");
+            TestTag tag = new TestTag(TestTag.Type.JIRA_COMPONENT, "payments");
+
+            service.addTag(test, tag);
+
+            assertEquals("\"payments\"", tag.getValue());
+            assertEquals(Set.of("payments"), test.getMetadata().getJiraComponents());
+        }
+
+        @Test
+        void givenAnnotationNotApplied_whenAddTag_thenDoesNotMutateMetadata() {
+            JavaTagger javaTagger = mock(JavaTagger.class);
+            when(javaTagger.addAnnotation(anyString(), anyString(), any(), any())).thenReturn(false);
+            Junit5TagService service = new Junit5TagService(javaTagger);
+            Junit5ZephyrReport.Test test = junitTest("uk.hmcts.zephyr.automation.util.SampleIgnoreTest", "shouldSkip");
+
+            service.addTag(test, new TestTag(TestTag.Type.JIRA_DEFECT, "BUG-1"));
+
+            assertTrue(test.getMetadata().getJiraDefects().isEmpty());
+        }
+
+        @Test
+        void givenNullTagType_whenAddTag_thenThrowsNullPointerException() {
+            Junit5ZephyrReport.Test test = junitTest("uk.hmcts.zephyr.automation.util.SampleIgnoreTest", "shouldSkip");
+            TestTag invalidTag = new TestTag(null, "ABC-1");
+
+            NullPointerException exception =
+                assertThrows(NullPointerException.class, () -> tagService.addTag(test, invalidTag));
+
+            assertTrue(exception.getMessage().contains("pk") && exception.getMessage().contains("null"));
+        }
+
+        @Test
+        void givenNullClassName_whenAddTag_thenThrowsNullPointerException() {
+            Junit5ZephyrReport.Test test = junitTest(null, "shouldSkip");
+
+            NullPointerException exception =
+                assertThrows(NullPointerException.class,
+                    () -> tagService.addTag(test, new TestTag(TestTag.Type.JIRA_KEY, "ABC-123")));
+
+            assertEquals("className", exception.getMessage());
+        }
     }
 
     private void copyTemplateToTemp(Path relativePath) throws Exception {
