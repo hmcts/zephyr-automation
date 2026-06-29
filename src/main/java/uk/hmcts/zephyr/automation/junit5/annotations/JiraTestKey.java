@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
 @Repeatable(JiraTestKey.List.class)
 public @interface JiraTestKey {
     String value() default "";
-    String[] arguments() default {};
+    String name() default "";
 
     @Target({ElementType.METHOD})
     @Retention(RetentionPolicy.RUNTIME)

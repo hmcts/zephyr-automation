@@ -8,8 +8,8 @@ class SampleParameterizedJiraKeysTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
-    @JiraTestKey(value = "ABC-101", arguments = "false")
-    @JiraTestKey(value = "ABC-202", arguments = "true")
+    @JiraTestKey(value = "ABC-101", name = "false")
+    @JiraTestKey(value = "ABC-202", name = "true")
     void parameterizedMethod(boolean consolidation) {
     }
 }

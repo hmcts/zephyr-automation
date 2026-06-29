@@ -92,28 +92,30 @@ class Junit5TagServiceTest {
         junitTest.setType(Junit5ZephyrReport.Test.Type.PARAMETERIZED);
 
         junitTest.setArguments(List.of("false"));
+        junitTest.setDisplayName("false");
         tagService.addTag(junitTest, new TestTag(TestTag.Type.JIRA_KEY, "ABC-101"));
 
         junitTest.setArguments(List.of("true"));
+        junitTest.setDisplayName("true");
         tagService.addTag(junitTest, new TestTag(TestTag.Type.JIRA_KEY, "ABC-202"));
 
         assertMatchesExpected(PARAMETERIZED_RELATIVE_PATH);
     }
 
     @Test
-    void givenParameterizedJiraKey_whenAddTag_thenFormatsArgumentsAndStoresOriginalKey() {
+    void givenParameterizedJiraKey_whenAddTag_thenFormatsDisplayNameAndStoresOriginalKey() {
         JavaTagger javaTagger = mock(JavaTagger.class);
         when(javaTagger.addAnnotation(anyString(), anyString(), any(), any())).thenReturn(true);
         final Junit5TagService parameterizedTagService = new Junit5TagService(javaTagger);
         final Junit5ZephyrReport.Test test =
             junitTest("uk.hmcts.zephyr.automation.util.SampleNestedTest$Nested1$Nested2", "targetMethod");
         test.setType(Junit5ZephyrReport.Test.Type.PARAMETERIZED);
-        test.setArguments(List.of("alpha", "x\"y"));
+        test.setDisplayName("alpha \"x\\y\"");
         TestTag tag = new TestTag(TestTag.Type.JIRA_KEY, "ABC-123");
 
         parameterizedTagService.addTag(test, tag);
 
-        assertEquals("value = \"ABC-123\", arguments = { \"alpha\",\"x\\\"y\" }", tag.getValue());
+        assertEquals("value = \"ABC-123\", name = \"alpha \\\"x\\\\y\\\"\"", tag.getValue());
         assertEquals(Set.of("ABC-123"), test.getMetadata().getJiraKey());
         verify(javaTagger).addAnnotation(anyString(), anyString(), any(), any());
     }

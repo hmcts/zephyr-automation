@@ -173,8 +173,8 @@ public class ZephyrAutomationExtension implements TestWatcher, InvocationInterce
                                      Junit5ZephyrReport.Test.Status status,
                                      String errorType,
                                      String errorMessage) {
-            List<String> arguments =
-                parameterizedArgumentsByTestId.getOrDefault(extensionContext.getUniqueId(), List.of());
+            Junit5ZephyrReport.Test.Type type =
+                typeByTestId.getOrDefault(extensionContext.getUniqueId(), Junit5ZephyrReport.Test.Type.STANDARD);
             return new Junit5ZephyrReport.Test(
                 extensionContext.getUniqueId(),
                 extensionContext.getDisplayName(),
@@ -184,9 +184,9 @@ public class ZephyrAutomationExtension implements TestWatcher, InvocationInterce
                 errorType,
                 errorMessage,
                 new HashSet<>(extensionContext.getTags()),
-                JiraAnnotations.fromContext(extensionContext, arguments),
-                arguments,
-                typeByTestId.getOrDefault(extensionContext.getUniqueId(), Junit5ZephyrReport.Test.Type.STANDARD),
+                JiraAnnotations.fromContext(extensionContext, type),
+                parameterizedArgumentsByTestId.getOrDefault(extensionContext.getUniqueId(), List.of()),
+                type,
                 groupIdByTestId.getOrDefault(extensionContext.getUniqueId(), extensionContext.getUniqueId())
             );
         }

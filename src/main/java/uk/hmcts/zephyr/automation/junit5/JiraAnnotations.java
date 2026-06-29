@@ -10,13 +10,12 @@ import uk.hmcts.zephyr.automation.junit5.annotations.JiraLink;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraNfr;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraStory;
 import uk.hmcts.zephyr.automation.junit5.annotations.JiraTestKey;
+import uk.hmcts.zephyr.automation.junit5.model.Junit5ZephyrReport;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -25,16 +24,13 @@ public final class JiraAnnotations {
     private JiraAnnotations() {
     }
 
-    public static JiraAnnotationMetadata fromContext(ExtensionContext context) {
-        return fromContext(context, List.of());
-    }
 
-    public static JiraAnnotationMetadata fromContext(ExtensionContext context, List<String> invocationArguments) {
+    public static JiraAnnotationMetadata fromContext(ExtensionContext context, Junit5ZephyrReport.Test.Type testType) {
         Class<?> testClass = context.getTestClass().orElse(null);
         Method testMethod = context.getTestMethod().orElse(null);
 
         return new JiraAnnotationMetadata(
-            collectJiraKeys(testClass, testMethod, invocationArguments),
+            collectJiraKeys(context, testType, testClass, testMethod),
             collectValues(testClass, testMethod, JiraComponent.class, JiraComponent::value, true),
             collectValues(testClass, testMethod, JiraLabel.class, JiraLabel::value, true),
             collectValues(testClass, testMethod, JiraEpic.class, JiraEpic::value, true),
@@ -46,34 +42,31 @@ public final class JiraAnnotations {
         );
     }
 
-    private static Set<String> collectJiraKeys(Class<?> testClass, Method testMethod,
-                                               List<String> invocationArguments) {
+    private static Set<String> collectJiraKeys(
+        ExtensionContext context, Junit5ZephyrReport.Test.Type testType, Class<?> testClass, Method testMethod) {
+
+        if (Junit5ZephyrReport.Test.Type.STANDARD.equals(testType)) {
+            return collectValues(testClass, testMethod, JiraTestKey.class, JiraTestKey::value, true);
+        }
         Set<String> keys = new LinkedHashSet<>();
-        addJiraKeys(keys, testClass, invocationArguments);
-        addJiraKeys(keys, testMethod, invocationArguments);
+        addParameterizedJiraKeys(context, keys, testClass);
+        addParameterizedJiraKeys(context, keys, testMethod);
         return keys;
     }
 
-    private static void addJiraKeys(Set<String> keys, AnnotatedElement element, List<String> invocationArguments) {
+    private static void addParameterizedJiraKeys(ExtensionContext context, Set<String> keys, AnnotatedElement element) {
         if (element == null) {
             return;
         }
-        List<String> normalizedInvocationArguments = normalizeArguments(invocationArguments);
         for (JiraTestKey annotation : element.getAnnotationsByType(JiraTestKey.class)) {
             String key = normalize(annotation.value());
             if (key.isEmpty()) {
                 continue;
             }
-            List<String> expectedArguments = normalizeArguments(Arrays.asList(annotation.arguments()));
-            boolean matches = expectedArguments.equals(normalizedInvocationArguments);
-            if (matches) {
+            if (annotation.name().equals(context.getDisplayName())) {
                 keys.add(key);
             }
         }
-    }
-
-    private static List<String> normalizeArguments(List<String> values) {
-        return values.stream().map(JiraAnnotations::normalize).toList();
     }
 
     private static String normalize(String raw) {
