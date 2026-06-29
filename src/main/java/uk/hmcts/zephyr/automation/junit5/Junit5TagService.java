@@ -93,20 +93,8 @@ public class Junit5TagService implements TagService<Junit5ZephyrReport.Test> {
 
         String originalValue = testTag.getValue();
         if (Junit5ZephyrReport.Test.Type.PARAMETERIZED.equals(test.getType())
-            && TestTag.Type.JIRA_KEY.equals(testTag.getType())
-            && test.getArguments() != null
-            && !test.getArguments().isEmpty()) {
-            String arguments = test.getArguments().stream()
-                .filter(Objects::nonNull)
-                .map(argument -> "\"" + escape(argument) + "\"")
-                .reduce((a, b) -> a + "," + b)
-                .orElse("");
-
-            if (test.getArguments().size() != 1) {
-                arguments = "{ " + arguments + " }";
-            }
-
-            testTag.setValue("value = \"" + originalValue + "\", arguments = " + arguments);
+            && TestTag.Type.JIRA_KEY.equals(testTag.getType())) {
+            testTag.setValue("value = \"" + originalValue + "\", name = \"" + escape(test.getDisplayName()) + "\"");
         } else {
             testTag.setValue("\"" + originalValue + "\"");
         }
