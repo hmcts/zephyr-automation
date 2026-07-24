@@ -126,7 +126,7 @@ repositories {
 
 ext {
     log4JVersion = "2.26.1"
-    logbackVersion = "1.5.38"
+    logbackVersion = "1.6.0"
     lombokVersion = "1.18.46"
 }
 
