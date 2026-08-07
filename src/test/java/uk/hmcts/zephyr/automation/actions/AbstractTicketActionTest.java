@@ -3,6 +3,7 @@ package uk.hmcts.zephyr.automation.actions;
 import org.apache.logging.log4j.util.TriConsumer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
@@ -14,6 +15,7 @@ import uk.hmcts.zephyr.automation.jira.client.Jira;
 import uk.hmcts.zephyr.automation.jira.models.JiraComponent;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueFieldsWrapper;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueLink;
+import uk.hmcts.zephyr.automation.jira.models.JiraTransitionRequest;
 import uk.hmcts.zephyr.automation.jira.models.LinkType;
 import uk.hmcts.zephyr.automation.support.TestUtil;
 import uk.hmcts.zephyr.automation.zephyr.ZephyrConstants;
@@ -26,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -161,7 +164,7 @@ class AbstractTicketActionTest {
         when(tagService.extractTagFromTagType(test, TestTag.Type.JIRA_EPIC)).thenReturn(
             Optional.of(new TestTag(TestTag.Type.JIRA_EPIC, "epic-1")));
 
-        assertEquals(Optional.of(new TestTag(TestTag.Type.JIRA_EPIC,"epic-1")), action.getEpicTicketKey(test));
+        assertEquals(Optional.of(new TestTag(TestTag.Type.JIRA_EPIC, "epic-1")), action.getEpicTicketKey(test));
     }
 
     @Test
@@ -201,6 +204,49 @@ class AbstractTicketActionTest {
         assertNull(updateBody.getFields().getReporter());
     }
 
+    @Nested
+    class TransitionJiraIssueTest {
+        private static final String SUCCESS_STATUS_ID = "31";
+        private static final String FAILED_STATUS_ID = "41";
+
+        @Test
+        void givenPassStatus_whenTransitionJiraIssue_thenUsesSuccessStatusId() {
+            TestTicketAction action = new TestTicketAction(tagService);
+            ZephyrTest passTest = new DummyZephyrTest(ZephyrConstants.ExecutionStatus.PASS);
+            configMock.when(Config::getSuccessStatusId).thenReturn(SUCCESS_STATUS_ID);
+
+            action.transitionJiraIssue("CASE-10", passTest);
+
+            ArgumentCaptor<JiraTransitionRequest> captor = ArgumentCaptor.forClass(JiraTransitionRequest.class);
+            verify(jira).transitionIssue(org.mockito.ArgumentMatchers.eq("CASE-10"), captor.capture());
+            assertEquals(SUCCESS_STATUS_ID, captor.getValue().getTransition().getId());
+        }
+
+        @Test
+        void givenFailStatus_whenTransitionJiraIssue_thenUsesFailedStatusId() {
+            TestTicketAction action = new TestTicketAction(tagService);
+            ZephyrTest failTest = new DummyZephyrTest(ZephyrConstants.ExecutionStatus.FAIL);
+            configMock.when(Config::getFailedStatusId).thenReturn(FAILED_STATUS_ID);
+
+            action.transitionJiraIssue("CASE-11", failTest);
+
+            ArgumentCaptor<JiraTransitionRequest> captor = ArgumentCaptor.forClass(JiraTransitionRequest.class);
+            verify(jira).transitionIssue(org.mockito.ArgumentMatchers.eq("CASE-11"), captor.capture());
+            assertEquals(FAILED_STATUS_ID, captor.getValue().getTransition().getId());
+        }
+
+        @Test
+        void givenNonTerminalStatus_whenTransitionJiraIssue_thenSkipsTransition() {
+            TestTicketAction action = new TestTicketAction(tagService);
+            ZephyrTest wipTest = new DummyZephyrTest(ZephyrConstants.ExecutionStatus.WIP);
+
+            action.transitionJiraIssue("CASE-12", wipTest);
+
+            verify(jira, never()).transitionIssue(org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any());
+        }
+    }
+
     private JiraComponent componentWithId(String id) {
         JiraComponent component = new JiraComponent();
         component.setId(id);
@@ -219,6 +265,16 @@ class AbstractTicketActionTest {
     }
 
     private static class DummyZephyrTest implements ZephyrTest {
+        private final ZephyrConstants.ExecutionStatus executionStatus;
+
+        DummyZephyrTest() {
+            this(ZephyrConstants.ExecutionStatus.PASS);
+        }
+
+        DummyZephyrTest(ZephyrConstants.ExecutionStatus executionStatus) {
+            this.executionStatus = executionStatus;
+        }
+
         @Override
         public String getName() {
             return "scenario";
@@ -236,7 +292,7 @@ class AbstractTicketActionTest {
 
         @Override
         public ZephyrConstants.ExecutionStatus getZephyrExecutionStatus() {
-            return ZephyrConstants.ExecutionStatus.PASS;
+            return executionStatus;
         }
 
         @Override

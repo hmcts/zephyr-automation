@@ -15,6 +15,7 @@ import uk.hmcts.zephyr.automation.jira.models.JiraIssueFieldsWrapper;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueLink;
 import uk.hmcts.zephyr.automation.jira.models.JiraSearchRequest;
 import uk.hmcts.zephyr.automation.jira.models.JiraSearchResponse;
+import uk.hmcts.zephyr.automation.jira.models.JiraTransitionRequest;
 
 import java.util.HashMap;
 import java.util.List;
@@ -75,5 +76,10 @@ public class JiraImpl implements Jira {
     @Override
     public JiraIssue updateIssue(JiraIssueFieldsWrapper body, String issueId) {
         return jiraClient.updateIssue(body, issueId);
+    }
+
+    @Override
+    public void transitionIssue(String issueId, JiraTransitionRequest transitionRequest) {
+        jiraClient.transitionIssue(issueId, transitionRequest);
     }
 }

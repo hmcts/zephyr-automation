@@ -20,6 +20,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SuppressWarnings("LineLength")
 class ConfigTest {
 
+    private static final String STATUS_IDS_ARGUMENT_EXCEPTION_MESSAGE =
+        "Failed status id and success status id must be specified together as command line arguments";
+
     @AfterEach
     void tearDown() throws Exception {
         resetSingletons();
@@ -88,6 +91,56 @@ class ConfigTest {
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> Config.instantiate(args));
         assertEquals("Jira configuration requires jira-base-url, jira-project-id, jira-default-user, and jira-auth-token to be specified as command line arguments", exception.getMessage());
+    }
+
+    @Nested
+    class StatusIdValidationTest {
+        @Test
+        void givenOnlyFailedStatusIdWhenInstantiateThenThrowsIllegalArgumentException() {
+            String[] args = new String[] {
+                "action-type=CREATE_TICKETS",
+                "process-type=CUCUMBER_JSON_REPORT",
+                "failed-status-id=2"
+            };
+
+            IllegalArgumentException exception =
+                assertThrows(IllegalArgumentException.class, () -> Config.instantiate(args));
+
+            assertEquals(STATUS_IDS_ARGUMENT_EXCEPTION_MESSAGE, exception.getMessage());
+        }
+
+        @Test
+        void givenOnlySuccessStatusIdWhenInstantiateThenThrowsIllegalArgumentException() {
+            String[] args = new String[] {
+                "action-type=CREATE_TICKETS",
+                "process-type=CUCUMBER_JSON_REPORT",
+                "success-status-id=1"
+            };
+
+            IllegalArgumentException exception =
+                assertThrows(IllegalArgumentException.class, () -> Config.instantiate(args));
+
+            assertEquals(STATUS_IDS_ARGUMENT_EXCEPTION_MESSAGE, exception.getMessage());
+        }
+
+        @Test
+        void givenBothStatusIdsWhenInstantiateThenStatusIdsAreAvailable() {
+            String[] args = new String[] {
+                "action-type=CREATE_TICKETS",
+                "process-type=CUCUMBER_JSON_REPORT",
+                "jira-base-url=https://jira.example",
+                "jira-project-id=PROJ",
+                "jira-default-user=bot@example.com",
+                "jira-auth-token=token",
+                "success-status-id=1",
+                "failed-status-id=2"
+            };
+
+            Config.instantiate(args);
+
+            assertEquals("1", Config.getSuccessStatusId());
+            assertEquals("2", Config.getFailedStatusId());
+        }
     }
 
     private void resetSingletons() throws Exception {

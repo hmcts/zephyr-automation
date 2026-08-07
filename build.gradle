@@ -9,7 +9,7 @@ plugins {
 }
 
 group = 'uk.gov.hmcts'
-version = '1.2.1'
+version = '1.2.2'
 
 java {
     toolchain {
@@ -151,6 +151,7 @@ dependencies {
     implementation 'org.junit.platform:junit-platform-suite:6.1.2'
     implementation 'org.junit.jupiter:junit-jupiter-api:6.1.2'
     implementation 'org.junit.jupiter:junit-jupiter-engine:6.1.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:6.1.2'
     testImplementation 'org.mockito:mockito-core:5.23.0'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.23.0'
     testImplementation 'org.mockito:mockito-inline:5.2.0'
