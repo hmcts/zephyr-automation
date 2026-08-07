@@ -111,12 +111,10 @@ public class Config {
         return ProcessType.valueOf(INSTANCE.arguments.getOrDefault(Argument.PROCESS_TYPE, null));
     }
 
-    //TODO test
     public static String getSuccessStatusId() {
         return INSTANCE.arguments.getOrDefault(Argument.SUCCESS_STATUS_ID, null);
     }
 
-    //TODO test
     public static String getFailedStatusId() {
         return INSTANCE.arguments.getOrDefault(Argument.FAILED_STATUS_ID, null);
     }
