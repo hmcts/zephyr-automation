@@ -116,6 +116,7 @@ class AbstractUpdateTicketActionTest {
 
         private static final String SUCCESS_STATUS_ID = "31";
         private static final String FAILED_STATUS_ID = "41";
+
         @Test
         void givenStatusIdsPresentAndPassingTest_whenUpdate_thenTransitionsIssue() {
             final TestUpdateTicketAction action = spy(new TestUpdateTicketAction(tagService));

@@ -14,6 +14,7 @@ import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -30,7 +31,7 @@ class ConfigTest {
 
     @Test
     void instantiate_populatesConfigAndJiraConfig() {
-        String[] args = new String[] {
+        String[] args = new String[]{
             "action-type=CREATE_TICKETS",
             "process-type=CUCUMBER_JSON_REPORT",
             "base-path=/tmp/base",
@@ -76,28 +77,34 @@ class ConfigTest {
 
     @Test
     void instantiate_missingActionOrProcessTypeThrows() {
-        String[] args = new String[] {"action-type=CREATE_TICKETS"};
+        String[] args = new String[]{"action-type=CREATE_TICKETS"};
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> Config.instantiate(args));
-        assertEquals("Both action-type and process-type must be specified as command line arguments", exception.getMessage());
+        IllegalArgumentException exception =
+            assertThrows(IllegalArgumentException.class, () -> Config.instantiate(args));
+        assertEquals("Both action-type and process-type must be specified as command line arguments",
+            exception.getMessage());
     }
 
     @Test
-    void instantiate_missingJiraArgsThrows()  {
-        String[] args = new String[] {
+    void instantiate_missingJiraArgsThrows() {
+        String[] args = new String[]{
             "action-type=CREATE_TICKETS",
             "process-type=CUCUMBER_JSON_REPORT"
         };
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> Config.instantiate(args));
-        assertEquals("Jira configuration requires jira-base-url, jira-project-id, jira-default-user, and jira-auth-token to be specified as command line arguments", exception.getMessage());
+        IllegalArgumentException exception =
+            assertThrows(IllegalArgumentException.class, () -> Config.instantiate(args));
+        assertEquals(
+            "Jira configuration requires jira-base-url, jira-project-id, jira-default-user, and jira-auth-token to be"
+                + " specified as command line arguments",
+            exception.getMessage());
     }
 
     @Nested
     class StatusIdValidationTest {
         @Test
         void givenOnlyFailedStatusIdWhenInstantiateThenThrowsIllegalArgumentException() {
-            String[] args = new String[] {
+            String[] args = new String[]{
                 "action-type=CREATE_TICKETS",
                 "process-type=CUCUMBER_JSON_REPORT",
                 "failed-status-id=2"
@@ -111,7 +118,7 @@ class ConfigTest {
 
         @Test
         void givenOnlySuccessStatusIdWhenInstantiateThenThrowsIllegalArgumentException() {
-            String[] args = new String[] {
+            String[] args = new String[]{
                 "action-type=CREATE_TICKETS",
                 "process-type=CUCUMBER_JSON_REPORT",
                 "success-status-id=1"
@@ -125,7 +132,7 @@ class ConfigTest {
 
         @Test
         void givenBothStatusIdsWhenInstantiateThenStatusIdsAreAvailable() {
-            String[] args = new String[] {
+            String[] args = new String[]{
                 "action-type=CREATE_TICKETS",
                 "process-type=CUCUMBER_JSON_REPORT",
                 "jira-base-url=https://jira.example",
@@ -140,6 +147,23 @@ class ConfigTest {
 
             assertEquals("1", Config.getSuccessStatusId());
             assertEquals("2", Config.getFailedStatusId());
+        }
+
+        @Test
+        void givenBothStatusIdsAreNotProvidedWhenInstantiateThenStatusIdsAreAvailable() {
+            String[] args = new String[]{
+                "action-type=CREATE_TICKETS",
+                "process-type=CUCUMBER_JSON_REPORT",
+                "jira-base-url=https://jira.example",
+                "jira-project-id=PROJ",
+                "jira-default-user=bot@example.com",
+                "jira-auth-token=token"
+            };
+
+            Config.instantiate(args);
+
+            assertNull(Config.getSuccessStatusId());
+            assertNull(Config.getFailedStatusId());
         }
     }
 
@@ -188,7 +212,8 @@ class ConfigTest {
                 (Map<Config.ActionType, Supplier<Action>>) field.get(processType);
 
             Map<Config.ActionType, Supplier<Action>> replacement = new EnumMap<>(Config.ActionType.class);
-            replacement.put(Config.ActionType.CREATE_TICKETS, () -> () -> { });
+            replacement.put(Config.ActionType.CREATE_TICKETS, () -> () -> {
+            });
 
             field.set(processType, replacement);
             try {

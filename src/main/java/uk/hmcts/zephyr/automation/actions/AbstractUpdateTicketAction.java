@@ -6,9 +6,6 @@ import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.TagService;
 import uk.hmcts.zephyr.automation.TestTag;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueFieldsWrapper;
-import uk.hmcts.zephyr.automation.jira.models.JiraTransition;
-import uk.hmcts.zephyr.automation.jira.models.JiraTransitionRequest;
-import uk.hmcts.zephyr.automation.zephyr.ZephyrConstants;
 
 import java.util.Optional;
 
