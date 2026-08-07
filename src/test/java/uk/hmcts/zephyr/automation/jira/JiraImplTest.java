@@ -9,6 +9,7 @@ import uk.hmcts.zephyr.automation.jira.models.JiraIssueFieldsWrapper;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueLink;
 import uk.hmcts.zephyr.automation.jira.models.JiraSearchRequest;
 import uk.hmcts.zephyr.automation.jira.models.JiraSearchResponse;
+import uk.hmcts.zephyr.automation.jira.models.JiraTransitionRequest;
 import uk.hmcts.zephyr.automation.support.TestUtil;
 
 import java.util.HashMap;
@@ -119,6 +120,18 @@ class JiraImplTest {
 
         assertSame(response, result);
         verify(jiraClient).updateIssue(request, "ID-1");
+    }
+
+    @Test
+    void given_transitionPayload_when_transitionIssue_then_delegatesToClient() throws Exception {
+        JiraClient jiraClient = mock(JiraClient.class);
+        JiraImpl jira = createSubjectWithMock(jiraClient);
+
+        JiraTransitionRequest request = mock(JiraTransitionRequest.class);
+
+        jira.transitionIssue("ID-1", request);
+
+        verify(jiraClient).transitionIssue("ID-1", request);
     }
 
     private JiraImpl createSubjectWithMock(JiraClient jiraClient) throws Exception {

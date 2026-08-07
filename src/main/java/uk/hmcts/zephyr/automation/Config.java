@@ -60,7 +60,9 @@ public class Config {
         EXECUTION_TEST_CYCLE_NAME("execution-test-cycle-name="),
         EXECUTION_TEST_CYCLE_DESCRIPTION("execution-test-cycle-description="),
         EXECUTION_TEST_CYCLE_VERSION("execution-test-cycle-version="),
-        EXECUTION_ATTACH_EVIDENCE("execution-attach-evidence=");
+        EXECUTION_ATTACH_EVIDENCE("execution-attach-evidence="),
+        SUCCESS_STATUS_ID("success-status-id="),
+        FAILED_STATUS_ID("failed-status-id=");
 
         private final String prefix;
 
@@ -83,11 +85,18 @@ public class Config {
             }
         }
         this.arguments = Collections.unmodifiableMap(argumentMap);
-        if (this.arguments.getOrDefault(Argument.ACTION_TYPE, null) == null
-            || this.arguments.getOrDefault(Argument.PROCESS_TYPE, null) == null) {
+        if (!argumentMap.containsKey(Argument.ACTION_TYPE) || !argumentMap.containsKey(Argument.PROCESS_TYPE)) {
             throw new IllegalArgumentException(
                 "Both action-type and process-type must be specified as command line arguments");
         }
+
+        boolean hasFailedStatusId = argumentMap.containsKey(Argument.FAILED_STATUS_ID);
+        boolean hasSuccessStatusId = argumentMap.containsKey(Argument.SUCCESS_STATUS_ID);
+        if (hasFailedStatusId != hasSuccessStatusId) {
+            throw new IllegalArgumentException(
+                "Failed status id and success status id must be specified together as command line arguments");
+        }
+
         JiraConfig.instantiate(args);
 
         this.objectMapper = new ObjectMapper()
@@ -100,6 +109,16 @@ public class Config {
 
     public static ProcessType getProcessType() {
         return ProcessType.valueOf(INSTANCE.arguments.getOrDefault(Argument.PROCESS_TYPE, null));
+    }
+
+    //TODO test
+    public static String getSuccessStatusId() {
+        return INSTANCE.arguments.getOrDefault(Argument.SUCCESS_STATUS_ID, null);
+    }
+
+    //TODO test
+    public static String getFailedStatusId() {
+        return INSTANCE.arguments.getOrDefault(Argument.FAILED_STATUS_ID, null);
     }
 
     public static ActionType getActionType() {

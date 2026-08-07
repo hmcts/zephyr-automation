@@ -43,6 +43,12 @@ public abstract class AbstractUpdateTicketAction<T extends ZephyrTest>
             //This does not remove any existing links, so if links are removed from the test, they will need to be
             //removed manually from the Jira issue.
             addLinksToJiraIssue(jiraKey, test);
+
+            //Transition issue
+            if (Config.getSuccessStatusId() != null && Config.getFailedStatusId() != null) {
+                transitionJiraIssue(jiraKey, test);
+            }
+
         } catch (Exception e) {
             log.error("Error updating JIRA issue for test in {}", test.getNameAndLocation(), e);
         }

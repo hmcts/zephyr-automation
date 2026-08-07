@@ -2,7 +2,10 @@ package uk.hmcts.zephyr.automation.actions;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.MockedStatic;
 import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.TagService;
@@ -18,14 +21,15 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class AbstractUpdateTicketActionTest {
-
     private MockedStatic<Config> configMock;
     private TagService<ZephyrTest> tagService;
     private Jira jira;
@@ -62,7 +66,7 @@ class AbstractUpdateTicketActionTest {
 
         action.updateJiraIssue(test);
 
-        configMock.verify(() -> Config.getJira(), never());
+        configMock.verify(Config::getJira, never());
     }
 
     @Test
@@ -105,6 +109,55 @@ class AbstractUpdateTicketActionTest {
         when(jira.updateIssue(any(), any())).thenThrow(new RuntimeException("boom"));
 
         assertDoesNotThrow(() -> action.updateJiraIssue(test));
+    }
+
+    @Nested
+    class UpdateJiraIssueTransitionTest {
+
+        private static final String SUCCESS_STATUS_ID = "31";
+        private static final String FAILED_STATUS_ID = "41";
+
+        @Test
+        void givenStatusIdsPresentAndPassingTest_whenUpdate_thenTransitionsIssue() {
+            final TestUpdateTicketAction action = spy(new TestUpdateTicketAction(tagService));
+            ZephyrTest test = new DummyZephyrTest();
+            doNothing().when(action).transitionJiraIssue(any(), any());
+
+            when(tagService.extractJiraKeyFromTag(test)).thenReturn(Optional.of("CASE-4"));
+            when(tagService.hasTag(test, TestTag.Type.JIRA_IGNORE)).thenReturn(false);
+            configMock.when(Config::getJira).thenReturn(jira);
+            configMock.when(Config::getSuccessStatusId).thenReturn(SUCCESS_STATUS_ID);
+            configMock.when(Config::getFailedStatusId).thenReturn(FAILED_STATUS_ID);
+
+            action.updateJiraIssue(test);
+
+            verify(action).transitionJiraIssue("CASE-4", test);
+        }
+
+        @ParameterizedTest
+        @CsvSource(value = {
+            "31,null",
+            "null,41",
+            "null,null"
+        }, nullValues = "null")
+        void givenInvalidStatusIdCombination_whenUpdate_thenDoesNotTransitionIssue(
+            String successStatusId,
+            String failedStatusId
+        ) {
+            final TestUpdateTicketAction action = spy(new TestUpdateTicketAction(tagService));
+            ZephyrTest test = new DummyZephyrTest();
+            doNothing().when(action).transitionJiraIssue(any(), any());
+
+            when(tagService.extractJiraKeyFromTag(test)).thenReturn(Optional.of("CASE-5"));
+            when(tagService.hasTag(test, TestTag.Type.JIRA_IGNORE)).thenReturn(false);
+            configMock.when(Config::getJira).thenReturn(jira);
+            configMock.when(Config::getSuccessStatusId).thenReturn(successStatusId);
+            configMock.when(Config::getFailedStatusId).thenReturn(failedStatusId);
+
+            action.updateJiraIssue(test);
+
+            verify(action, never()).transitionJiraIssue(any(), any());
+        }
     }
 
     private static class TestUpdateTicketAction extends AbstractUpdateTicketAction<ZephyrTest> {
