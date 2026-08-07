@@ -2,7 +2,10 @@ package uk.hmcts.zephyr.automation.actions;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.MockedStatic;
 import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.TagService;
@@ -19,6 +22,8 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -26,6 +31,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class AbstractCreateTicketActionTest {
+
+    private static final String SUCCESS_STATUS_ID = "31";
+    private static final String FAILED_STATUS_ID = "41";
 
     private MockedStatic<Config> configMock;
     private TagService<ZephyrTest> tagService;
@@ -62,7 +70,7 @@ class AbstractCreateTicketActionTest {
         when(tagService.extractJiraKeyFromTag(test)).thenReturn(Optional.of("ABC-1"));
 
         assertTrue(action.createJiraIssue(test).isEmpty());
-        configMock.verify(() -> Config.getJira(), never());
+        configMock.verify(Config::getJira, never());
     }
 
     @Test
@@ -74,7 +82,7 @@ class AbstractCreateTicketActionTest {
         when(tagService.hasTag(test, TestTag.Type.JIRA_IGNORE)).thenReturn(true);
 
         assertTrue(action.createJiraIssue(test).isEmpty());
-        configMock.verify(() -> Config.getJira(), never());
+        configMock.verify(Config::getJira, never());
     }
 
     @Test
@@ -109,6 +117,56 @@ class AbstractCreateTicketActionTest {
 
         assertTrue(action.createJiraIssue(test).isEmpty());
         verify(tagService, never()).addTag(any(), any());
+    }
+
+    @Nested
+    class CreateJiraIssueTransitionTest {
+        @Test
+        void givenStatusIdsPresent_whenCreateJiraIssue_thenTransitionsIssue() {
+            final TestCreateTicketAction action = new TestCreateTicketAction(tagService);
+            final ZephyrTest test = new DummyZephyrTest();
+            final JiraIssue createdIssue = JiraIssue.builder().key("CASE-10").build();
+
+            when(tagService.extractJiraKeyFromTag(test)).thenReturn(Optional.empty());
+            when(tagService.hasTag(test, TestTag.Type.JIRA_IGNORE)).thenReturn(false);
+            configMock.when(Config::getJira).thenReturn(jira);
+            configMock.when(Config::getSuccessStatusId).thenReturn(SUCCESS_STATUS_ID);
+            configMock.when(Config::getFailedStatusId).thenReturn(FAILED_STATUS_ID);
+            when(jira.createIssue(any())).thenReturn(createdIssue);
+
+            action.createJiraIssue(test);
+
+            verify(jira).transitionIssue(eq("CASE-10"), argThat(request ->
+                request != null
+                    && request.getTransition() != null
+                    && SUCCESS_STATUS_ID.equals(request.getTransition().getId())));
+        }
+
+        @ParameterizedTest
+        @CsvSource(value = {
+            "31,null",
+            "null,41",
+            "null,null"
+        }, nullValues = "null")
+        void givenInvalidStatusIdCombination_whenCreateJiraIssue_thenDoesNotTransitionIssue(
+            String successStatusId,
+            String failedStatusId
+        ) {
+            final TestCreateTicketAction action = new TestCreateTicketAction(tagService);
+            final ZephyrTest test = new DummyZephyrTest();
+            final JiraIssue createdIssue = JiraIssue.builder().key("CASE-11").build();
+
+            when(tagService.extractJiraKeyFromTag(test)).thenReturn(Optional.empty());
+            when(tagService.hasTag(test, TestTag.Type.JIRA_IGNORE)).thenReturn(false);
+            configMock.when(Config::getJira).thenReturn(jira);
+            configMock.when(Config::getSuccessStatusId).thenReturn(successStatusId);
+            configMock.when(Config::getFailedStatusId).thenReturn(failedStatusId);
+            when(jira.createIssue(any())).thenReturn(createdIssue);
+
+            action.createJiraIssue(test);
+
+            verify(jira, never()).transitionIssue(any(), any());
+        }
     }
 
     private static class TestCreateTicketAction extends AbstractCreateTicketAction<ZephyrTest> {

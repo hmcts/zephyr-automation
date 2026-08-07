@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 @Getter
 @Slf4j
 public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
-    extends AbstractAction<T>
+    extends AbstractTicketAction<T>
     implements CreateExecutionAction {
 
     protected AbstractCreateExecutionAction(TagService<T> tagService) {
@@ -107,6 +107,11 @@ public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
                 .build();
             Config.getZephyr().updateExecutionStatus(request);
         });
+
+        if (Config.getSuccessStatusId() != null && Config.getFailedStatusId() != null) {
+            scenarioResults
+                .forEach(scenarioResult -> transitionJiraIssue(scenarioResult.getIssueKey(), scenarioResult.getTest()));
+        }
     }
 
     private void assignExecutionDetails(List<ScenarioResult> scenarioResults, String cycleId) {

@@ -39,8 +39,13 @@ public abstract class AbstractCreateTicketAction<T extends ZephyrTest>
             //Create the issue
             JiraIssue jiraIssue = Config.getJira().createIssue(body);
             addLinksToJiraIssue(jiraIssue.getKey(), test);
+            //Transition issue
+            if (Config.getSuccessStatusId() != null && Config.getFailedStatusId() != null) {
+                transitionJiraIssue(jiraIssue.getKey(), test);
+            }
             TestTag testTag = new TestTag(TestTag.Type.JIRA_KEY, jiraIssue.getKey());
             getTagService().addTag(test, testTag);
+
             return Optional.of(jiraIssue);
         } catch (Exception e) {
             log.error("Error creating JIRA issue for test in {}", test.getNameAndLocation(), e);
