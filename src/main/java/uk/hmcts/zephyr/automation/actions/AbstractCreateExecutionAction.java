@@ -37,10 +37,11 @@ public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
 
     protected AbstractCreateExecutionAction(TagService<T> tagService) {
         super(tagService);
-        validateConfig();
     }
 
-    private void validateConfig() {
+    @Override
+    protected void validateConfig() {
+        super.validateConfig();
         if (Config.getReportPath() == null) {
             throw new IllegalArgumentException(
                 "For CREATE_EXECUTION action type, report-path must be specified as a command line "

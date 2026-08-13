@@ -23,7 +23,7 @@ public abstract class AbstractTicketAction<T extends ZephyrTest> extends Abstrac
         validateConfig();
     }
 
-    private void validateConfig() {
+    protected void validateConfig() {
         if (Config.getGithubRepoBaseSrcDir() == null) {
             throw new IllegalArgumentException(
                 "For CREATE_TICKETS action type, github-repo-base-src-dir must be specified as a command line "
