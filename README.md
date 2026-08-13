@@ -31,13 +31,15 @@ Zephyr Automation is a tool for integrating test results and ticket management b
 - `jira-epic-link-custom-field-id=`: Custom field ID for Jira epic links
 - `jira-default-components=`: Comma-separated list of default Jira components (e.g., `ComponentA,ComponentB`)
 
-**Optional Arguments:*
+**Optional Arguments:**
 - `execution-environment=`: Environment for the Zephyr execution (e.g., `Staging`, `Production`)
 - `execution-build=`:  Build version for the Zephyr execution (e.g., `1.0.0`)
 - `execution-test-cycle-name=`: Test cycle name for the Zephyr execution (e.g., `Regression Cycle 1`)
 - `execution-test-cycle-description=`: Test cycle description for the Zephyr execution (e.g., `Automated test execution for regression cycle 1`)
 - `execution-test-cycle-version=`: Test cycle version for the Zephyr execution 
 - `execution-attach-evidence=`: Whether to attach evidence to the Zephyr execution (true/false, default: false) - (Only supported for cucumber reports)
+- `success-status-id=`: Jira transition status ID to use for PASS execution results (e.g., `31`); must be provided with `failed-status-id=`
+- `failed-status-id=`: Jira transition status ID to use for FAIL execution results (e.g., `41`); must be provided with `success-status-id=`
 
 ### Supported Tags
 

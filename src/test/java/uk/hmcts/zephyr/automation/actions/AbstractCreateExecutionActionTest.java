@@ -3,7 +3,10 @@ package uk.hmcts.zephyr.automation.actions;
 import feign.form.FormData;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 import uk.hmcts.zephyr.automation.Config;
@@ -11,6 +14,8 @@ import uk.hmcts.zephyr.automation.TagService;
 import uk.hmcts.zephyr.automation.jira.JiraConfig;
 import uk.hmcts.zephyr.automation.jira.client.Jira;
 import uk.hmcts.zephyr.automation.jira.models.JiraSearchResponse;
+import uk.hmcts.zephyr.automation.jira.models.JiraTransition;
+import uk.hmcts.zephyr.automation.jira.models.JiraTransitionRequest;
 import uk.hmcts.zephyr.automation.support.TestUtil;
 import uk.hmcts.zephyr.automation.zephyr.ZephyrConstants;
 import uk.hmcts.zephyr.automation.zephyr.client.Zephyr;
@@ -31,10 +36,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class AbstractCreateExecutionActionTest {
+
+    private static final String SUCCESS_STATUS_ID = "31";
+    private static final String FAILED_STATUS_ID = "41";
 
     private MockedStatic<Config> configMock;
     private TagService<ZephyrTest> tagService;
@@ -46,6 +55,8 @@ class AbstractCreateExecutionActionTest {
             Config.ActionType.CREATE_EXECUTION, Config.ProcessType.CYPRESS_JSON_REPORT);
         JiraConfig.instantiate(args);
         configMock = mockStatic(Config.class);
+        configMock.when(Config::getGithubRepoBaseSrcDir).thenReturn("/repo");
+        configMock.when(Config::getBasePath).thenReturn("/base");
         @SuppressWarnings("unchecked")
         TagService<ZephyrTest> tagServiceMock = mock(TagService.class);
         tagService = tagServiceMock;
@@ -75,8 +86,8 @@ class AbstractCreateExecutionActionTest {
 
         action.processTests(List.of(test));
 
-        configMock.verify(() -> Config.getJira(), never());
-        configMock.verify(() -> Config.getZephyr(), never());
+        configMock.verify(Config::getJira, never());
+        configMock.verify(Config::getZephyr, never());
     }
 
     @Test
@@ -141,6 +152,119 @@ class AbstractCreateExecutionActionTest {
         assertEquals(List.of(String.valueOf(execution.getId())), statusCaptor.getValue().getExecutions());
         assertEquals(String.valueOf(ZephyrConstants.ExecutionStatus.PASS.getStatusId()),
             statusCaptor.getValue().getStatus());
+    }
+
+    @Nested
+    class TransitionJiraIssueFromExecutionStatusUpdateTest {
+        @Test
+        void givenStatusIdsPresent_whenProcessTests_thenTransitionsEachJiraIssue() {
+            Zephyr zephyr = mock(Zephyr.class);
+            Jira jira = mock(Jira.class);
+            configMock.when(Config::getReportPath).thenReturn("/tmp/report.json");
+            configMock.when(Config::getZephyr).thenReturn(zephyr);
+            configMock.when(Config::getJira).thenReturn(jira);
+            configMock.when(Config::getExecutionBuild).thenReturn("Some-Build");
+            configMock.when(Config::getExecutionEnvironment).thenReturn("Some-Env");
+            configMock.when(Config::getSuccessStatusId).thenReturn(SUCCESS_STATUS_ID);
+            configMock.when(Config::getFailedStatusId).thenReturn(FAILED_STATUS_ID);
+
+            final TestCreateExecutionAction action = new TestCreateExecutionAction(tagService);
+            final ZephyrTest passTest = new DummyZephyrTest("Scenario pass", ZephyrConstants.ExecutionStatus.PASS);
+            final ZephyrTest failTest = new DummyZephyrTest("Scenario fail", ZephyrConstants.ExecutionStatus.FAIL);
+            when(tagService.extractJiraKeyFromTag(passTest)).thenReturn(Optional.of("CASE-1"));
+            when(tagService.extractJiraKeyFromTag(failTest)).thenReturn(Optional.of("CASE-2"));
+
+            JiraSearchResponse searchResponse = JiraSearchResponse.builder()
+                .issues(List.of(
+                    JiraSearchResponse.JiraIssueSummary.builder().key("CASE-1").id("101").build(),
+                    JiraSearchResponse.JiraIssueSummary.builder().key("CASE-2").id("102").build()
+                ))
+                .build();
+            when(jira.searchIssues(any())).thenReturn(searchResponse);
+
+            ZephyrCycleResponse cycleResponse = new ZephyrCycleResponse();
+            cycleResponse.setId("cycle-1");
+            when(zephyr.createCycle(any())).thenReturn(cycleResponse);
+            when(zephyr.addTestsToCycle(any()))
+                .thenReturn(JobProgressToken.builder().jobProgressToken("job-123").build());
+            when(zephyr.getAddTestsToCycleJobProgress("job-123"))
+                .thenReturn(ZephyrBulkExecutionResponse.builder().progress(1.0).build());
+
+            ZephyrExecutionSearchResponse.Execution passExecution = new ZephyrExecutionSearchResponse.Execution();
+            passExecution.setIssueKey("CASE-1");
+            passExecution.setId(55L);
+            ZephyrExecutionSearchResponse.Execution failExecution = new ZephyrExecutionSearchResponse.Execution();
+            failExecution.setIssueKey("CASE-2");
+            failExecution.setId(56L);
+            ZephyrExecutionSearchResponse executionSearchResponse = new ZephyrExecutionSearchResponse();
+            executionSearchResponse.setExecutions(List.of(passExecution, failExecution));
+            when(zephyr.searchExecutions("cycle-1")).thenReturn(executionSearchResponse);
+
+            action.processTests(List.of(passTest, failTest));
+
+            ArgumentCaptor<String> issueKeyCaptor = ArgumentCaptor.forClass(String.class);
+            ArgumentCaptor<JiraTransitionRequest> transitionRequestCaptor =
+                ArgumentCaptor.forClass(JiraTransitionRequest.class);
+            verify(jira, times(2)).transitionIssue(issueKeyCaptor.capture(), transitionRequestCaptor.capture());
+
+            List<String> issueKeys = issueKeyCaptor.getAllValues();
+            List<String> transitionIds = transitionRequestCaptor.getAllValues().stream()
+                .map(JiraTransitionRequest::getTransition)
+                .map(JiraTransition::getId)
+                .toList();
+
+            assertEquals(List.of("CASE-1", "CASE-2"), issueKeys);
+            assertEquals(List.of(SUCCESS_STATUS_ID, FAILED_STATUS_ID), transitionIds);
+        }
+
+        @ParameterizedTest
+        @CsvSource(value = {
+            "31,null",
+            "null,41",
+            "null,null"
+        }, nullValues = "null")
+        void givenInvalidStatusIdCombination_whenProcessTests_thenDoesNotTransitionJiraIssues(
+            String successStatusId,
+            String failedStatusId
+        ) {
+            Zephyr zephyr = mock(Zephyr.class);
+            Jira jira = mock(Jira.class);
+            configMock.when(Config::getReportPath).thenReturn("/tmp/report.json");
+            configMock.when(Config::getZephyr).thenReturn(zephyr);
+            configMock.when(Config::getJira).thenReturn(jira);
+            configMock.when(Config::getExecutionBuild).thenReturn("Some-Build");
+            configMock.when(Config::getExecutionEnvironment).thenReturn("Some-Env");
+            configMock.when(Config::getSuccessStatusId).thenReturn(successStatusId);
+            configMock.when(Config::getFailedStatusId).thenReturn(failedStatusId);
+
+            final TestCreateExecutionAction action = new TestCreateExecutionAction(tagService);
+            final ZephyrTest test = new DummyZephyrTest("Scenario pass", ZephyrConstants.ExecutionStatus.PASS);
+            when(tagService.extractJiraKeyFromTag(test)).thenReturn(Optional.of("CASE-1"));
+
+            JiraSearchResponse searchResponse = JiraSearchResponse.builder()
+                .issues(List.of(JiraSearchResponse.JiraIssueSummary.builder().key("CASE-1").id("101").build()))
+                .build();
+            when(jira.searchIssues(any())).thenReturn(searchResponse);
+
+            ZephyrCycleResponse cycleResponse = new ZephyrCycleResponse();
+            cycleResponse.setId("cycle-1");
+            when(zephyr.createCycle(any())).thenReturn(cycleResponse);
+            when(zephyr.addTestsToCycle(any()))
+                .thenReturn(JobProgressToken.builder().jobProgressToken("job-123").build());
+            when(zephyr.getAddTestsToCycleJobProgress("job-123"))
+                .thenReturn(ZephyrBulkExecutionResponse.builder().progress(1.0).build());
+
+            ZephyrExecutionSearchResponse.Execution execution = new ZephyrExecutionSearchResponse.Execution();
+            execution.setIssueKey("CASE-1");
+            execution.setId(55L);
+            ZephyrExecutionSearchResponse executionSearchResponse = new ZephyrExecutionSearchResponse();
+            executionSearchResponse.setExecutions(List.of(execution));
+            when(zephyr.searchExecutions("cycle-1")).thenReturn(executionSearchResponse);
+
+            action.processTests(List.of(test));
+
+            verify(jira, never()).transitionIssue(any(), any());
+        }
     }
 
     @Test

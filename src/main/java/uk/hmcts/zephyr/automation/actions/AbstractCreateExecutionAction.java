@@ -32,15 +32,16 @@ import java.util.stream.Collectors;
 @Getter
 @Slf4j
 public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
-    extends AbstractAction<T>
+    extends AbstractTicketAction<T>
     implements CreateExecutionAction {
 
     protected AbstractCreateExecutionAction(TagService<T> tagService) {
         super(tagService);
-        validateConfig();
     }
 
-    private void validateConfig() {
+    @Override
+    protected void validateConfig() {
+        super.validateConfig();
         if (Config.getReportPath() == null) {
             throw new IllegalArgumentException(
                 "For CREATE_EXECUTION action type, report-path must be specified as a command line "
@@ -107,6 +108,11 @@ public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
                 .build();
             Config.getZephyr().updateExecutionStatus(request);
         });
+
+        if (Config.getSuccessStatusId() != null && Config.getFailedStatusId() != null) {
+            scenarioResults
+                .forEach(scenarioResult -> transitionJiraIssue(scenarioResult.getIssueKey(), scenarioResult.getTest()));
+        }
     }
 
     private void assignExecutionDetails(List<ScenarioResult> scenarioResults, String cycleId) {

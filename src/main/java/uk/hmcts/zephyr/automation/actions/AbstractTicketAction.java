@@ -6,6 +6,8 @@ import uk.hmcts.zephyr.automation.TestTag;
 import uk.hmcts.zephyr.automation.jira.JiraConfig;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueFieldsWrapper;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueLink;
+import uk.hmcts.zephyr.automation.jira.models.JiraTransition;
+import uk.hmcts.zephyr.automation.jira.models.JiraTransitionRequest;
 import uk.hmcts.zephyr.automation.jira.models.LinkType;
 import uk.hmcts.zephyr.automation.zephyr.ZephyrConstants;
 
@@ -21,7 +23,7 @@ public abstract class AbstractTicketAction<T extends ZephyrTest> extends Abstrac
         validateConfig();
     }
 
-    private void validateConfig() {
+    protected void validateConfig() {
         if (Config.getGithubRepoBaseSrcDir() == null) {
             throw new IllegalArgumentException(
                 "For CREATE_TICKETS action type, github-repo-base-src-dir must be specified as a command line "
@@ -134,5 +136,21 @@ public abstract class AbstractTicketAction<T extends ZephyrTest> extends Abstrac
         body.getFields().setLabels(getLabels(test));
 
         return body;
+    }
+
+    protected void transitionJiraIssue(String jiraKey, T test) {
+        String status;
+        if (ZephyrConstants.ExecutionStatus.PASS.equals(test.getZephyrExecutionStatus())) {
+            status = Config.getSuccessStatusId();
+        } else if (ZephyrConstants.ExecutionStatus.FAIL.equals(test.getZephyrExecutionStatus())) {
+            status = Config.getFailedStatusId();
+        } else {
+            return;
+        }
+        JiraTransitionRequest jiraTransitionRequest = new JiraTransitionRequest();
+        jiraTransitionRequest.setTransition(new JiraTransition(status));
+
+        Config.getJira().transitionIssue(jiraKey, jiraTransitionRequest);
+
     }
 }
