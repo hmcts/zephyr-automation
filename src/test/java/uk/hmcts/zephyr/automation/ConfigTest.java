@@ -39,9 +39,9 @@ class ConfigTest {
             "github-repo-base-src-dir=/repo",
             "jira-base-url=https://jira.example",
             "jira-project-id=PROJ",
-            "jira-default-user=bot@example.com",
+            "jira-default-user-id=someTestUserId",
+            "jira-auth-username=someAuthUsername",
             "jira-auth-token=token",
-            "jira-epic-link-custom-field-id=custom_1",
             "jira-default-components=CompA,CompB",
             "execution-environment=stg",
             "execution-build=1.0.0",
@@ -69,9 +69,9 @@ class ConfigTest {
         assertNotNull(Config.getObjectMapper());
         assertEquals("https://jira.example", JiraConfig.getBaseUrl());
         assertEquals("PROJ", JiraConfig.getProjectId());
-        assertEquals("bot@example.com", JiraConfig.getDefaultUser());
+        assertEquals("someTestUserId", JiraConfig.getDefaultUserId());
+        assertEquals("someAuthUsername", JiraConfig.getAuthUsername());
         assertEquals("token", JiraConfig.getAuthToken());
-        assertEquals("custom_1", JiraConfig.getEpicLinkCustomFieldId());
         assertEquals(2, JiraConfig.getDefaultComponents().size());
     }
 
@@ -95,8 +95,8 @@ class ConfigTest {
         IllegalArgumentException exception =
             assertThrows(IllegalArgumentException.class, () -> Config.instantiate(args));
         assertEquals(
-            "Jira configuration requires jira-base-url, jira-project-id, jira-default-user, and jira-auth-token to be"
-                + " specified as command line arguments",
+            "Jira configuration requires jira-base-url, jira-project-id, jira-default-user-id, jira-auth-token, "
+                + "jira-auth-username to be specified as command line arguments",
             exception.getMessage());
     }
 
@@ -137,7 +137,8 @@ class ConfigTest {
                 "process-type=CUCUMBER_JSON_REPORT",
                 "jira-base-url=https://jira.example",
                 "jira-project-id=PROJ",
-                "jira-default-user=bot@example.com",
+                "jira-default-user-id=botId",
+                "jira-auth-username=bot@example.com",
                 "jira-auth-token=token",
                 "success-status-id=1",
                 "failed-status-id=2"
@@ -156,7 +157,8 @@ class ConfigTest {
                 "process-type=CUCUMBER_JSON_REPORT",
                 "jira-base-url=https://jira.example",
                 "jira-project-id=PROJ",
-                "jira-default-user=bot@example.com",
+                "jira-default-user-id=botId",
+                "jira-auth-username=bot@example.com",
                 "jira-auth-token=token"
             };
 

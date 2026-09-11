@@ -5,7 +5,7 @@ import lombok.Getter;
 
 public class ZephyrConstants {
     public static final String BASE_URL = "https://tools.hmcts.net/jira/rest/zapi/latest";
-    public static final String ZEPHYR_ISSUE_TYPE_ID = "15601";
+    public static final String ZEPHYR_ISSUE_TYPE_ID = "10005";
 
 
     @Getter

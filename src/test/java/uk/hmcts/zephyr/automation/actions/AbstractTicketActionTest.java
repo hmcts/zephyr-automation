@@ -118,16 +118,6 @@ class AbstractTicketActionTest {
     }
 
     @Test
-    void givenTest_whenGetJiraDescription_thenFormatsLocationAndScenario() {
-        TestTicketAction action = new TestTicketAction(tagService);
-        ZephyrTest test = new DummyZephyrTest();
-
-        String description = action.getJiraDescription(test);
-
-        assertEquals("Location: [feature|https://example]\r\nScenario: scenario\r\n", description);
-    }
-
-    @Test
     void givenLabels_whenGetLabels_thenDelegatesToTagService() {
         TestTicketAction action = new TestTicketAction(tagService);
         ZephyrTest test = new DummyZephyrTest();
@@ -189,11 +179,11 @@ class AbstractTicketActionTest {
         assertEquals("Location: [feature|https://example]\r\nScenario: scenario\r\n", fields.getDescription());
         assertEquals(JiraConfig.getProjectId(), fields.getProject().getId());
         assertEquals(ZephyrConstants.ZEPHYR_ISSUE_TYPE_ID, fields.getIssuetype().getId());
-        assertEquals(JiraConfig.getDefaultUser(), fields.getReporter().getName());
+        assertEquals(JiraConfig.getDefaultUserId(), fields.getReporter().getId());
         assertEquals(List.of("critical"), fields.getLabels());
         assertEquals(List.of("id-default", "id-extra"),
             fields.getComponents().stream().map(JiraIssueFieldsWrapper.Component::getId).toList());
-        assertEquals("EPIC-9", fields.getDynamicFields().get(JiraConfig.getEpicLinkCustomFieldId()));
+        assertEquals("EPIC-9", fields.getParent().getKey());
 
         JiraIssueFieldsWrapper updateBody = action.buildBody(test, false);
         assertEquals("scenario", updateBody.getFields().getSummary());

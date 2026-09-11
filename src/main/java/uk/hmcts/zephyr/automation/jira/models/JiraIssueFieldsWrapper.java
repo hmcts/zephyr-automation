@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.experimental.SuperBuilder;
-import uk.hmcts.zephyr.automation.jira.JiraConfig;
 
 import java.util.HashMap;
 import java.util.List;
@@ -27,18 +26,19 @@ public class JiraIssueFieldsWrapper {
         private List<Component> components;
         private List<String> labels;
         private Reporter reporter;
-        private String description;
+        private Parent parent;
+        private JiraDescription description;
 
         @JsonIgnore
-        private String epicLink;
+        private Map<String, Object> dynamicFields;
+
 
         @JsonAnyGetter
         public Map<String, Object> getDynamicFields() {
-            Map<String, Object> dynamic = new HashMap<>();
-            if (epicLink != null) {
-                dynamic.put(JiraConfig.getEpicLinkCustomFieldId(), epicLink);
+            if (dynamicFields == null) {
+                dynamicFields = new HashMap<>();
             }
-            return dynamic;
+            return dynamicFields;
         }
 
         public void setSummary(String summary) {
@@ -54,6 +54,10 @@ public class JiraIssueFieldsWrapper {
                 ? withoutNewLines.substring(0, 255)
                 : withoutNewLines;
         }
+
+        public void addDynamicField(String fieldId, Object value) {
+            getDynamicFields().put(fieldId, value);
+        }
     }
 
     @Data
@@ -62,6 +66,14 @@ public class JiraIssueFieldsWrapper {
     public static class Project {
         private String id;
     }
+
+    @Data
+    @SuperBuilder
+    @AllArgsConstructor
+    public static class Parent {
+        private String key;
+    }
+
 
     @Data
     @SuperBuilder
@@ -81,6 +93,6 @@ public class JiraIssueFieldsWrapper {
     @SuperBuilder
     @AllArgsConstructor
     public static class Reporter {
-        private String name;
+        private String id;
     }
 }

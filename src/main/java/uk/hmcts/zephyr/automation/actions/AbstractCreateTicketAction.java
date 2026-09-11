@@ -1,5 +1,6 @@
 package uk.hmcts.zephyr.automation.actions;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import uk.hmcts.zephyr.automation.Config;
@@ -35,6 +36,9 @@ public abstract class AbstractCreateTicketAction<T extends ZephyrTest>
             log.info("Test in {} does not have JIRA key tag", test.getNameAndLocation());
 
             JiraIssueFieldsWrapper body = buildBody(test, true);
+
+
+            System.out.println(new ObjectMapper().writeValueAsString(body));
 
             //Create the issue
             JiraIssue jiraIssue = Config.getJira().createIssue(body);

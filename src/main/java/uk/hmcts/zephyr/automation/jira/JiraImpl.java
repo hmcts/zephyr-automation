@@ -3,6 +3,7 @@ package uk.hmcts.zephyr.automation.jira;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Feign;
 import feign.Logger;
+import feign.auth.BasicAuthRequestInterceptor;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
@@ -28,12 +29,10 @@ public class JiraImpl implements Jira {
 
     private final Map<String, List<JiraComponent>> componentsCacheMap;
 
-    public JiraImpl(ObjectMapper objectMapper, String baseUrl, String authToken) {
+    public JiraImpl(ObjectMapper objectMapper, String baseUrl, String authUsername, String authToken) {
         jiraClient = Feign.builder()
-            .requestInterceptor(template -> {
-                template.header("Authorization", authToken);
-                template.header("Content-Type", "application/json");
-            })
+            .requestInterceptor(template -> template.header("Content-Type", "application/json"))
+            .requestInterceptor(new BasicAuthRequestInterceptor(authUsername, authToken))
             .encoder(new JacksonEncoder(objectMapper))
             .decoder(new JacksonDecoder(objectMapper))
             .logLevel(Logger.Level.FULL)

@@ -103,7 +103,10 @@ public class Config {
             .findAndRegisterModules()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        this.jira = new JiraImpl(objectMapper, JiraConfig.getBaseUrl(), JiraConfig.getAuthToken());
+        this.jira = new JiraImpl(objectMapper,
+            JiraConfig.getBaseUrl(),
+            JiraConfig.getAuthUsername(),
+            JiraConfig.getAuthToken());
         this.zephyr = new ZephyrImpl(objectMapper, ZephyrConstants.BASE_URL, JiraConfig.getAuthToken());
     }
 

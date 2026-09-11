@@ -135,7 +135,7 @@ class JiraImplTest {
     }
 
     private JiraImpl createSubjectWithMock(JiraClient jiraClient) throws Exception {
-        JiraImpl jira = new JiraImpl(new ObjectMapper(), "http://localhost", "Bearer token");
+        JiraImpl jira = new JiraImpl(new ObjectMapper(), "http://localhost", "AuthUsername","Bearer token");
         TestUtil.setField(JiraImpl.class, jira, "jiraClient", jiraClient);
         TestUtil.setField(JiraImpl.class, jira, "componentsCacheMap", new HashMap<>());
         return jira;
