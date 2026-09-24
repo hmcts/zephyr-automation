@@ -127,7 +127,7 @@ repositories {
 ext {
     log4JVersion = "2.26.1"
     logbackVersion = "1.6.2"
-    lombokVersion = "1.18.46"
+    lombokVersion = "1.18.48"
 }
 
 dependencies {
