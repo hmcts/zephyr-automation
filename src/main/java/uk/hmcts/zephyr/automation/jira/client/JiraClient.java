@@ -1,6 +1,8 @@
 package uk.hmcts.zephyr.automation.jira.client;
 
+import feign.Headers;
 import feign.Param;
+import feign.QueryMap;
 import feign.RequestLine;
 import uk.hmcts.zephyr.automation.jira.models.JiraComponent;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssue;
@@ -11,6 +13,7 @@ import uk.hmcts.zephyr.automation.jira.models.JiraSearchResponse;
 import uk.hmcts.zephyr.automation.jira.models.JiraTransitionRequest;
 
 import java.util.List;
+import java.util.Map;
 
 public interface JiraClient {
 
@@ -23,8 +26,9 @@ public interface JiraClient {
     @RequestLine("POST /issueLink")
     void linkIssue(JiraIssueLink jiraIssueLink);
 
-    @RequestLine("POST /search")
-    JiraSearchResponse searchIssues(JiraSearchRequest searchRequest);
+    @RequestLine("GET /search/jql")
+    @Headers("Accept: application/json")
+    JiraSearchResponse searchIssues(@QueryMap Map<String, Object> queryParams);
 
     @RequestLine("PUT /issue/{issueId}")
     JiraIssue updateIssue(JiraIssueFieldsWrapper body, @Param("issueId") String issueId);

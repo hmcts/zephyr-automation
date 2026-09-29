@@ -19,6 +19,7 @@ import uk.hmcts.zephyr.automation.jira.models.JiraSearchResponse;
 import uk.hmcts.zephyr.automation.jira.models.JiraTransitionRequest;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -69,7 +70,7 @@ public class JiraImpl implements Jira {
 
     @Override
     public JiraSearchResponse searchIssues(JiraSearchRequest searchRequest) {
-        return jiraClient.searchIssues(searchRequest);
+        return jiraClient.searchIssues(toSearchQueryParams(searchRequest));
     }
 
     @Override
@@ -80,5 +81,29 @@ public class JiraImpl implements Jira {
     @Override
     public void transitionIssue(String issueId, JiraTransitionRequest transitionRequest) {
         jiraClient.transitionIssue(issueId, transitionRequest);
+    }
+
+    private static Map<String, Object> toSearchQueryParams(JiraSearchRequest searchRequest) {
+        Map<String, Object> queryParams = new LinkedHashMap<>();
+        putIfPresent(queryParams, "jql", searchRequest.getJql());
+        putIfPresent(queryParams, "nextPageToken", searchRequest.getNextPageToken());
+        putIfPresent(queryParams, "maxResults", searchRequest.getMaxResults());
+        putIfPresent(queryParams, "fields", toFieldsQueryParam(searchRequest.getFields()));
+        putIfPresent(queryParams, "expand", searchRequest.getExpand());
+        putIfPresent(queryParams, "reconcileIssues", searchRequest.getReconcileIssues());
+        return queryParams;
+    }
+
+    private static String toFieldsQueryParam(List<String> fields) {
+        if (fields == null || fields.isEmpty()) {
+            return null;
+        }
+        return String.join(",", fields);
+    }
+
+    private static void putIfPresent(Map<String, Object> queryParams, String name, Object value) {
+        if (value != null) {
+            queryParams.put(name, value);
+        }
     }
 }

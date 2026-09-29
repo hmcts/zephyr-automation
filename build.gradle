@@ -17,6 +17,8 @@ java {
     }
 }
 
+def jwtGeneratorJar = layout.projectDirectory.file('libs/jwt-generator.jar')
+
 def configureSourceSet(String name) {
     sourceSets.create(name) { sourceSet ->
         sourceSet.java {
@@ -133,7 +135,7 @@ ext {
 dependencies {
 
     implementation group: 'com.github.hmcts.java-logging', name: 'logging', version: '8.0.0'
-
+    implementation files('libs/jwt-generator.jar')
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.22.1'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.22.1'
     implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: log4JVersion
@@ -142,9 +144,12 @@ dependencies {
     implementation group: 'ch.qos.logback', name: 'logback-core', version: logbackVersion
     implementation 'io.github.openfeign:feign-core:13.13'
     implementation 'io.github.openfeign:feign-jackson:13.13'
+    implementation 'io.github.openfeign:feign-okhttp:13.13'
     implementation 'io.github.openfeign:feign-slf4j:13.13'
     implementation "io.github.openfeign.form:feign-form:3.8.0"
     implementation 'com.github.javaparser:javaparser-core:3.28.2'
+    implementation 'jakarta.annotation:jakarta.annotation-api:3.0.0'
+    implementation 'org.openapitools:jackson-databind-nullable:0.2.11'
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
     annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
@@ -159,6 +164,14 @@ dependencies {
 
 jar {
     archiveClassifier.set('')
+    from(zipTree(jwtGeneratorJar)) {
+        exclude 'META-INF/*.DSA'
+        exclude 'META-INF/*.RSA'
+        exclude 'META-INF/*.SF'
+        exclude 'META-INF/MANIFEST.MF'
+        exclude 'com/fasterxml/**'
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 publishing {

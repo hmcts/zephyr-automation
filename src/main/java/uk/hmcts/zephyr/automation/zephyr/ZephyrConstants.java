@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 public class ZephyrConstants {
-    public static final String BASE_URL = "https://tools.hmcts.net/jira/rest/zapi/latest";
+    public static final String BASE_URL = "https://prod-api.zephyr4jiracloud.com/connect";
     public static final String ZEPHYR_ISSUE_TYPE_ID = "10005";
 
 

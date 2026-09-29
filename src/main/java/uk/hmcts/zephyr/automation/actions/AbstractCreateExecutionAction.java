@@ -81,7 +81,7 @@ public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
         return scenarioResults;
     }
 
-    public void attachFileToExecution(Long executionId, Attachment attachment) {
+    public void attachFileToExecution(String executionId, Attachment attachment) {
         FormData formData = new FormData(
             attachment.getContentType(),
             attachment.getFileName(),
@@ -104,9 +104,10 @@ public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
                     .map(sr -> sr.getExecutionDetail().getId())
                     .map(String::valueOf)
                     .toList())
-                .status(String.valueOf(key.getStatusId()))
+                .status(key.getStatusId())
                 .build();
-            Config.getZephyr().updateExecutionStatus(request);
+            String jobProgressToken = Config.getZephyr().updateExecutionStatus(request);
+            waitForJob(jobProgressToken);
         });
 
         if (Config.getSuccessStatusId() != null && Config.getFailedStatusId() != null) {
@@ -123,51 +124,26 @@ public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
 
         //Bulk link test to the cycle to minimize API
         ZephyrBulkExecutionRequest bulkExecutionRequest = ZephyrBulkExecutionRequest.builder()
-            .cycleId(cycleId)
             .issues(jiraKeys)
             .method("1")
             .projectId(JiraConfig.getProjectId())
+            .versionId(Optional.ofNullable(Config.getTestCycleVersion()).orElse("-1"))
             .build();
 
-        JobProgressToken jobProgressToken = Config.getZephyr().addTestsToCycle(bulkExecutionRequest);
+        String jobProgressToken = Config.getZephyr().addTestsToCycle(cycleId, bulkExecutionRequest);
 
-        //Poll Zephyr for job progress and wait until executions are created before proceeding to update execution
-        // details
-        ZephyrBulkExecutionResponse jobProgressResponse;
-        long startTime = System.currentTimeMillis();
-        boolean firstPoll = true;
-        log.info("Polling Zephyr for job progress of adding tests to cycle. Job progress token: {}", jobProgressToken);
-        do {
-            jobProgressResponse =
-                Config.getZephyr().getAddTestsToCycleJobProgress(jobProgressToken.getJobProgressToken());
-
-            if (firstPoll) {
-                firstPoll = false;
-            } else {
-                log.info("Waiting for Zephyr job to complete. Job progress response: {}",
-                    Util.writeObjectToString(jobProgressResponse));
-                try {
-                    //Wait before polling to avoid hitting rate limits and give Zephyr some time to process the request
-                    Thread.sleep(Config.DEFAULT_WAIT_TIME);
-                } catch (InterruptedException e) {
-                    log.error("Thread interrupted while waiting for Zephyr job to complete", e);
-                    Thread.currentThread().interrupt();
-                    return;
-                }
-            }
-
-        } while (!jobProgressResponse.isCompleted() && !jobProgressResponse.isFailed()
-            && (System.currentTimeMillis() - startTime) < Config.DEFAULT_TIMEOUT);
-
-        if (!jobProgressResponse.isCompleted()) {
-            log.error("Zephyr job did not complete within the expected time. Job progress response: {}",
-                jobProgressResponse);
-            throw new RuntimeException("Zephyr job did not complete within the expected time.");
+        if(!waitForJob(jobProgressToken)){
+            return;
         }
 
-        log.info("Mapping Zephyr executions to scenario results. Job progress response: {}", jobProgressResponse);
+        log.info("Mapping Zephyr executions to scenario results. Job progress response: {}", jobProgressToken);
         //Fetch all executions for the cycle and map them by issue key to assign execution details to scenario results
-        ZephyrExecutionSearchResponse executionSearchResponse = Config.getZephyr().searchExecutions(cycleId);
+        ZephyrExecutionSearchResponse executionSearchResponse = Config.getZephyr()
+            .searchExecutions(
+                cycleId,
+                JiraConfig.getProjectId(),
+                Optional.ofNullable(Config.getTestCycleVersion()).orElse("-1"),
+                scenarioResults.size());
 
         Map<String, ZephyrExecutionSearchResponse.Execution> issueKeyToExecutionMap =
             executionSearchResponse.getExecutions()
@@ -183,6 +159,42 @@ public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
             }
             scenarioResult.setExecutionDetail(execution);
         }
+    }
+
+    private boolean waitForJob(String jobProgressToken) {
+        //Poll Zephyr for job progress and wait until executions are created before proceeding to update execution
+        // details
+        ZephyrBulkExecutionResponse jobProgressResponse;
+        long startTime = System.currentTimeMillis();
+        boolean firstPoll = true;
+        log.info("Polling Zephyr for job progress. Job progress token: {}", jobProgressToken);
+        do {
+            jobProgressResponse =
+                Config.getZephyr().getAddTestsToCycleJobProgress(jobProgressToken);
+            if (firstPoll) {
+                firstPoll = false;
+            } else {
+                log.info("Waiting for Zephyr job to complete. Job progress response: {}",
+                    Util.writeObjectToString(jobProgressResponse));
+                try {
+                    //Wait before polling to avoid hitting rate limits and give Zephyr some time to process the request
+                    Thread.sleep(Config.DEFAULT_WAIT_TIME);
+                } catch (InterruptedException e) {
+                    log.error("Thread interrupted while waiting for Zephyr job to complete", e);
+                    Thread.currentThread().interrupt();
+                    return false;
+                }
+            }
+
+        } while (!jobProgressResponse.isCompleted() && !jobProgressResponse.isFailed()
+            && (System.currentTimeMillis() - startTime) < Config.DEFAULT_TIMEOUT);
+
+        if (!jobProgressResponse.isCompleted()) {
+            log.error("Zephyr job did not complete within the expected time. Job progress response: {}",
+                jobProgressResponse);
+            throw new RuntimeException("Zephyr job did not complete within the expected time.");
+        }
+        return true;
     }
 
     private void assignJiraIds(List<ScenarioResult> scenarioResults) {
