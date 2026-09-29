@@ -43,6 +43,9 @@ class ConfigTest {
             "jira-auth-username=someAuthUsername",
             "jira-auth-token=token",
             "jira-default-components=CompA,CompB",
+            "zephyr-access-key=zephyr-access-key",
+            "zephyr-secret-key=zephyr-secret-key",
+            "zephyr-account-id=zephyr-account-id",
             "execution-environment=stg",
             "execution-build=1.0.0",
             "execution-test-cycle-name=SomeTest cycle name",
@@ -73,6 +76,9 @@ class ConfigTest {
         assertEquals("someAuthUsername", JiraConfig.getAuthUsername());
         assertEquals("token", JiraConfig.getAuthToken());
         assertEquals(2, JiraConfig.getDefaultComponents().size());
+        assertEquals("zephyr-access-key", Config.getZephyrAccessKey());
+        assertEquals("zephyr-secret-key", Config.getZephyrSecretKey());
+        assertEquals("zephyr-account-id", Config.getZephyrAccountId());
     }
 
     @Test
@@ -97,6 +103,26 @@ class ConfigTest {
         assertEquals(
             "Jira configuration requires jira-base-url, jira-project-id, jira-default-user-id, jira-auth-token, "
                 + "jira-auth-username to be specified as command line arguments",
+            exception.getMessage());
+    }
+
+    @Test
+    void instantiate_missingZephyrArgsThrows() {
+        String[] args = new String[]{
+            "action-type=CREATE_TICKETS",
+            "process-type=CUCUMBER_JSON_REPORT",
+            "jira-base-url=https://jira.example",
+            "jira-project-id=PROJ",
+            "jira-default-user-id=botId",
+            "jira-auth-username=bot@example.com",
+            "jira-auth-token=token"
+        };
+
+        IllegalArgumentException exception =
+            assertThrows(IllegalArgumentException.class, () -> Config.instantiate(args));
+        assertEquals(
+            "Zephyr configuration requires zephyr-access-key, zephyr-secret-key, zephyr-account-id"
+                + " to be specified as command line arguments",
             exception.getMessage());
     }
 
@@ -140,6 +166,9 @@ class ConfigTest {
                 "jira-default-user-id=botId",
                 "jira-auth-username=bot@example.com",
                 "jira-auth-token=token",
+                "zephyr-access-key=zephyr-access-key",
+                "zephyr-secret-key=zephyr-secret-key",
+                "zephyr-account-id=zephyr-account-id",
                 "success-status-id=1",
                 "failed-status-id=2"
             };
@@ -159,7 +188,10 @@ class ConfigTest {
                 "jira-project-id=PROJ",
                 "jira-default-user-id=botId",
                 "jira-auth-username=bot@example.com",
-                "jira-auth-token=token"
+                "jira-auth-token=token",
+                "zephyr-access-key=zephyr-access-key",
+                "zephyr-secret-key=zephyr-secret-key",
+                "zephyr-account-id=zephyr-account-id"
             };
 
             Config.instantiate(args);

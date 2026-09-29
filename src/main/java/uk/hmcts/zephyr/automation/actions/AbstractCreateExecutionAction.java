@@ -12,7 +12,6 @@ import uk.hmcts.zephyr.automation.jira.models.JiraSearchRequest;
 import uk.hmcts.zephyr.automation.jira.models.JiraSearchResponse;
 import uk.hmcts.zephyr.automation.util.Util;
 import uk.hmcts.zephyr.automation.zephyr.ZephyrConstants;
-import uk.hmcts.zephyr.automation.zephyr.models.JobProgressToken;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrBulkExecutionRequest;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrBulkExecutionResponse;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrCycle;
@@ -132,7 +131,7 @@ public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
 
         String jobProgressToken = Config.getZephyr().addTestsToCycle(cycleId, bulkExecutionRequest);
 
-        if(!waitForJob(jobProgressToken)){
+        if (!waitForJob(jobProgressToken)) {
             return;
         }
 

@@ -11,7 +11,8 @@ import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.TagService;
 import uk.hmcts.zephyr.automation.TestTag;
 import uk.hmcts.zephyr.automation.jira.JiraConfig;
-import uk.hmcts.zephyr.automation.jira.client.Jira;
+import uk.hmcts.zephyr.automation.jira.JiraImpl;
+import uk.hmcts.zephyr.automation.jira.models.JiraDescription;
 import uk.hmcts.zephyr.automation.jira.models.JiraComponent;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueFieldsWrapper;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueLink;
@@ -37,7 +38,7 @@ class AbstractTicketActionTest {
 
     private MockedStatic<Config> configMock;
     private TagService<ZephyrTest> tagService;
-    private Jira jira;
+    private JiraImpl jira;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -48,7 +49,7 @@ class AbstractTicketActionTest {
         configMock.when(Config::getGithubRepoBaseSrcDir).thenReturn("/repo");
         configMock.when(Config::getBasePath).thenReturn("/base");
         configMock.when(Config::getReportPath).thenReturn("/report");
-        jira = mock(Jira.class);
+        jira = mock(JiraImpl.class);
         configMock.when(Config::getJira).thenReturn(jira);
         @SuppressWarnings("unchecked")
         TagService<ZephyrTest> tagServiceMock = mock(TagService.class);
@@ -176,7 +177,32 @@ class AbstractTicketActionTest {
 
         JiraIssueFieldsWrapper.Fields fields = createBody.getFields();
         assertEquals("scenario", fields.getSummary());
-        assertEquals("Location: [feature|https://example]\r\nScenario: scenario\r\n", fields.getDescription());
+        JiraDescription description = fields.getDescription();
+        assertEquals(JiraDescription.RootType.DOC, description.getType());
+        assertEquals(1, description.getVersion());
+        assertEquals(2, description.getContent().size());
+
+        JiraDescription.ParagraphNode locationParagraph =
+            (JiraDescription.ParagraphNode) description.getContent().getFirst();
+        JiraDescription.TextNode locationLabel =
+            (JiraDescription.TextNode) locationParagraph.getContent().getFirst();
+        JiraDescription.TextNode locationValue =
+            (JiraDescription.TextNode) locationParagraph.getContent().get(1);
+        assertEquals("Location: ", locationLabel.getText());
+        assertEquals(JiraDescription.MarkType.STRONG, locationLabel.getMarks().getFirst().getType());
+        assertEquals("feature", locationValue.getText());
+        assertEquals("https://example",
+            ((JiraDescription.LinkMark) locationValue.getMarks().getFirst()).getAttrs().getHref());
+
+        JiraDescription.ParagraphNode scenarioParagraph =
+            (JiraDescription.ParagraphNode) description.getContent().get(1);
+        JiraDescription.TextNode scenarioLabel =
+            (JiraDescription.TextNode) scenarioParagraph.getContent().getFirst();
+        JiraDescription.TextNode scenarioValue =
+            (JiraDescription.TextNode) scenarioParagraph.getContent().get(1);
+        assertEquals("Scenario: ", scenarioLabel.getText());
+        assertEquals(JiraDescription.MarkType.STRONG, scenarioLabel.getMarks().getFirst().getType());
+        assertEquals("scenario", scenarioValue.getText());
         assertEquals(JiraConfig.getProjectId(), fields.getProject().getId());
         assertEquals(ZephyrConstants.ZEPHYR_ISSUE_TYPE_ID, fields.getIssuetype().getId());
         assertEquals(JiraConfig.getDefaultUserId(), fields.getReporter().getId());
@@ -187,8 +213,7 @@ class AbstractTicketActionTest {
 
         JiraIssueFieldsWrapper updateBody = action.buildBody(test, false);
         assertEquals("scenario", updateBody.getFields().getSummary());
-        assertEquals("Location: [feature|https://example]\r\nScenario: scenario\r\n",
-            updateBody.getFields().getDescription());
+        assertEquals(description, updateBody.getFields().getDescription());
         assertNull(updateBody.getFields().getProject());
         assertNull(updateBody.getFields().getIssuetype());
         assertNull(updateBody.getFields().getReporter());

@@ -1,6 +1,5 @@
 package uk.hmcts.zephyr.automation.cucumber.actions;
 
-import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Element;
 import uk.hmcts.zephyr.automation.jira.models.JiraDescription;
 import uk.hmcts.zephyr.automation.util.Util;

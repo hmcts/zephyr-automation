@@ -15,13 +15,11 @@ import uk.hmcts.zephyr.automation.cypress.actions.CypressCreateTicketAction;
 import uk.hmcts.zephyr.automation.cypress.actions.CypressUpdateTicketAction;
 import uk.hmcts.zephyr.automation.jira.JiraConfig;
 import uk.hmcts.zephyr.automation.jira.JiraImpl;
-import uk.hmcts.zephyr.automation.jira.client.Jira;
 import uk.hmcts.zephyr.automation.junit5.actions.JUnit5CreateExecutionAction;
 import uk.hmcts.zephyr.automation.junit5.actions.Junit5CreateTicketAction;
 import uk.hmcts.zephyr.automation.junit5.actions.Junit5UpdateTicketAction;
 import uk.hmcts.zephyr.automation.zephyr.ZephyrConstants;
 import uk.hmcts.zephyr.automation.zephyr.ZephyrImpl;
-import uk.hmcts.zephyr.automation.zephyr.client.Zephyr;
 
 import java.time.Duration;
 import java.util.Collections;
