@@ -161,13 +161,13 @@ class CucumberCreateExecutionActionTest {
             CucumberCreateExecutionAction action = spy(new CucumberCreateExecutionAction());
             final Element.Step.Embedding embedding = new Element.Step.Embedding();
             ZephyrExecutionSearchResponse.Execution execution = new ZephyrExecutionSearchResponse.Execution();
-            execution.setId(123L);
+            execution.setId("a1d2fbf8-a645-4b71-9cc9-f353e67305fd");
             execution.setIssueKey("TEST-123");
 
             doNothing().when(action).attachFileToExecution(any(), any());
             action.processEmbedding(execution, embedding);
 
-            verify(action).attachFileToExecution(123L, embedding);
+            verify(action).attachFileToExecution("a1d2fbf8-a645-4b71-9cc9-f353e67305fd", embedding);
         }
     }
 

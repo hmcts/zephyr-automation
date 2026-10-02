@@ -7,11 +7,11 @@ import feign.form.FormData;
 
 public interface ZephyrFormClient {
 
-    @RequestLine("POST /attachment?entityType={entityType}&entityId={entityId}")
+    @RequestLine("POST /public/rest/api/1.0/attachment?entityType={entityType}&entityId={entityId}")
     @Headers("Content-Type: multipart/form-data")
     void attachEvidence(
         @Param("entityType") String entityType,
-        @Param("entityId") Long entityId,
+        @Param("entityId") String entityId,
         @Param("file") FormData formData
     );
 }

@@ -1,5 +1,12 @@
 package uk.hmcts.zephyr.automation.jira;
 
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import uk.hmcts.zephyr.automation.jira.client.JiraClient;
@@ -13,14 +20,9 @@ import uk.hmcts.zephyr.automation.jira.models.JiraTransitionRequest;
 import uk.hmcts.zephyr.automation.support.TestUtil;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import java.util.Map;
 
 class JiraImplTest {
 
@@ -93,18 +95,51 @@ class JiraImplTest {
     }
 
     @Test
-    void given_searchRequest_when_searchIssues_then_delegatesToClient() throws Exception {
+    void given_searchRequest_when_searchIssues_then_mapsRequestToSearchQueryParams() throws Exception {
         JiraClient jiraClient = mock(JiraClient.class);
-        JiraImpl jira = createSubjectWithMock(jiraClient);
+        final JiraImpl jira = createSubjectWithMock(jiraClient);
 
-        JiraSearchRequest request = mock(JiraSearchRequest.class);
-        JiraSearchResponse response = mock(JiraSearchResponse.class);
-        when(jiraClient.searchIssues(request)).thenReturn(response);
+        final JiraSearchRequest request = JiraSearchRequest.builder()
+            .jql("project = HSP")
+            .nextPageToken("next-token")
+            .maxResults(50)
+            .fields(List.of("id", "key"))
+            .expand("names")
+            .reconcileIssues(true)
+            .build();
+        final JiraSearchResponse response = mock(JiraSearchResponse.class);
+        Map<String, Object> expectedQueryParams = new LinkedHashMap<>();
+        expectedQueryParams.put("jql", "project = HSP");
+        expectedQueryParams.put("nextPageToken", "next-token");
+        expectedQueryParams.put("maxResults", 50);
+        expectedQueryParams.put("fields", "id,key");
+        expectedQueryParams.put("expand", "names");
+        expectedQueryParams.put("reconcileIssues", true);
+        when(jiraClient.searchIssues(expectedQueryParams)).thenReturn(response);
 
         JiraSearchResponse result = jira.searchIssues(request);
 
         assertSame(response, result);
-        verify(jiraClient).searchIssues(request);
+        verify(jiraClient).searchIssues(expectedQueryParams);
+    }
+
+    @Test
+    void given_searchRequestWithMissingOptionalParams_when_searchIssues_then_omitsEmptyQueryParams() throws Exception {
+        JiraClient jiraClient = mock(JiraClient.class);
+        JiraImpl jira = createSubjectWithMock(jiraClient);
+
+        JiraSearchRequest request = JiraSearchRequest.builder()
+            .jql("project = HSP")
+            .fields(List.of())
+            .build();
+        JiraSearchResponse response = mock(JiraSearchResponse.class);
+        Map<String, Object> expectedQueryParams = Map.of("jql", "project = HSP");
+        when(jiraClient.searchIssues(expectedQueryParams)).thenReturn(response);
+
+        JiraSearchResponse result = jira.searchIssues(request);
+
+        assertSame(response, result);
+        verify(jiraClient).searchIssues(expectedQueryParams);
     }
 
     @Test
@@ -135,7 +170,7 @@ class JiraImplTest {
     }
 
     private JiraImpl createSubjectWithMock(JiraClient jiraClient) throws Exception {
-        JiraImpl jira = new JiraImpl(new ObjectMapper(), "http://localhost", "Bearer token");
+        JiraImpl jira = new JiraImpl(new ObjectMapper(), "http://localhost", "AuthUsername","Bearer token");
         TestUtil.setField(JiraImpl.class, jira, "jiraClient", jiraClient);
         TestUtil.setField(JiraImpl.class, jira, "componentsCacheMap", new HashMap<>());
         return jira;
@@ -148,4 +183,3 @@ class JiraImplTest {
         return component;
     }
 }
-

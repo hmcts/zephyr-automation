@@ -12,14 +12,13 @@ import org.mockito.MockedStatic;
 import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.TagService;
 import uk.hmcts.zephyr.automation.jira.JiraConfig;
-import uk.hmcts.zephyr.automation.jira.client.Jira;
+import uk.hmcts.zephyr.automation.jira.JiraImpl;
 import uk.hmcts.zephyr.automation.jira.models.JiraSearchResponse;
 import uk.hmcts.zephyr.automation.jira.models.JiraTransition;
 import uk.hmcts.zephyr.automation.jira.models.JiraTransitionRequest;
 import uk.hmcts.zephyr.automation.support.TestUtil;
+import uk.hmcts.zephyr.automation.zephyr.ZephyrImpl;
 import uk.hmcts.zephyr.automation.zephyr.ZephyrConstants;
-import uk.hmcts.zephyr.automation.zephyr.client.Zephyr;
-import uk.hmcts.zephyr.automation.zephyr.models.JobProgressToken;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrBulkExecutionRequest;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrBulkExecutionResponse;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrCycle;
@@ -33,6 +32,8 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -92,8 +93,8 @@ class AbstractCreateExecutionActionTest {
 
     @Test
     void givenTestsWithJiraKeys_whenProcessTests_thenCreatesCycleAndUpdatesExecutions() {
-        Zephyr zephyr = mock(Zephyr.class);
-        Jira jira = mock(Jira.class);
+        ZephyrImpl zephyr = mock(ZephyrImpl.class);
+        JiraImpl jira = mock(JiraImpl.class);
         configMock.when(Config::getReportPath).thenReturn("/tmp/report.json");
         configMock.when(Config::getZephyr).thenReturn(zephyr);
         configMock.when(Config::getJira).thenReturn(jira);
@@ -116,16 +117,18 @@ class AbstractCreateExecutionActionTest {
         ZephyrCycleResponse cycleResponse = new ZephyrCycleResponse();
         cycleResponse.setId("cycle-1");
         when(zephyr.createCycle(any())).thenReturn(cycleResponse);
-        when(zephyr.addTestsToCycle(any())).thenReturn(JobProgressToken.builder().jobProgressToken("job-123").build());
-        when(zephyr.getAddTestsToCycleJobProgress("job-123"))
+        when(zephyr.addTestsToCycle(eq("cycle-1"), any())).thenReturn("job-123");
+        when(zephyr.updateExecutionStatus(any())).thenReturn("status-job-123");
+        when(zephyr.getAddTestsToCycleJobProgress(anyString()))
             .thenReturn(ZephyrBulkExecutionResponse.builder().progress(1.0).build());
 
         ZephyrExecutionSearchResponse.Execution execution = new ZephyrExecutionSearchResponse.Execution();
         execution.setIssueKey("CASE-1");
-        execution.setId(55L);
+        execution.setId("55");
         ZephyrExecutionSearchResponse executionSearchResponse = new ZephyrExecutionSearchResponse();
         executionSearchResponse.setExecutions(List.of(execution));
-        when(zephyr.searchExecutions("cycle-1")).thenReturn(executionSearchResponse);
+        when(zephyr.searchExecutions("cycle-1", JiraConfig.getProjectId(), "-1", 1))
+            .thenReturn(executionSearchResponse);
 
         action.processTests(List.of(test));
 
@@ -141,25 +144,26 @@ class AbstractCreateExecutionActionTest {
 
 
         verify(jira).searchIssues(any());
+        ArgumentCaptor<String> cycleIdCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<ZephyrBulkExecutionRequest> bulkExecutionCaptor =
             ArgumentCaptor.forClass(ZephyrBulkExecutionRequest.class);
-        verify(zephyr).addTestsToCycle(bulkExecutionCaptor.capture());
+        verify(zephyr).addTestsToCycle(cycleIdCaptor.capture(), bulkExecutionCaptor.capture());
+        assertEquals("cycle-1", cycleIdCaptor.getValue());
         assertEquals(List.of("CASE-1"), bulkExecutionCaptor.getValue().getIssues());
 
         ArgumentCaptor<ZephyrExecutionStatusUpdateRequest> statusCaptor =
             ArgumentCaptor.forClass(ZephyrExecutionStatusUpdateRequest.class);
         verify(zephyr).updateExecutionStatus(statusCaptor.capture());
         assertEquals(List.of(String.valueOf(execution.getId())), statusCaptor.getValue().getExecutions());
-        assertEquals(String.valueOf(ZephyrConstants.ExecutionStatus.PASS.getStatusId()),
-            statusCaptor.getValue().getStatus());
+        assertEquals(ZephyrConstants.ExecutionStatus.PASS.getStatusId(), statusCaptor.getValue().getStatus());
     }
 
     @Nested
     class TransitionJiraIssueFromExecutionStatusUpdateTest {
         @Test
         void givenStatusIdsPresent_whenProcessTests_thenTransitionsEachJiraIssue() {
-            Zephyr zephyr = mock(Zephyr.class);
-            Jira jira = mock(Jira.class);
+            ZephyrImpl zephyr = mock(ZephyrImpl.class);
+            JiraImpl jira = mock(JiraImpl.class);
             configMock.when(Config::getReportPath).thenReturn("/tmp/report.json");
             configMock.when(Config::getZephyr).thenReturn(zephyr);
             configMock.when(Config::getJira).thenReturn(jira);
@@ -185,20 +189,21 @@ class AbstractCreateExecutionActionTest {
             ZephyrCycleResponse cycleResponse = new ZephyrCycleResponse();
             cycleResponse.setId("cycle-1");
             when(zephyr.createCycle(any())).thenReturn(cycleResponse);
-            when(zephyr.addTestsToCycle(any()))
-                .thenReturn(JobProgressToken.builder().jobProgressToken("job-123").build());
-            when(zephyr.getAddTestsToCycleJobProgress("job-123"))
+            when(zephyr.addTestsToCycle(eq("cycle-1"), any())).thenReturn("job-123");
+            when(zephyr.updateExecutionStatus(any())).thenReturn("status-job-123");
+            when(zephyr.getAddTestsToCycleJobProgress(anyString()))
                 .thenReturn(ZephyrBulkExecutionResponse.builder().progress(1.0).build());
 
             ZephyrExecutionSearchResponse.Execution passExecution = new ZephyrExecutionSearchResponse.Execution();
             passExecution.setIssueKey("CASE-1");
-            passExecution.setId(55L);
+            passExecution.setId("55");
             ZephyrExecutionSearchResponse.Execution failExecution = new ZephyrExecutionSearchResponse.Execution();
             failExecution.setIssueKey("CASE-2");
-            failExecution.setId(56L);
+            failExecution.setId("56");
             ZephyrExecutionSearchResponse executionSearchResponse = new ZephyrExecutionSearchResponse();
             executionSearchResponse.setExecutions(List.of(passExecution, failExecution));
-            when(zephyr.searchExecutions("cycle-1")).thenReturn(executionSearchResponse);
+            when(zephyr.searchExecutions("cycle-1", JiraConfig.getProjectId(), "-1", 2)).thenReturn(
+                executionSearchResponse);
 
             action.processTests(List.of(passTest, failTest));
 
@@ -227,8 +232,8 @@ class AbstractCreateExecutionActionTest {
             String successStatusId,
             String failedStatusId
         ) {
-            Zephyr zephyr = mock(Zephyr.class);
-            Jira jira = mock(Jira.class);
+            ZephyrImpl zephyr = mock(ZephyrImpl.class);
+            JiraImpl jira = mock(JiraImpl.class);
             configMock.when(Config::getReportPath).thenReturn("/tmp/report.json");
             configMock.when(Config::getZephyr).thenReturn(zephyr);
             configMock.when(Config::getJira).thenReturn(jira);
@@ -249,17 +254,18 @@ class AbstractCreateExecutionActionTest {
             ZephyrCycleResponse cycleResponse = new ZephyrCycleResponse();
             cycleResponse.setId("cycle-1");
             when(zephyr.createCycle(any())).thenReturn(cycleResponse);
-            when(zephyr.addTestsToCycle(any()))
-                .thenReturn(JobProgressToken.builder().jobProgressToken("job-123").build());
-            when(zephyr.getAddTestsToCycleJobProgress("job-123"))
+            when(zephyr.addTestsToCycle(eq("cycle-1"), any())).thenReturn("job-123");
+            when(zephyr.updateExecutionStatus(any())).thenReturn("status-job-123");
+            when(zephyr.getAddTestsToCycleJobProgress(anyString()))
                 .thenReturn(ZephyrBulkExecutionResponse.builder().progress(1.0).build());
 
             ZephyrExecutionSearchResponse.Execution execution = new ZephyrExecutionSearchResponse.Execution();
             execution.setIssueKey("CASE-1");
-            execution.setId(55L);
+            execution.setId("55");
             ZephyrExecutionSearchResponse executionSearchResponse = new ZephyrExecutionSearchResponse();
             executionSearchResponse.setExecutions(List.of(execution));
-            when(zephyr.searchExecutions("cycle-1")).thenReturn(executionSearchResponse);
+            when(zephyr.searchExecutions("cycle-1", JiraConfig.getProjectId(), "-1", 1)).thenReturn(
+                executionSearchResponse);
 
             action.processTests(List.of(test));
 
@@ -269,7 +275,7 @@ class AbstractCreateExecutionActionTest {
 
     @Test
     void attachFileToExecution_givenAttachment_whenCalled_thenInvokesZephyrClientWithFormData() {
-        Zephyr zephyr = mock(Zephyr.class);
+        ZephyrImpl zephyr = mock(ZephyrImpl.class);
         configMock.when(Config::getZephyr).thenReturn(zephyr);
         configMock.when(Config::getReportPath).thenReturn("/tmp/report.json");
         configMock.when(Config::getZephyr).thenReturn(zephyr);
@@ -278,12 +284,12 @@ class AbstractCreateExecutionActionTest {
         final TestCreateExecutionAction action = new TestCreateExecutionAction(tagService);
 
         Attachment attachment = new TestAttachment("screenshot.png", "image/png", new byte[]{1, 2, 3});
-        Long executionId = 123L;
+        String executionId = "a1d2fbf8-a645-4b71-9cc9-f353e67305fd";
 
         action.attachFileToExecution(executionId, attachment);
 
         ArgumentCaptor<String> entityTypeCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<Long> entityIdCaptor = ArgumentCaptor.forClass(Long.class);
+        ArgumentCaptor<String> entityIdCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<FormData> formDataCaptor = ArgumentCaptor.forClass(FormData.class);
         verify(zephyr).attachEvidence(entityTypeCaptor.capture(), entityIdCaptor.capture(), formDataCaptor.capture());
 

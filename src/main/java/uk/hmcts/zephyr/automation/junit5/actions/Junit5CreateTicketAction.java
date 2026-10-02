@@ -3,6 +3,7 @@ package uk.hmcts.zephyr.automation.junit5.actions;
 import lombok.extern.slf4j.Slf4j;
 import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.actions.AbstractCreateTicketAction;
+import uk.hmcts.zephyr.automation.jira.models.JiraDescription;
 import uk.hmcts.zephyr.automation.junit5.Junit5TagService;
 import uk.hmcts.zephyr.automation.junit5.model.Junit5ZephyrReport;
 import uk.hmcts.zephyr.automation.util.FileUtil;
@@ -34,7 +35,7 @@ public class Junit5CreateTicketAction
     }
 
     @Override
-    public void jiraDescriptionPostProcess(Junit5ZephyrReport.Test test, StringBuilder builder) {
-        Junit5ActionJiraDescription.super.jiraDescriptionPostProcess(test, builder);
+    public void jiraDescriptionPostProcess(Junit5ZephyrReport.Test test, JiraDescription jiraDescription) {
+        Junit5ActionJiraDescription.super.jiraDescriptionPostProcess(test, jiraDescription);
     }
 }

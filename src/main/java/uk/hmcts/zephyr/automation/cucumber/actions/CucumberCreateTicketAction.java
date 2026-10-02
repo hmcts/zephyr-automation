@@ -6,6 +6,7 @@ import uk.hmcts.zephyr.automation.actions.AbstractCreateTicketAction;
 import uk.hmcts.zephyr.automation.cucumber.CucumberTagService;
 import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature;
 import uk.hmcts.zephyr.automation.cucumber.models.CucumberFeature.Element;
+import uk.hmcts.zephyr.automation.jira.models.JiraDescription;
 import uk.hmcts.zephyr.automation.util.FileUtil;
 
 import java.util.List;
@@ -39,7 +40,7 @@ public class CucumberCreateTicketAction
     }
 
     @Override
-    public void jiraDescriptionPostProcess(Element test, StringBuilder builder) {
-        CucumberJiraDescription.super.jiraDescriptionPostProcess(test, builder);
+    public void jiraDescriptionPostProcess(Element test, JiraDescription jiraDescription) {
+        CucumberJiraDescription.super.jiraDescriptionPostProcess(test, jiraDescription);
     }
 }
