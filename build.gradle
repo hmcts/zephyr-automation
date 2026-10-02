@@ -158,7 +158,6 @@ dependencies {
 
 jar {
     archiveClassifier.set('')
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 publishing {
