@@ -2,7 +2,6 @@ package uk.hmcts.zephyr.automation.zephyr.client;
 
 import feign.Param;
 import feign.RequestLine;
-import uk.hmcts.zephyr.automation.zephyr.models.JobProgressToken;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrBulkExecutionRequest;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrBulkExecutionResponse;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrCycle;
@@ -16,21 +15,27 @@ import java.util.Map;
 
 public interface ZephyrClient {
 
-    @RequestLine("POST /cycle")
+    @RequestLine("POST /public/rest/api/1.0/cycle")
     ZephyrCycleResponse createCycle(ZephyrCycle cycle);
 
-    @RequestLine("POST /execution")
+    @RequestLine("POST /public/rest/api/1.0/execution")
     Map<String, ZephyrExecutionDetail> createExecution(ZephyrExecutionRequest execution);
 
-    @RequestLine("POST /execution/addTestsToCycle")
-    JobProgressToken addTestsToCycle(ZephyrBulkExecutionRequest bulkExecutionRequest);
+    @RequestLine("POST /public/rest/api/1.0/executions/add/cycle/{cycleId}")
+    String addTestsToCycle(@Param("cycleId") String cycleId, ZephyrBulkExecutionRequest bulkExecutionRequest);
 
-    @RequestLine("GET /execution/jobProgress/{jobProgressToken}?type=add_tests_to_cycle_job_progress")
+    @RequestLine("GET /public/rest/api/1.0/jobprogress/{jobProgressToken}")
     ZephyrBulkExecutionResponse getAddTestsToCycleJobProgress(@Param("jobProgressToken") String jobProgressToken);
 
-    @RequestLine("GET /execution?cycleId={cycleId}")
-    ZephyrExecutionSearchResponse searchExecutions(@Param("cycleId") String cycleId);
+    @RequestLine("GET /public/rest/api/1.0/executions/search/cycle/{cycleId}?projectId={projectId}&versionId"
+        + "={versionId}&size={size}")
+    ZephyrExecutionSearchResponse searchExecutions(@Param("cycleId") String cycleId,
+                                                   @Param("projectId") String projectId,
+                                                   @Param("versionId")
+                                                   String versionId,
+                                                   @Param("size")
+                                                   Integer size);
 
-    @RequestLine("PUT /execution/updateBulkStatus")
-    void updateExecutionStatus(ZephyrExecutionStatusUpdateRequest statusUpdateRequest);
+    @RequestLine("POST /public/rest/api/1.0/executions")
+    String updateExecutionStatus(ZephyrExecutionStatusUpdateRequest statusUpdateRequest);
 }

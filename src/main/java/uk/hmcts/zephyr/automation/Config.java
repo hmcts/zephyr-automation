@@ -15,13 +15,11 @@ import uk.hmcts.zephyr.automation.cypress.actions.CypressCreateTicketAction;
 import uk.hmcts.zephyr.automation.cypress.actions.CypressUpdateTicketAction;
 import uk.hmcts.zephyr.automation.jira.JiraConfig;
 import uk.hmcts.zephyr.automation.jira.JiraImpl;
-import uk.hmcts.zephyr.automation.jira.client.Jira;
 import uk.hmcts.zephyr.automation.junit5.actions.JUnit5CreateExecutionAction;
 import uk.hmcts.zephyr.automation.junit5.actions.Junit5CreateTicketAction;
 import uk.hmcts.zephyr.automation.junit5.actions.Junit5UpdateTicketAction;
 import uk.hmcts.zephyr.automation.zephyr.ZephyrConstants;
 import uk.hmcts.zephyr.automation.zephyr.ZephyrImpl;
-import uk.hmcts.zephyr.automation.zephyr.client.Zephyr;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -32,13 +30,13 @@ import java.util.function.Supplier;
 @Slf4j
 public class Config {
     public static final String NEW_LINE_CHARACTER = "\r\n";
-    public static final long DEFAULT_WAIT_TIME = Duration.ofMillis(500).toMillis();
+    public static final long DEFAULT_WAIT_TIME = Duration.ofMillis(4000).toMillis();
     public static final long DEFAULT_TIMEOUT = Duration.ofMinutes(30).toMillis();
     private static Config INSTANCE;
 
     private final Map<Argument, String> arguments;
-    private final Jira jira;
-    private final Zephyr zephyr;
+    private final JiraImpl jira;
+    private final ZephyrImpl zephyr;
     private final ObjectMapper objectMapper;
 
     public static void instantiate(String[] args) {
@@ -61,6 +59,9 @@ public class Config {
         EXECUTION_TEST_CYCLE_DESCRIPTION("execution-test-cycle-description="),
         EXECUTION_TEST_CYCLE_VERSION("execution-test-cycle-version="),
         EXECUTION_ATTACH_EVIDENCE("execution-attach-evidence="),
+        ZEPHYR_ACCESS_KEY("zephyr-access-key="),
+        ZEPHYR_SECRET_KEY("zephyr-secret-key="),
+        ZEPHYR_ACCOUNT_ID("zephyr-account-id="),
         SUCCESS_STATUS_ID("success-status-id="),
         FAILED_STATUS_ID("failed-status-id=");
 
@@ -99,12 +100,30 @@ public class Config {
 
         JiraConfig.instantiate(args);
 
+        boolean hasZephyrAccessKey = argumentMap.containsKey(Argument.ZEPHYR_ACCESS_KEY);
+        boolean hasZephyrSecretKey = argumentMap.containsKey(Argument.ZEPHYR_SECRET_KEY);
+        boolean hasZephyrAccountId = argumentMap.containsKey(Argument.ZEPHYR_ACCOUNT_ID);
+        if (!hasZephyrAccessKey || !hasZephyrSecretKey || !hasZephyrAccountId) {
+            throw new IllegalArgumentException(
+                "Zephyr configuration requires zephyr-access-key, zephyr-secret-key, zephyr-account-id"
+                    + " to be specified as command line arguments");
+        }
+
         this.objectMapper = new ObjectMapper()
             .findAndRegisterModules()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        this.jira = new JiraImpl(objectMapper, JiraConfig.getBaseUrl(), JiraConfig.getAuthToken());
-        this.zephyr = new ZephyrImpl(objectMapper, ZephyrConstants.BASE_URL, JiraConfig.getAuthToken());
+        this.jira = new JiraImpl(objectMapper,
+            JiraConfig.getBaseUrl(),
+            JiraConfig.getAuthUsername(),
+            JiraConfig.getAuthToken());
+        this.zephyr = new ZephyrImpl(
+            objectMapper,
+            ZephyrConstants.BASE_URL,
+            argumentMap.get(Argument.ZEPHYR_ACCESS_KEY),
+            argumentMap.get(Argument.ZEPHYR_SECRET_KEY),
+            argumentMap.get(Argument.ZEPHYR_ACCOUNT_ID)
+        );
     }
 
     public static ProcessType getProcessType() {
@@ -117,6 +136,18 @@ public class Config {
 
     public static String getFailedStatusId() {
         return INSTANCE.arguments.getOrDefault(Argument.FAILED_STATUS_ID, null);
+    }
+
+    public static String getZephyrAccessKey() {
+        return INSTANCE.arguments.getOrDefault(Argument.ZEPHYR_ACCESS_KEY, null);
+    }
+
+    public static String getZephyrSecretKey() {
+        return INSTANCE.arguments.getOrDefault(Argument.ZEPHYR_SECRET_KEY, null);
+    }
+
+    public static String getZephyrAccountId() {
+        return INSTANCE.arguments.getOrDefault(Argument.ZEPHYR_ACCOUNT_ID, null);
     }
 
     public static ActionType getActionType() {
@@ -159,11 +190,11 @@ public class Config {
         return INSTANCE.arguments.getOrDefault(Argument.EXECUTION_TEST_CYCLE_DESCRIPTION, null);
     }
 
-    public static Jira getJira() {
+    public static JiraImpl getJira() {
         return INSTANCE.jira;
     }
 
-    public static Zephyr getZephyr() {
+    public static ZephyrImpl getZephyr() {
         return INSTANCE.zephyr;
     }
 
