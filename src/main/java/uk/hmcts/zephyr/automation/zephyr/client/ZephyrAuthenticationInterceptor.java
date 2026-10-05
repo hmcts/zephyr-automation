@@ -1,9 +1,9 @@
 package uk.hmcts.zephyr.automation.zephyr.client;
 
-import com.thed.zephyr.cloud.rest.ZFJCloudRestClient;
-import com.thed.zephyr.cloud.rest.client.JwtGenerator;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
+import uk.hmcts.zephyr.automation.zephyr.atlassian.ZFJCloudRestClient;
+import uk.hmcts.zephyr.automation.zephyr.atlassian.client.JwtGenerator;
 
 import java.net.URI;
 import java.util.Collection;

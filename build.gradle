@@ -58,6 +58,10 @@ tasks.withType(Test).configureEach {
     }
 }
 
+tasks.withType(Checkstyle).configureEach {
+    exclude '**/uk/hmcts/zephyr/automation/zephyr/atlassian/**'
+}
+
 tasks.register('functional', Test) {
     description = "Runs functional tests"
     group = "Verification"

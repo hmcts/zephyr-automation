@@ -1,9 +1,9 @@
 package uk.hmcts.zephyr.automation.zephyr.client;
 
-import com.thed.zephyr.cloud.rest.client.JwtGenerator;
 import feign.RequestTemplate;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import uk.hmcts.zephyr.automation.zephyr.atlassian.client.JwtGenerator;
 
 import java.net.URI;
 import java.util.ArrayList;
