@@ -37,6 +37,9 @@ public class CucumberCreateExecutionAction
 
         List<ScenarioResult> scenarioResults = processTests(tests);
         if (Config.shouldAttachEvidence()) {
+            if (true) {
+                log.error("Attaching Evidence is not currently supported");
+            }
             scenarioResults.stream()
                 .filter(scenarioResult -> hasEmbeddings(scenarioResult.getTest()))
                 .filter(scenarioResult -> scenarioResult.getExecutionDetail() != null)
@@ -58,7 +61,7 @@ public class CucumberCreateExecutionAction
     }
 
     void processEmbedding(ZephyrExecutionSearchResponse.Execution executionDetail,
-                                  Element.Step.Embedding embedding) {
+                          Element.Step.Embedding embedding) {
         log.info("Processing embedding with mime type: {} for jira: {} using execution: {}",
             embedding.getMimeType(),
             executionDetail.getIssueKey(),

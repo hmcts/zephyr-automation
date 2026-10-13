@@ -2,11 +2,12 @@ package uk.hmcts.zephyr.automation.zephyr;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Feign;
+import feign.Logger;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import feign.form.FormEncoder;
-import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
+import feign.slf4j.Slf4jLogger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -17,8 +18,8 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.hmcts.zephyr.automation.zephyr.client.ZephyrClient;
+import uk.hmcts.zephyr.automation.zephyr.client.ZephyrDecoder;
 import uk.hmcts.zephyr.automation.zephyr.client.ZephyrFormClient;
-import uk.hmcts.zephyr.automation.zephyr.models.JobProgressToken;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrBulkExecutionRequest;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrBulkExecutionResponse;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrCycle;
@@ -47,7 +48,9 @@ import static org.mockito.Mockito.when;
 class ZephyrImplTest {
 
     private static final String BASE_URL = "https://zephyr.local";
-    private static final String AUTH_TOKEN = "Bearer token";
+    private static final String ACCESS_KEY = "access-key";
+    private static final String SECRET_KEY = "secret-key";
+    private static final String ACCOUNT_ID = "account-id";
 
     @Mock
     private Feign.Builder builder;
@@ -70,13 +73,17 @@ class ZephyrImplTest {
         lenient().when(builder.requestInterceptor(any())).thenReturn(builder);
         lenient().when(builder.encoder(any())).thenReturn(builder);
         lenient().when(builder.decoder(any())).thenReturn(builder);
+        lenient().when(builder.logLevel(any())).thenReturn(builder);
+        lenient().when(builder.logger(any())).thenReturn(builder);
         lenient().when(builder.target(eq(ZephyrClient.class), any())).thenReturn(zephyrClient);
 
         lenient().when(formBuilder.requestInterceptor(any())).thenReturn(formBuilder);
         lenient().when(formBuilder.encoder(any())).thenReturn(formBuilder);
+        lenient().when(formBuilder.logLevel(any())).thenReturn(formBuilder);
+        lenient().when(formBuilder.logger(any())).thenReturn(formBuilder);
         lenient().when(formBuilder.target(eq(ZephyrFormClient.class), any())).thenReturn(zephyrFormClient);
 
-        return new ZephyrImpl(new ObjectMapper(), BASE_URL, AUTH_TOKEN);
+        return new ZephyrImpl(new ObjectMapper(), BASE_URL, ACCESS_KEY, SECRET_KEY, ACCOUNT_ID);
     }
 
     @AfterEach
@@ -95,11 +102,15 @@ class ZephyrImplTest {
 
             verify(builder).requestInterceptor(any(RequestInterceptor.class));
             verify(builder).encoder(isA(JacksonEncoder.class));
-            verify(builder).decoder(isA(JacksonDecoder.class));
+            verify(builder).decoder(isA(ZephyrDecoder.class));
+            verify(builder).logLevel(Logger.Level.FULL);
+            verify(builder).logger(isA(Slf4jLogger.class));
             verify(builder).target(ZephyrClient.class, BASE_URL);
 
             verify(formBuilder).requestInterceptor(any(RequestInterceptor.class));
             verify(formBuilder).encoder(isA(FormEncoder.class));
+            verify(formBuilder).logLevel(Logger.Level.FULL);
+            verify(formBuilder).logger(isA(Slf4jLogger.class));
             verify(formBuilder).target(ZephyrFormClient.class, BASE_URL);
         }
 
@@ -112,12 +123,15 @@ class ZephyrImplTest {
             verify(builder).requestInterceptor(jsonInterceptorCaptor.capture());
 
             RequestTemplate jsonTemplate = new RequestTemplate();
+            jsonTemplate.method("GET");
+            jsonTemplate.target(BASE_URL);
+            jsonTemplate.uri("/public/rest/api/1.0/cycles/search?projectId=10013&versionId=-1");
             jsonInterceptorCaptor.getValue().apply(jsonTemplate);
 
             Collection<String> authorizationHeader = jsonTemplate.headers().get("Authorization");
             Collection<String> contentTypeHeader = jsonTemplate.headers().get("Content-Type");
 
-            assertEquals(List.of(AUTH_TOKEN), new ArrayList<>(authorizationHeader));
+            assertEquals(1, authorizationHeader.size());
             assertEquals(List.of("application/json"), new ArrayList<>(contentTypeHeader));
 
             ArgumentCaptor<RequestInterceptor> formInterceptorCaptor =
@@ -125,12 +139,16 @@ class ZephyrImplTest {
             verify(formBuilder).requestInterceptor(formInterceptorCaptor.capture());
 
             RequestTemplate formTemplate = new RequestTemplate();
+            formTemplate.method("POST");
+            formTemplate.target(BASE_URL);
+            formTemplate.uri("/attachment?entityType=execution&entityId=1");
+            formTemplate.header("Content-Type", "multipart/form-data");
             formInterceptorCaptor.getValue().apply(formTemplate);
 
             Collection<String> formAuthorization = formTemplate.headers().get("Authorization");
             Collection<String> xsrfHeader = formTemplate.headers().get("X-Atlassian-Token");
 
-            assertEquals(List.of(AUTH_TOKEN), new ArrayList<>(formAuthorization));
+            assertEquals(1, formAuthorization.size());
             assertEquals(List.of("no-check"), new ArrayList<>(xsrfHeader));
         }
     }
@@ -140,14 +158,15 @@ class ZephyrImplTest {
         @Test
         void given_bulkRequest_when_addTestsToCycle_then_delegatesToClient() {
             ZephyrImpl subject = createSubject();
+            String cycleId = "cycle-1";
             ZephyrBulkExecutionRequest request = mock(ZephyrBulkExecutionRequest.class);
-            JobProgressToken expectedResponse = JobProgressToken.builder().jobProgressToken("job-token").build();
-            when(zephyrClient.addTestsToCycle(request)).thenReturn(expectedResponse);
+            String expectedResponse = "job-token";
+            when(zephyrClient.addTestsToCycle(cycleId, request)).thenReturn(expectedResponse);
 
-            JobProgressToken actualResponse = subject.addTestsToCycle(request);
+            String actualResponse = subject.addTestsToCycle(cycleId, request);
 
             assertSame(expectedResponse, actualResponse);
-            verify(zephyrClient).addTestsToCycle(request);
+            verify(zephyrClient).addTestsToCycle(cycleId, request);
         }
     }
 
@@ -173,13 +192,17 @@ class ZephyrImplTest {
         void given_cycleId_when_searching_then_delegatesToClient() {
             ZephyrImpl subject = createSubject();
             String cycleId = "cycle-1";
+            String projectId = "10013";
+            String versionId = "-1";
+            Integer size = 50;
             ZephyrExecutionSearchResponse expectedResponse = mock(ZephyrExecutionSearchResponse.class);
-            when(zephyrClient.searchExecutions(cycleId)).thenReturn(expectedResponse);
+            when(zephyrClient.searchExecutions(cycleId, projectId, versionId, size)).thenReturn(expectedResponse);
 
-            ZephyrExecutionSearchResponse actualResponse = subject.searchExecutions(cycleId);
+            ZephyrExecutionSearchResponse actualResponse =
+                subject.searchExecutions(cycleId, projectId, versionId, size);
 
             assertSame(expectedResponse, actualResponse);
-            verify(zephyrClient).searchExecutions(cycleId);
+            verify(zephyrClient).searchExecutions(cycleId, projectId, versionId, size);
         }
     }
 
@@ -188,8 +211,13 @@ class ZephyrImplTest {
         @Test
         void given_cycle_when_creating_then_delegatesToClient() {
             ZephyrImpl subject = createSubject();
-            ZephyrCycle cycle = mock(ZephyrCycle.class);
-            ZephyrCycleResponse expectedResponse = mock(ZephyrCycleResponse.class);
+            ZephyrCycle cycle = ZephyrCycle.builder()
+                .name("Regression")
+                .projectId("10013")
+                .versionId("-1")
+                .build();
+            ZephyrCycleResponse expectedResponse = new ZephyrCycleResponse();
+            expectedResponse.setId("cycle-1");
             when(zephyrClient.createCycle(cycle)).thenReturn(expectedResponse);
 
             ZephyrCycleResponse actualResponse = subject.createCycle(cycle);
@@ -221,9 +249,12 @@ class ZephyrImplTest {
         void given_statusUpdate_when_updating_then_delegatesToClient() {
             ZephyrImpl subject = createSubject();
             ZephyrExecutionStatusUpdateRequest request = mock(ZephyrExecutionStatusUpdateRequest.class);
+            String expectedResponse = "job-token";
+            when(zephyrClient.updateExecutionStatus(request)).thenReturn(expectedResponse);
 
-            subject.updateExecutionStatus(request);
+            String actualResponse = subject.updateExecutionStatus(request);
 
+            assertSame(expectedResponse, actualResponse);
             verify(zephyrClient).updateExecutionStatus(request);
         }
     }

@@ -14,9 +14,9 @@ public class JiraConfig {
 
     private final String baseUrl;
     private final String projectId;
-    private final String defaultUser;
+    private final String defaultUserId;
+    private final String authUsername;
     private final String authToken;
-    private final String epicLinkCustomFieldId;
     private final List<String> defaultComponents;
 
     public static void instantiate(String[] args) {
@@ -29,9 +29,10 @@ public class JiraConfig {
     private JiraConfig(String[] args) {
         String baseUrl = null;
         String projectId = null;
-        String defaultUser = null;
+        String defaultUserId = null;
+
+        String authUsername = null;
         String authToken = null;
-        String epicLinkCustomFieldId = null;
         List<String> defaultComponents = new ArrayList<>();
 
         for (String arg : args) {
@@ -39,12 +40,12 @@ public class JiraConfig {
                 baseUrl = arg.substring("jira-base-url=".length());
             } else if (arg.startsWith("jira-project-id=")) {
                 projectId = arg.substring("jira-project-id=".length());
-            } else if (arg.startsWith("jira-default-user=")) {
-                defaultUser = arg.substring("jira-default-user=".length());
+            } else if (arg.startsWith("jira-default-user-id=")) {
+                defaultUserId = arg.substring("jira-default-user-id=".length());
+            } else if (arg.startsWith("jira-auth-username=")) {
+                authUsername = arg.substring("jira-auth-username=".length());
             } else if (arg.startsWith("jira-auth-token=")) {
                 authToken = arg.substring("jira-auth-token=".length());
-            } else if (arg.startsWith("jira-epic-link-custom-field-id=")) {
-                epicLinkCustomFieldId = arg.substring("jira-epic-link-custom-field-id=".length());
             } else if (arg.startsWith("jira-default-components=")) {
                 String componentsStr = arg.substring("jira-default-components=".length());
                 String[] components = componentsStr.split(",");
@@ -54,16 +55,21 @@ public class JiraConfig {
             }
         }
 
-        if (baseUrl == null || projectId == null || defaultUser == null || authToken == null) {
+        if (baseUrl == null || projectId == null || defaultUserId == null || authToken == null
+            || authUsername == null) {
             throw new IllegalArgumentException(
-                "Jira configuration requires jira-base-url, jira-project-id, jira-default-user, and jira-auth-token "
-                    + "to be specified as command line arguments");
+                "Jira configuration requires jira-base-url"
+                    + ", jira-project-id"
+                    + ", jira-default-user-id"
+                    + ", jira-auth-token"
+                    + ", jira-auth-username"
+                    + " to be specified as command line arguments");
         }
         this.baseUrl = baseUrl;
         this.projectId = projectId;
-        this.defaultUser = defaultUser;
+        this.defaultUserId = defaultUserId;
+        this.authUsername = authUsername;
         this.authToken = authToken;
-        this.epicLinkCustomFieldId = epicLinkCustomFieldId;
         this.defaultComponents = Collections.unmodifiableList(defaultComponents);
     }
 
@@ -76,16 +82,16 @@ public class JiraConfig {
         return INSTANCE.projectId;
     }
 
-    public static String getDefaultUser() {
-        return INSTANCE.defaultUser;
+    public static String getDefaultUserId() {
+        return INSTANCE.defaultUserId;
+    }
+
+    public static String getAuthUsername() {
+        return INSTANCE.authUsername;
     }
 
     public static String getAuthToken() {
         return INSTANCE.authToken;
-    }
-
-    public static String getEpicLinkCustomFieldId() {
-        return INSTANCE.epicLinkCustomFieldId;
     }
 
     public static List<String> getDefaultComponents() {

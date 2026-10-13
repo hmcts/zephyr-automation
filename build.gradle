@@ -9,7 +9,7 @@ plugins {
 }
 
 group = 'uk.gov.hmcts'
-version = '1.2.2'
+version = '2.0.1'
 
 java {
     toolchain {
@@ -56,6 +56,10 @@ tasks.withType(Test).configureEach {
     testLogging {
         exceptionFormat = 'full'
     }
+}
+
+tasks.withType(Checkstyle).configureEach {
+    exclude '**/uk/hmcts/zephyr/automation/zephyr/atlassian/**'
 }
 
 tasks.register('functional', Test) {
@@ -133,7 +137,6 @@ ext {
 dependencies {
 
     implementation group: 'com.github.hmcts.java-logging', name: 'logging', version: '8.0.0'
-
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.22.1'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.22.1'
     implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: log4JVersion

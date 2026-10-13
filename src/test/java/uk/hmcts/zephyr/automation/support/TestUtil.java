@@ -32,10 +32,14 @@ public class TestUtil {
             "github-repo-base-src-dir=/repo",
             "jira-base-url=https://jira.example",
             "jira-project-id=PROJ",
-            "jira-default-user=bot@example.com",
+            "jira-auth-username=bot@example.com",
+            "jira-default-user-id=botId",
             "jira-auth-token=token",
             "jira-epic-link-custom-field-id=custom_1",
-            "jira-default-components=Default"
+            "jira-default-components=Default",
+            "zephyr-access-key=zephyr-access-key",
+            "zephyr-secret-key=zephyr-secret-key",
+            "zephyr-account-id=zephyr-account-id"
         };
     }
 

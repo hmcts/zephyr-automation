@@ -4,6 +4,7 @@ import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.TagService;
 import uk.hmcts.zephyr.automation.TestTag;
 import uk.hmcts.zephyr.automation.jira.JiraConfig;
+import uk.hmcts.zephyr.automation.jira.models.JiraDescription;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueFieldsWrapper;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueLink;
 import uk.hmcts.zephyr.automation.jira.models.JiraTransition;
@@ -14,8 +15,6 @@ import uk.hmcts.zephyr.automation.zephyr.ZephyrConstants;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import static uk.hmcts.zephyr.automation.Config.NEW_LINE_CHARACTER;
 
 public abstract class AbstractTicketAction<T extends ZephyrTest> extends AbstractAction<T> {
     protected AbstractTicketAction(TagService<T> tagService) {
@@ -64,21 +63,27 @@ public abstract class AbstractTicketAction<T extends ZephyrTest> extends Abstrac
             .build();
     }
 
-    protected String getJiraDescription(T test) {
-        StringBuilder builder = new StringBuilder("Location: [")
-            .append(test.getLocationDisplayName())
-            .append("|")
-            .append(test.getGitHubLink())
-            .append("]")
-            .append(NEW_LINE_CHARACTER)
-            .append("Scenario: ")
-            .append(test.getName())
-            .append(Config.NEW_LINE_CHARACTER);
-        jiraDescriptionPostProcess(test, builder);
-        return builder.toString();
+    protected JiraDescription getJiraDescription(T test) {
+        JiraDescription jiraDescription = new JiraDescription();
+
+        jiraDescription.setContent(
+            new ArrayList<>(List.of(
+                new JiraDescription.ParagraphNode(
+                    new JiraDescription.TextNode("Location: ", new JiraDescription.StrongMark()),
+                    new JiraDescription.TextNode(test.getLocationDisplayName(),
+                        new JiraDescription.LinkMark(test.getGitHubLink()))
+                ),
+                new JiraDescription.ParagraphNode(
+                    new JiraDescription.TextNode("Scenario: ", new JiraDescription.StrongMark()),
+                    new JiraDescription.TextNode(test.getName())
+                )
+            )
+        ));
+        jiraDescriptionPostProcess(test, jiraDescription);
+        return jiraDescription;
     }
 
-    protected void jiraDescriptionPostProcess(T test, StringBuilder builder) {
+    protected void jiraDescriptionPostProcess(T test, JiraDescription jiraDescription) {
         //Can be overridden by child classes to add more info to the description
     }
 
@@ -125,11 +130,14 @@ public abstract class AbstractTicketAction<T extends ZephyrTest> extends Abstrac
             JiraIssueFieldsWrapper.Fields fields = body.getFields();
             fields.setProject(new JiraIssueFieldsWrapper.Project(JiraConfig.getProjectId()));
             fields.setIssuetype(new JiraIssueFieldsWrapper.IssueType(ZephyrConstants.ZEPHYR_ISSUE_TYPE_ID));
-            fields.setReporter(new JiraIssueFieldsWrapper.Reporter(JiraConfig.getDefaultUser()));
+            fields.setReporter(new JiraIssueFieldsWrapper.Reporter(JiraConfig.getDefaultUserId()));
         }
 
         //Add Epic link if there is one
-        getEpicTicketKey(test).ifPresent(s -> body.getFields().setEpicLink(s.getValue()));
+        getEpicTicketKey(test).ifPresent(s -> body.getFields()
+            .setParent(
+                new JiraIssueFieldsWrapper.Parent(s.getValue()))
+        );
         //Add components if there are any
         body.getFields().setComponents(getComponents(test));
         //Add labels if there are any
