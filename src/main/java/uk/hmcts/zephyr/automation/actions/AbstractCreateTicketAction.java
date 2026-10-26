@@ -37,9 +37,6 @@ public abstract class AbstractCreateTicketAction<T extends ZephyrTest>
 
             JiraIssueFieldsWrapper body = buildBody(test, true);
 
-
-            System.out.println(new ObjectMapper().writeValueAsString(body));
-
             //Create the issue
             JiraIssue jiraIssue = Config.getJira().createIssue(body);
             addLinksToJiraIssue(jiraIssue.getKey(), test);

@@ -89,7 +89,6 @@ public class ZephyrImpl {
     }
 
     public ZephyrCycleResponse createCycle(ZephyrCycle cycle) {
-        System.out.println("TMP: " + Util.writeObjectToString(cycle));
         return zephyrClient.createCycle(cycle);
     }
 
