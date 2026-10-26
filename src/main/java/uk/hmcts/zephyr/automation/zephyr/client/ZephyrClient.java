@@ -28,13 +28,12 @@ public interface ZephyrClient {
     ZephyrBulkExecutionResponse getAddTestsToCycleJobProgress(@Param("jobProgressToken") String jobProgressToken);
 
     @RequestLine("GET /public/rest/api/1.0/executions/search/cycle/{cycleId}?projectId={projectId}&versionId"
-        + "={versionId}&size={size}")
+        + "={versionId}&size={size}&offset={offset}")
     ZephyrExecutionSearchResponse searchExecutions(@Param("cycleId") String cycleId,
                                                    @Param("projectId") String projectId,
-                                                   @Param("versionId")
-                                                   String versionId,
-                                                   @Param("size")
-                                                   Integer size);
+                                                   @Param("versionId") String versionId,
+                                                   @Param("size") Integer size,
+                                                   @Param("offset") Integer offset);
 
     @RequestLine("POST /public/rest/api/1.0/executions")
     String updateExecutionStatus(ZephyrExecutionStatusUpdateRequest statusUpdateRequest);

@@ -204,7 +204,7 @@ public abstract class AbstractCreateExecutionAction<T extends ZephyrTest>
         JiraSearchResponse searchResponse = Config.getJira().searchIssues(
             JiraSearchRequest.builder()
                 .jql("key in (" + String.join(",", issueKeys) + ")")
-                .fields(List.of("id"))
+                .fields(List.of("id", "key"))
                 .maxResults(scenarioResults.size())
                 .build());
 

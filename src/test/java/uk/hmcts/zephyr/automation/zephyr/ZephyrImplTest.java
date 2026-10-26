@@ -196,13 +196,13 @@ class ZephyrImplTest {
             String versionId = "-1";
             Integer size = 50;
             ZephyrExecutionSearchResponse expectedResponse = mock(ZephyrExecutionSearchResponse.class);
-            when(zephyrClient.searchExecutions(cycleId, projectId, versionId, size)).thenReturn(expectedResponse);
+            when(zephyrClient.searchExecutions(cycleId, projectId, versionId, size, 0)).thenReturn(expectedResponse);
 
             ZephyrExecutionSearchResponse actualResponse =
                 subject.searchExecutions(cycleId, projectId, versionId, size);
 
             assertSame(expectedResponse, actualResponse);
-            verify(zephyrClient).searchExecutions(cycleId, projectId, versionId, size);
+            verify(zephyrClient).searchExecutions(cycleId, projectId, versionId, size, 0);
         }
     }
 
