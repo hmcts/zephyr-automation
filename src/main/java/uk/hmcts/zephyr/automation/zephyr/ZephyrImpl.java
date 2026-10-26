@@ -10,7 +10,6 @@ import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import uk.hmcts.zephyr.automation.util.Util;
 import uk.hmcts.zephyr.automation.zephyr.client.ZephyrAuthenticationInterceptor;
 import uk.hmcts.zephyr.automation.zephyr.client.ZephyrClient;
 import uk.hmcts.zephyr.automation.zephyr.client.ZephyrDecoder;
