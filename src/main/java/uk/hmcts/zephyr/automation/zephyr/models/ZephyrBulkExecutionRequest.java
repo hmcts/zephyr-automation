@@ -14,7 +14,7 @@ import java.util.List;
 public class ZephyrBulkExecutionRequest {
     private List<String> issues;
     private String method;
-    private String cycleId;
+    private String versionId;
     private String projectId;
 }
 

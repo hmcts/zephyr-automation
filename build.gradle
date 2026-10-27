@@ -9,7 +9,7 @@ plugins {
 }
 
 group = 'uk.gov.hmcts'
-version = '1.2.2'
+version = '2.0.2'
 
 java {
     toolchain {
@@ -56,6 +56,10 @@ tasks.withType(Test).configureEach {
     testLogging {
         exceptionFormat = 'full'
     }
+}
+
+tasks.withType(Checkstyle).configureEach {
+    exclude '**/uk/hmcts/zephyr/automation/zephyr/atlassian/**'
 }
 
 tasks.register('functional', Test) {

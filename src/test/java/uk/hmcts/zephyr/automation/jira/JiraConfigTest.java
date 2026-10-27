@@ -7,7 +7,6 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class JiraConfigTest {
@@ -24,9 +23,9 @@ class JiraConfigTest {
         String[] args = {
             "jira-base-url=https://example.atlassian.net",
             "jira-project-id=OPAL",
-            "jira-default-user=opal.user",
+            "jira-default-user-id=opal.user.id",
             "jira-auth-token=token-123",
-            "jira-epic-link-custom-field-id=custom_42",
+            "jira-auth-username=token-username",
             "jira-default-components= Core , API,  UI "
         };
 
@@ -34,9 +33,9 @@ class JiraConfigTest {
 
         assertEquals("https://example.atlassian.net", JiraConfig.getBaseUrl());
         assertEquals("OPAL", JiraConfig.getProjectId());
-        assertEquals("opal.user", JiraConfig.getDefaultUser());
+        assertEquals("opal.user.id", JiraConfig.getDefaultUserId());
+        assertEquals("token-username", JiraConfig.getAuthUsername());
         assertEquals("token-123", JiraConfig.getAuthToken());
-        assertEquals("custom_42", JiraConfig.getEpicLinkCustomFieldId());
         assertEquals(List.of("Core", "API", "UI"), JiraConfig.getDefaultComponents());
     }
 
@@ -52,8 +51,8 @@ class JiraConfigTest {
             () -> JiraConfig.instantiate(args));
 
         assertEquals(
-            "Jira configuration requires jira-base-url, jira-project-id, jira-default-user, and jira-auth-token to be"
-                + " specified as command line arguments",
+            "Jira configuration requires jira-base-url, jira-project-id, jira-default-user-id, jira-auth-token, "
+                + "jira-auth-username to be specified as command line arguments",
             exception.getMessage());
     }
 
@@ -62,7 +61,8 @@ class JiraConfigTest {
         String[] args = {
             "jira-base-url=https://example.atlassian.net",
             "jira-project-id=OPAL",
-            "jira-default-user=opal.user",
+            "jira-default-user-id=opal.user.id",
+            "jira-auth-username=opal.user@example.com",
             "jira-auth-token=token-123"
         };
 
@@ -73,25 +73,12 @@ class JiraConfigTest {
     }
 
     @Test
-    void given_noEpicLinkCustomFieldId_when_instantiate_then_epicLinkFieldIsNull() {
-        String[] args = {
-            "jira-base-url=https://example.atlassian.net",
-            "jira-project-id=OPAL",
-            "jira-default-user=opal.user",
-            "jira-auth-token=token-123"
-        };
-
-        JiraConfig.instantiate(args);
-
-        assertNull(JiraConfig.getEpicLinkCustomFieldId());
-    }
-
-    @Test
     void given_defaultComponents_when_instantiate_then_listIsUnmodifiable() {
         String[] args = {
             "jira-base-url=https://example.atlassian.net",
             "jira-project-id=OPAL",
-            "jira-default-user=opal.user",
+            "jira-default-user-id=opal.user.id",
+            "jira-auth-username=opal.user@example.com",
             "jira-auth-token=token-123",
             "jira-default-components=Core"
         };

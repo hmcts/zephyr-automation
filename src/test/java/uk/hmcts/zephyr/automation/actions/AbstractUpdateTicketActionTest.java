@@ -11,7 +11,7 @@ import uk.hmcts.zephyr.automation.Config;
 import uk.hmcts.zephyr.automation.TagService;
 import uk.hmcts.zephyr.automation.TestTag;
 import uk.hmcts.zephyr.automation.jira.JiraConfig;
-import uk.hmcts.zephyr.automation.jira.client.Jira;
+import uk.hmcts.zephyr.automation.jira.JiraImpl;
 import uk.hmcts.zephyr.automation.jira.models.JiraIssueFieldsWrapper;
 import uk.hmcts.zephyr.automation.support.TestUtil;
 import uk.hmcts.zephyr.automation.zephyr.ZephyrConstants;
@@ -32,7 +32,7 @@ import static org.mockito.Mockito.when;
 class AbstractUpdateTicketActionTest {
     private MockedStatic<Config> configMock;
     private TagService<ZephyrTest> tagService;
-    private Jira jira;
+    private JiraImpl jira;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -46,7 +46,7 @@ class AbstractUpdateTicketActionTest {
         @SuppressWarnings("unchecked")
         TagService<ZephyrTest> tagServiceMock = mock(TagService.class);
         tagService = tagServiceMock;
-        jira = mock(Jira.class);
+        jira = mock(JiraImpl.class);
     }
 
     @AfterEach

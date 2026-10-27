@@ -2,15 +2,18 @@ package uk.hmcts.zephyr.automation.zephyr;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Feign;
+import feign.Logger;
 import feign.form.FormData;
 import feign.form.FormEncoder;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
+import feign.slf4j.Slf4jLogger;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import uk.hmcts.zephyr.automation.zephyr.client.Zephyr;
+import uk.hmcts.zephyr.automation.zephyr.client.ZephyrAuthenticationInterceptor;
 import uk.hmcts.zephyr.automation.zephyr.client.ZephyrClient;
+import uk.hmcts.zephyr.automation.zephyr.client.ZephyrDecoder;
 import uk.hmcts.zephyr.automation.zephyr.client.ZephyrFormClient;
-import uk.hmcts.zephyr.automation.zephyr.models.JobProgressToken;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrBulkExecutionRequest;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrBulkExecutionResponse;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrCycle;
@@ -20,66 +23,89 @@ import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionRequest;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionSearchResponse;
 import uk.hmcts.zephyr.automation.zephyr.models.ZephyrExecutionStatusUpdateRequest;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
-public class ZephyrImpl implements Zephyr {
+public class ZephyrImpl {
+    private static final int MAX_EXECUTION_SEARCH_PAGE_SIZE = 50;
+
     private final ZephyrClient zephyrClient;
     private final ZephyrFormClient zephyrFormClient;
 
-    public ZephyrImpl(ObjectMapper objectMapper, String baseUrl, String authToken) {
+    public ZephyrImpl(ObjectMapper objectMapper, String baseUrl, String accessKey, String secretKey, String accountId) {
+        ZephyrAuthenticationInterceptor authenticationInterceptor =
+            new ZephyrAuthenticationInterceptor(baseUrl, accessKey, secretKey, accountId);
         zephyrClient = Feign.builder()
-            .requestInterceptor(template -> {
-                template.header("Authorization", authToken);
-                template.header("Content-Type", "application/json");
-            })
+            .requestInterceptor(authenticationInterceptor)
             .encoder(new JacksonEncoder(objectMapper))
-            .decoder(new JacksonDecoder(objectMapper))
+            .decoder(new ZephyrDecoder(new JacksonDecoder(objectMapper)))
+            .logLevel(Logger.Level.FULL)
+            .logger(new Slf4jLogger())
             .target(ZephyrClient.class, baseUrl);
 
         zephyrFormClient = Feign.builder()
-            .requestInterceptor(template -> {
-                template.header("Authorization", authToken);
-                template.header("X-Atlassian-Token", "no-check");
-            })
+            .requestInterceptor(authenticationInterceptor)
             .encoder(new FormEncoder())
+            .logLevel(Logger.Level.FULL)
+            .logger(new Slf4jLogger())
             .target(ZephyrFormClient.class, baseUrl);
     }
 
 
     //Passthrough
-    @Override
-    public JobProgressToken addTestsToCycle(ZephyrBulkExecutionRequest bulkExecutionRequest) {
-        return zephyrClient.addTestsToCycle(bulkExecutionRequest);
-    }
 
-    @Override
     public ZephyrBulkExecutionResponse getAddTestsToCycleJobProgress(String jobProgressToken) {
         return zephyrClient.getAddTestsToCycleJobProgress(jobProgressToken);
     }
 
-    @Override
-    public ZephyrExecutionSearchResponse searchExecutions(String cycleId) {
-        return zephyrClient.searchExecutions(cycleId);
+    public ZephyrExecutionSearchResponse searchExecutions(String cycleId,
+                                                          String projectId,
+                                                          String versionId,
+                                                          Integer size) {
+        int requestedSize = size == null ? MAX_EXECUTION_SEARCH_PAGE_SIZE : size;
+        int pageSize = Math.min(requestedSize, MAX_EXECUTION_SEARCH_PAGE_SIZE);
+        ZephyrExecutionSearchResponse response =
+            zephyrClient.searchExecutions(cycleId, projectId, versionId, pageSize, 0);
+        ZephyrExecutionSearchResponse page = response;
+        List<ZephyrExecutionSearchResponse.SearchObject> searchObjects = new ArrayList<>();
+        int offset = 0;
+        while (page.getSearchObjectList() != null && !page.getSearchObjectList().isEmpty()) {
+            int resultCount = page.getSearchObjectList().size();
+            searchObjects.addAll(page.getSearchObjectList());
+            offset += resultCount;
+            if (offset >= requestedSize
+                || (page.getTotalCount() != null && offset >= page.getTotalCount())
+                || (page.getTotalCount() == null && resultCount < pageSize)) {
+                break;
+            }
+            pageSize = Math.min(requestedSize - offset, MAX_EXECUTION_SEARCH_PAGE_SIZE);
+            page = zephyrClient.searchExecutions(cycleId, projectId, versionId, pageSize, offset);
+        }
+        response.setSearchObjectList(searchObjects);
+        return response;
     }
 
-    @Override
     public ZephyrCycleResponse createCycle(ZephyrCycle cycle) {
         return zephyrClient.createCycle(cycle);
     }
 
-    @Override
     public Map<String, ZephyrExecutionDetail> createExecution(ZephyrExecutionRequest execution) {
         return zephyrClient.createExecution(execution);
     }
 
-    @Override
-    public void updateExecutionStatus(ZephyrExecutionStatusUpdateRequest statusUpdateRequest) {
-        zephyrClient.updateExecutionStatus(statusUpdateRequest);
+    @SneakyThrows
+    public String addTestsToCycle(String cycleId, ZephyrBulkExecutionRequest bulkExecutionRequest) {
+        return zephyrClient.addTestsToCycle(cycleId, bulkExecutionRequest);
     }
 
-    @Override
-    public void attachEvidence(String entityType, Long entityId, FormData formData) {
+    @SneakyThrows
+    public String updateExecutionStatus(ZephyrExecutionStatusUpdateRequest statusUpdateRequest) {
+        return zephyrClient.updateExecutionStatus(statusUpdateRequest);
+    }
+
+    public void attachEvidence(String entityType, String entityId, FormData formData) {
         zephyrFormClient.attachEvidence(entityType, entityId, formData);
     }
 }
